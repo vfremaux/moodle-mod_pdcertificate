@@ -1,0 +1,65 @@
+.pdcertificate-notice-box{
+    margin:50px;
+    padding:30px;
+}
+
+.pdcertificate-check .param{
+    font-weight:bold;
+}
+
+.pdcertificate-valid{
+    background-color:#397313;
+    color:white;
+    font-weight:bolder;
+    font-size:110%;
+    padding:8px;
+    border-radius:5px;
+}
+
+.pdcertificate-invalid{
+    background-color:#B70004;
+    color:white;
+    font-weight:bolder;
+    font-size:110%;
+    padding:8px;
+    border-radius:5px;
+}
+
+.pdcertificate-invalid-code{
+    background-color:#B70004;
+    color:white;
+    font-weight:bolder;
+    font-size:180%;
+    padding:30px;
+    border-radius:5px;
+    text-align:center;
+    margin:40px;
+}
+
+.activity-pdcertificate-status {
+    margin-top:5px !important;
+    padding:4px;
+    background-color:#c0c0c0;
+    border-radius:5px;
+}
+
+.activity-pdcertificate.inline-left {
+    float:left;
+    padding:0px 10px;
+}
+
+.pdcertificate-output {
+    font-size:1.3em;
+}
+
+.activity-pdcertificate-dependancies {
+    display:table-cell;
+}
+
+.pdcertificate-follower-image {
+    margin-right:10px;
+    width:35px;
+    height:20px;
+    vertical-align: bottom;
+    margin-top:5px;
+}
