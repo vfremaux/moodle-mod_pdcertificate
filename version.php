@@ -25,9 +25,9 @@
  */
 
 $module->version   = 2016061502; // The current module version (Date: YYYYMMDDXX)
-$module->requires  = 2010112400; // Requires this Moodle version
+$module->requires  = 2014110400; // Requires this Moodle version
 $module->cron      = 0; // Period for cron to check this module (secs)
 $module->component = 'mod_pdcertificate';
 
 $module->maturity  = MATURITY_STABLE;
-$module->release   = "2.7.0 (2016061501)"; // User-friendly version number
+$module->release   = "2.8.0 (2016061501)"; // User-friendly version number
