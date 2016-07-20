@@ -212,6 +212,7 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
         $CACHE[$pdcertificate->id][$userid] = false;
 
         // Course time check.
+        /*
         if (($pdcertificate->requiredtime > 0) && !has_capability('mod/pdcertificate:manage', $context, $userid)) {
             if (pdcertificate_get_course_time($course->id) < ($pdcertificate->requiredtime * 60)) {
                 $a = new stdClass;
@@ -220,6 +221,7 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
                 return $CACHE[$pdcertificate->id][$userid];
             }
         }
+        */
 
         if ($pdcertificate->lockoncoursecompletion && !has_capability('mod/pdcertificate:manage', $context, $userid)) {
             $completioninfo = new completion_info($course);
