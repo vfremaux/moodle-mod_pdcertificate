@@ -99,6 +99,5 @@ pdcertificate_print_textbox($pdf, $custw, $custx, $custy, 'L', $printconfig->fon
 pdcertificate_print_textbox($pdf, $footerw, $footerx, $footery, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $footertext);
 
 if (!empty($printconfig->printqrcode)) {
-    $code = pdcertificate_get_code($pdcertificate, $certrecord);
-    pdcertificate_print_qrcode($pdf, $code, $qrcx, $qrcy);
+    pdcertificate_print_qrcode($pdf, $pdcertificate->code, $qrcx, $qrcy);
 }
