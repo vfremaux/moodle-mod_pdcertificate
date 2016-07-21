@@ -20,20 +20,22 @@ require_once($CFG->dirroot.'/availability/classes/info_module.php');
  * get all groupspecifichtml instances in the current course and get it back
  * as a list for select options.
  */
-function pdcertificate_get_groupspecific_block_instances() {
+function pdcertificate_get_groupspecific_block_instances(&$blockoptions) {
     global $COURSE, $DB;
 
     $parentcontext = context_course::instance($COURSE->id);
 
     $blockoptions = array();
+    $hasoptions = false;
     if (!$gsis = $DB->get_records_select('block_instances', " blockname = 'groupspecifichtml' AND parentcontextid = ? ", array($COURSE->id, $parentcontext->id))) {
         foreach($gsis as $gsi) {
             $blockinstance = block_instance('groupspecifichtml', $gsi);
             $blockoptions["{$gsi->id}"] = $blockinstance->config->title;
+            $hasoptions = true;
         }
     }
 
-    return $blockoptions;
+    return $hasoptions;
 }
 
 /**
@@ -56,7 +58,7 @@ function pdcertificate_get_groupspecific_content(&$pdcertificate){
 
 /**
  * Get linkable courses for mod_form.
- * A linkable cours is a course that is : 
+ * A linkable cours is a course that is :
  * - not the current course
  * // - not a metacourse
  * - not linked to the current course through a linking loop, everything we are linked to cannot be candidate
@@ -92,10 +94,10 @@ function pdcertificate_get_linkable_courses() {
 
     $discardedcourselist = implode("','", $discardedcourseids);
     $availablecourses = $DB->get_records_select_menu('course', " id NOT IN ('$discardedcourselist') AND visible = 1  ", array(), 'fullname', 'id, fullname');    
-    
+
     // TODO check real accessibility of the course for real students (if category is hidden ?)
     $availablecourses[0] = get_string('none', 'pdcertificate');
-    
+
     asort($availablecourses);
     return $availablecourses;
 }
@@ -106,11 +108,11 @@ function pdcertificate_get_linkable_courses() {
 */
 function pdcertificate_get_linked_courses($certid) {
     global $DB;
-    
-    if (!$certid){
+
+    if (!$certid) {
         return array();
     }
-    
+
     if (is_numeric($certid)) {
         return $DB->get_records('pdcertificate_linked_courses', array('pdcertificateid' => $certid), 'id', 'courseid, id, pdcertificateid, mandatory, roletobegiven');
     } else {
@@ -124,7 +126,9 @@ function pdcertificate_get_linked_courses($certid) {
 function pdcertificate_print_linked_courses($courses) {
     $str = '';
 
-    if (empty($courses)) return $str;
+    if (empty($courses)) {
+        return $str;
+    }
 
     $coursestr = get_string('course');
     $mandatorystr = get_string('mandatory', 'pdcertificate');
@@ -144,9 +148,9 @@ function pdcertificate_print_linked_courses($courses) {
 * get the possible contexts a certification mentor is allowed to operate
 *
 */
-function pdcertificate_get_possible_contexts(){
+function pdcertificate_get_possible_contexts() {
     global $USER, $COURSE;
-    
+
     $contexts[CONTEXT_COURSE] = get_string('thiscourse', 'pdcertificate');
     if (has_capability('moodle/category:manage', context_coursecat::instance($COURSE->category))){
         $contexts[CONTEXT_COURSECAT] = get_string('thiscategory', 'pdcertificate');
@@ -157,13 +161,13 @@ function pdcertificate_get_possible_contexts(){
     if (has_capability('moodle/site:config', context_system::instance())){
         $contexts[CONTEXT_SYSTEM] = get_string('system', 'pdcertificate');
     }
-    
+
     return $contexts;
 }
 
 function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, &$total, &$certifiableusers) {
     global $DB;
-    
+
     $context = context_module::instance($cm->id);
 
     $state = new StdClass;
@@ -178,7 +182,7 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
         $state->totalcount = count($total);
         $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email', 'lastname,firstname', $page * $pagesize, $pagesize, '', '', false);
     }
-    
+
     // This may be quite costfull on large courses. Not for MOOCS !!
     foreach ($total as $u) {
         if ($DB->record_exists('pdcertificate_issues', array('userid' => $u->id, 'pdcertificateid' => $pdcertificate->id))) {
@@ -365,8 +369,6 @@ function pdcertificate_get_issues($pdcertificateid, $sort="ci.timecreated ASC", 
         $conditionsparams += $params;
     }
 
-
-
     $restricttogroup = false;
     if ($groupmode) {
         $currentgroup = groups_get_activity_group($cm);
@@ -457,52 +459,6 @@ function pdcertificate_get_attempts($pdcertificateid) {
     }
 
     return false;
-}
-
-/**
- * Prints a table of previously issued pdcertificates--used for reissue.
- *
- * @param stdClass $course
- * @param stdClass $pdcertificate
- * @param stdClass $attempts
- * @return string the attempt table
- */
-function pdcertificate_print_attempts($course, $pdcertificate, $attempts) {
-    global $OUTPUT, $DB;
-
-    echo $OUTPUT->heading(get_string('summaryofattempts', 'pdcertificate'));
-
-    $printconfig = unserialize(@$pdcertificate->printconfig);
-
-    // Prepare table header
-    $table = new html_table();
-    $table->class = 'generaltable';
-    $table->head = array(get_string('issued', 'pdcertificate'));
-    $table->align = array('left');
-    $table->attributes = array("style" => "width:20%; margin:auto");
-    $gradecolumn = @$printconfig->printgrade;
-    if ($gradecolumn) {
-        $table->head[] = get_string('grade');
-        $table->align[] = 'center';
-        $table->size[] = '';
-    }
-    // One row for each attempt
-    foreach ($attempts as $attempt) {
-        $row = array();
-
-        // prepare strings for time taken and date completed
-        $datecompleted = userdate($attempt->timecreated);
-        $row[] = $datecompleted;
-
-        if ($gradecolumn) {
-            $attemptgrade = pdcertificate_get_grade($pdcertificate, $course);
-            $row[] = $attemptgrade;
-        }
-
-        $table->data[$attempt->id] = $row;
-    }
-
-    echo html_writer::table($table);
 }
 
 /**

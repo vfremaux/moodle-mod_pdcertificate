@@ -76,6 +76,8 @@ $PAGE->set_heading(format_string($course->fullname));
 
 // Set the context
 $context = context_module::instance($cm->id);
+$renderer = $PAGE->get_renderer('mod_pdcertificate');
+
 
 if (($edit != -1) and $PAGE->user_allowed_editing()) {
      $USER->editing = $edit;
@@ -120,20 +122,26 @@ make_cache_directory('tcpdf');
 $user = $USER; // see for self
 require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
 
-if (empty($action)) { // Not displaying PDF
+if (empty($action)) {
+    // Not distributing PDF.
+
     echo $OUTPUT->header();
 
     // Find out current groups mode.
-    groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id)));
-    $currentgroup = groups_get_activity_group($cm);
-    $groupmode = groups_get_activity_groupmode($cm);
+    if ($course->groupmode) {
+        groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id)));
+        $currentgroup = groups_get_activity_group($cm);
+        $groupmode = groups_get_activity_groupmode($cm);
+    }
 
     if (!empty($pdcertificate->intro)) {
         echo $OUTPUT->box(format_module_intro('pdcertificate', $pdcertificate, $cm->id), 'generalbox', 'intro');
     }
 
-    if ($attempts = pdcertificate_get_attempts($pdcertificate->id)) {
-        echo pdcertificate_print_attempts($course, $pdcertificate, $attempts);
+    if (has_capability('mod/pdcertificate:getown', $context, $USER->id, false)) {
+        if ($attempts = pdcertificate_get_attempts($pdcertificate->id)) {
+            echo $renderer->attempts($course, $pdcertificate, $attempts);
+        }
     }
 
     if ($pdcertificate->delivery == 0) {
@@ -144,23 +152,28 @@ if (empty($action)) { // Not displaying PDF
         $str = get_string('openemail', 'pdcertificate');
     }
 
+    /*
     echo html_writer::tag('p', $str, array('style' => 'text-align:center'));
     $linkname = get_string('getpdcertificate', 'pdcertificate');
-
     $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
     $button = new single_button($link, $linkname);
     $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
+    */
 
     $coursecontext = context_course::instance($COURSE->id);
 
-    if (has_capability('mod/pdcertificate:getown', $context, $USER, false)) {
+    if (has_capability('mod/pdcertificate:getown', $context, $USER->id, false)) {
         $linkname = get_string('getpdcertificate', 'pdcertificate');
         $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
         $button = new single_button($link, $linkname);
         $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
         echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center'));
         $confirm = true;
-    } elseif (has_capability('mod/pdcertificate:addinstance', $coursecontext)) {
+    }
+    if (has_capability('mod/pdcertificate:addinstance', $coursecontext)) {
+
+        echo $OUTPUT->heading(get_string('teacherview', 'pdcertificate'));
+
         $linkname = get_string('gettestpdcertificate', 'pdcertificate');
         $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
         $button = new single_button($link, $linkname);
@@ -168,7 +181,7 @@ if (empty($action)) { // Not displaying PDF
         echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center'));
 
         if (has_capability('mod/pdcertificate:manage', $context)) {
-            $numusers = count(pdcertificate_get_issues($pdcertificate->id, 'ci.timecreated ASC', $groupmode, $cm));
+            $numusers = count(get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id', '', '', '', $currentgroup, '', true));
             $linkname = get_string('viewpdcertificateviews', 'pdcertificate', $numusers);
             $link = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
             $button = new single_button($link, $linkname);
