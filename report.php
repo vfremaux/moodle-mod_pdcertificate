@@ -354,11 +354,11 @@ foreach ($certifiableusers as $user) {
         $check = '';
         $cert = $certs[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
-        if (has_capability('mod/pdcertificate:manage', $context)) {
+        if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
             // TODO : Move this capability to a more local cap
             $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
             $date .= ' <a href="'.$redrawurl.'">'.get_string('regenerate', 'pdcertificate').'</a>';
-            
+
             // Delete link
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));

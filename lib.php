@@ -112,12 +112,15 @@ function pdcertificate_add_instance($pdcertificate) {
     }
 
     // Saves pdcertificate images.
-    $context = context_module::instance($pdcertificate->coursemodule);
-    $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
-
-    foreach ($instancefiles as $if) {
-        $draftitemid = 0 + @$pdcertificate->$if;
-        file_save_draft_area_files($draftitemid, $context->id, 'mod_pdcertificate', $if, 0);
+    if (isset($pdcertificate->coursemodule)) {
+        // Allow not processing files when migrating.
+        $context = context_module::instance($pdcertificate->coursemodule);
+        $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
+    
+        foreach ($instancefiles as $if) {
+            $draftitemid = 0 + @$pdcertificate->$if;
+            file_save_draft_area_files($draftitemid, $context->id, 'mod_pdcertificate', $if, 0);
+        }
     }
 
     return $pdcertificate->id;

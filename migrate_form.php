@@ -14,21 +14,31 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
 /**
- * Provides some custom settings for the pdcertificate module
+ * Handles viewing a pdcertificate
  *
  * @package    mod
  * @subpackage pdcertificate
- * @copyright  Michael Avelar <michaela@moodlerooms.com>
+ * @copyright  Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die;
+require_once($CFG->dirroot.'/lib/formslib.php');
 
-require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');
+class Migrate_Form extends moodleform {
 
-$ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
-    get_string('migration', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migrate.php'), 'moodle/site:config'));
+    function definition() {
+        $mform = $this->_form;
 
-$settings->add(new admin_setting_configcheckbox('pdcertificate/defaultpropagategroups',
-    get_string('defaultpropagategroups', 'pdcertificate'), get_string('defaultpropagategroups_desc', 'pdcertificate'), ''));
+        foreach($this->_customdata['courses'] as $c) {
+            $courses[$c->id] = "[$c->shortname] $c->fullname";
+        }
+
+        $select = $mform->addElement('select', 'courses', get_string('courses'), $courses, array('size' => 20, 'style' => 'width:800px'));
+        $select->setMultiple(true);
+
+        $this->add_action_buttons(true, get_string('migrate', 'pdcertificate'));
+    }
+}
