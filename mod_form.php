@@ -228,14 +228,17 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
         $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
 
-        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), 1);
+        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
+        $mform->setDefault('printqrcode', true);
 
         // this needs groupspecifichtml block installed for providing group addressed content
         if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
-            $groupspecificoptions = pdcertificate_get_groupspecific_block_instances();
-            $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'),$groupspecificoptions);
-            $mform->setDefault('groupspecificcontent', 0);
-            $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
+            $hasoptions = pdcertificate_get_groupspecific_block_instances($groupspecificoptions);
+            if (!empty($groupspecificoptions)) {
+                $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'), $groupspecificoptions);
+                $mform->setDefault('groupspecificcontent', 0);
+                $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
+            }
         }
 
         // Design Options

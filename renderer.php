@@ -62,4 +62,75 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         $tablebutton->data[] = array($btndownloadods, $btndownloadxls, $btndownloadtxt);
         return html_writer::tag('div', html_writer::table($tablebutton), array('style' => 'margin:auto; width:50%'));
     }
+
+    /**
+     * Prints a table of previously issued pdcertificates--used for reissue.
+     *
+     * @param stdClass $course
+     * @param stdClass $pdcertificate
+     * @param stdClass $attempts
+     * @return string the attempt table
+     */
+    function attempts($course, $pdcertificate, $attempts) {
+        global $OUTPUT, $DB;
+
+        echo $OUTPUT->heading(get_string('getattempts', 'pdcertificate'));
+
+        $printconfig = unserialize(@$pdcertificate->printconfig);
+
+        // Prepare table header
+        $table = new html_table();
+        $table->class = 'generaltable';
+        $table->head = array(get_string('issued', 'pdcertificate'));
+        $table->align = array('left');
+        $table->width = '80%';
+
+        if ($pdcertificate->validitytime) {
+            $table->head[] = get_string('validuntil', 'pdcertificate');
+            $table->align[] = 'right';
+            $table->size[] = '';
+        }
+
+        $table->head[] = get_string('authority', 'pdcertificate');
+        $table->align[] = 'left';
+        $table->size[] = '';
+
+        $table->head[] = get_string('deliveredon', 'pdcertificate');
+        $table->align[] = 'right';
+        $table->size[] = '';
+
+        // One row for each attempt
+        $i = 0;
+        foreach ($attempts as $attempt) {
+            $row = array();
+
+            // prepare strings for time taken and date completed
+            $datecompleted = userdate($attempt->timecreated);
+            $row[] = $datecompleted;
+
+            if ($pdcertificate->validitytime) {
+                $validuntil = $attempt->timecreated + $pdcertificate->validitytime;
+                if ($validuntil < time()) {
+                    $table->rowclasses[$i] = 'pdcertificate-invalid';
+                }
+                $row[] = userdate($validuntil);
+            }
+
+            if ($attempt->authorityid) {
+                $certifier = $DB->get_record('user', array('id' => $attempt->authorityid));
+                $row[] = fullname($certifier);
+            } else {
+                $row[] = '';
+            }
+
+            if ($attempt->delivered) {
+                $row[] = userdate($attempt->timedelivered);
+            }
+
+            $table->data[$attempt->id] = $row;
+            $i++;
+        }
+
+        echo html_writer::table($table);
+    }
 }

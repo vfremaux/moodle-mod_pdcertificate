@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die;
 require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');
 
 $ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
-    get_string('migrate', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migration/php'), 'moodle/site:config'));
+    get_string('migration', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migrate.php'), 'moodle/site:config'));
 
 $settings->add(new admin_setting_configcheckbox('pdcertificate/defaultpropagategroups',
     get_string('defaultpropagategroups', 'pdcertificate'), get_string('defaultpropagategroups_desc', 'pdcertificate'), ''));
