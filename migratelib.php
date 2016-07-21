@@ -140,7 +140,7 @@ function pdcertificate_migrate_one_certificate($certificate, $mod) {
         UPDATE
             {logstore_standard_log}
         SET
-            component = 'mod_pdcertificate' AND
+            component = 'mod_pdcertificate',
             table = 'pdcertificate'
         WHERE
             contextid = ? AND
@@ -152,7 +152,7 @@ function pdcertificate_migrate_one_certificate($certificate, $mod) {
         UPDATE
             {logstore_standard_log}
         SET
-            component = 'mod_pdcertificate' AND
+            component = 'mod_pdcertificate',
             table = 'pdcertificate_issues'
         WHERE
             contextid = ? AND

@@ -127,6 +127,8 @@ if (empty($action)) {
 
     echo $OUTPUT->header();
 
+    $currentgroup = 0;
+
     // Find out current groups mode.
     if ($course->groupmode) {
         groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id)));
