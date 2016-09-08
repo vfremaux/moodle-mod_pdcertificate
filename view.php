@@ -127,6 +127,8 @@ if (empty($action)) {
 
     echo $OUTPUT->header();
 
+    $currentgroup = 0;
+
     // Find out current groups mode.
     if ($course->groupmode) {
         groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id)));
@@ -178,23 +180,15 @@ if (empty($action)) {
         $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
         $button = new single_button($link, $linkname);
         $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
-        echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center'));
+        echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center', 'class' => 'inline-button'));
 
         if (has_capability('mod/pdcertificate:manage', $context)) {
             $numusers = count(get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id', '', '', '', $currentgroup, '', true));
-            $linkname = get_string('viewpdcertificateviews', 'pdcertificate', $numusers);
+            $linkname = get_string('managedelivery', 'pdcertificate', $numusers);
             $link = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
             $button = new single_button($link, $linkname);
-            echo '<div style="text-align:center"><a href="'.$link.'">'.$OUTPUT->render($button).'</a></div>';
-
-            /*
-            // Not ready.
-            $linkname = get_string('editpdcertificatelayout', 'pdcertificate');
-            $link = new moodle_url('/mod/pdcertificate/formatbuilder.php', array('id' => $cm->id));
-            $button = new single_button($link, $linkname);
-            $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
-            echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center'));
-            */
+            $button->add_action(new popup_action('click', $link, 'manage'.$cm->id, array('height' => 600, 'width' => 800)));
+            echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center', 'class' => 'inline-button'));
         }
     }
 

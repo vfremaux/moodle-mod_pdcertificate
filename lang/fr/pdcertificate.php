@@ -131,6 +131,7 @@ $string['linkedcourse'] = 'Cours';
 $string['linkedcourse'] = 'Lié au cours';
 $string['lockingoptions'] = 'Conditions d\'acquisition';
 $string['lockoncoursecompletion'] = 'Sensible à l\'achèvement de cours';
+$string['managedelivery'] = 'Gérer la délivrance';
 $string['mandatoryreq'] = 'Prérequis obligatoire';
 $string['migrate'] = 'Migrer les certificats';
 $string['migration'] = 'Assistant de migration des certificats';
