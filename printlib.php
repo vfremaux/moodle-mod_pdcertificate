@@ -250,7 +250,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         $certifier = $DB->get_record('user', array('id' => $pdcertificate->certifierid));
     }
 
-    $DATEFORMATS = array('1' => 'M d , Y',
+    $DATEFORMATS = array('1' => 'M d, Y',
                          '2' => 'M d, Y',
                          '3' => 'd M Y',
                          '4' => 'M Y',
@@ -306,7 +306,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         $aggregate = use_stats_aggregate_logs($logs, 'module', 0, $course->startdate, $now);
 
         if (array_key_exists('coursetotal', $aggregate)) {
-            $replacements['{info:course_total_time}'] = block_use_stats_format_time($aggregate['coursetotal'][$course->id]->elapsed);
+            $replacements['{info:course_total_time}'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);
         } else {
             $replacements['{info:course_total_time}'] = '';
         }

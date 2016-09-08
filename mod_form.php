@@ -100,11 +100,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('setcertification', 0 + @$CFG->pdcertificate_certification_authority); // choose the default system designed
         $mform->addHelpButton('certifierid', 'certifierid', 'pdcertificate');
 
-        $roleoptions = $this->assignableroles;
-        $roleoptions['0'] = get_string('none', 'pdcertificate');
-        ksort($roleoptions);
+        $roleoptions = array('' => get_string('none', 'pdcertificate'));
+        $roleoptions = array_merge($roleoptions, $this->assignableroles);
         $mform->addElement('select', 'setcertification',get_string('setcertification', 'pdcertificate'), $roleoptions);
-        $mform->setDefault('setcertification', max(array_keys($roleoptions))); // choose the weaker role (further from admin role)
+        $mform->setDefault('setcertification', ''); // choose the weaker role (further from admin role)
         $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
 
         $contextoptions = pdcertificate_get_possible_contexts();

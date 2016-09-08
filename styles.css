@@ -63,3 +63,7 @@
     vertical-align: bottom;
     margin-top:5px;
 }
+
+.inline-button *{
+    display:inline;
+}
