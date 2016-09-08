@@ -118,6 +118,7 @@ $string['linkedcourse'] = 'Linked to course';
 $string['lockingoptions'] = 'Locking Options';
 $string['lockoncoursecompletion'] = 'Locked by course completion';
 $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT be retrievable if the current course has not be completed.';
+$string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';

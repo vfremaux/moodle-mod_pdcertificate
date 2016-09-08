@@ -67,7 +67,7 @@ $mform = new Migrate_Form($url, array('courses' => $courses));
 
 if ($data = $mform->get_data()) {
 
-    print_object($data);
+    // print_object($data);
 
     $certs = $DB->get_records_list('certificate', 'course', $data->courses);
 

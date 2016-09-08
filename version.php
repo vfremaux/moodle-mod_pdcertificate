@@ -32,3 +32,5 @@ $module->component = 'mod_pdcertificate';
 $module->maturity  = MATURITY_STABLE;
 $module->release   = "2.8.0 (2016061501)"; // User-friendly version number
 
+// Non Moodle fields
+$plugin->codeincrement = '2.8.0001';
