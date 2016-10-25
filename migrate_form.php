@@ -32,6 +32,7 @@ class Migrate_Form extends moodleform {
     function definition() {
         $mform = $this->_form;
 
+        $courses = array();
         foreach($this->_customdata['courses'] as $c) {
             $courses[$c->id] = "[$c->shortname] $c->fullname";
         }
