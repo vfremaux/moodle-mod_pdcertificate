@@ -260,7 +260,7 @@ $string['tenyears'] = "Ten years";
 
 // Help strings
 
-$string['validitytime_help'] = 'when setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
+$string['validitytime_help'] = 'When setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
 
 $string['pdcertificatetype_help'] = 'This is where you determine the layout of the certificate. The certificate type folder includes four default certificates:
 A4 Embedded prints on A4 size paper with embedded font.
