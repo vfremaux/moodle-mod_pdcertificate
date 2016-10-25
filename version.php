@@ -17,11 +17,11 @@
 /**
  * Version details.
  *
- * @package    mod
- * @subpackage pdcertificate
- * @author     Valery Fremaux <valery.fremaux@gmail.com>
- * @copyright  (C) 2016 onwards Valery Fremaux <valery.fremaux@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
+ * @package     mod_pdcertificate
+ * @category    mod
+ * @author      Valery Fremaux <valery.fremaux@gmail.com>
+ * @copyright   Valery Fremaux (http://www.mylearningfactory.com)
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
  */
 
 $plugin->version   = 2016061502; // The current module version (Date: YYYYMMDDXX)
