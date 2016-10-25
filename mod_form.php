@@ -56,7 +56,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('text', 'caption', get_string('pdcertificatecaption', 'pdcertificate'), array('size' => 128, 'maxlength' => 255));
         $mform->setType('caption', PARAM_CLEANHTML);
 
-        $this->standard_intro_elements(get_string('description', 'pdcertificate'));
+        $this->add_intro_editor(false, get_string('intro', 'pdcertificate'));
 
         // Issue options
         $mform->addElement('header', 'issueoptions', get_string('issueoptions', 'pdcertificate'));
