@@ -28,6 +28,7 @@
  */
 require('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/migratelib.php');
+require_once($CFG->dirroot.'/mod/pdcertificate/migrate_form.php');
 
 $action = optional_param('what', '', PARAM_ALPHA);
 
@@ -37,14 +38,54 @@ require_capability('moodle/site:config', $context);
 
 // Initialize $PAGE.
 
-$PAGE->set_url('/mod/pdcertificate/view.php', array('id' => $cm->id));
+$url = new moodle_url('/mod/pdcertificate/migrate.php');
+$PAGE->set_url($url);
 $PAGE->set_context($context);
-$PAGE->set_cm($cm);
-$PAGE->set_title(format_string($pdcertificate->name));
-$PAGE->set_heading(format_string($course->fullname));
+$PAGE->set_title(get_string('migration', 'pdcertificate'));
+$PAGE->set_heading(get_string('migration', 'pdcertificate'));
+
+$certificatemodule = $DB->get_record('modules', array('name' => 'certificate'));
+
+$sql = "
+    SELECT DISTINCT
+        c.id,
+        c.shortname,
+        c.fullname
+    FROM
+        {course_modules} cm,
+        {course} c
+    WHERE
+        cm.course = c.id AND
+        cm.module = ?
+    ORDER BY
+        c.shortname
+";
+
+$courses = $DB->get_records_sql($sql, array($certificatemodule->id));
+
+$mform = new Migrate_Form($url, array('courses' => $courses));
+
+if ($data = $mform->get_data()) {
+
+    // print_object($data);
+
+    $certs = $DB->get_records_list('certificate', 'course', $data->courses);
+
+    if (!empty($certs)) {
+        $report = pdcertificate_migrate_certificates($certs);
+    }
+} 
 
 echo $OUTPUT->header();
 
+echo $OUTPUT->heading(get_string('migration', 'pdcertificate'));
 
+if (isset($report)) {
+    echo '<pre>';
+    echo $report;
+    echo '</pre>';
+}
+
+$mform->display();
 
 echo $OUTPUT->footer();

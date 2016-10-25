@@ -89,6 +89,7 @@ $capabilities = array(
         )
     ),
 
+    // People who apply to certification can be certified.
     'mod/pdcertificate:apply' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

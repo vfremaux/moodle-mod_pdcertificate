@@ -33,6 +33,9 @@ $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:view'] = 'View a certificate';
 
+$string['authority'] = 'Authority';
+$string['addcourselabel'] = 'Add course';
+$string['addcoursetitle'] = 'Add course title';
 $string['antecedantcourse'] = '{$a->coursename}. Mandatory requisite: {$a->prerequisite}';
 $string['areaintro'] = 'Certificate introduction';
 $string['awarded'] = 'Awarded';
@@ -40,63 +43,54 @@ $string['awardedto'] = 'Awarded To';
 $string['back'] = 'Back';
 $string['backtocourse'] = 'Back to course';
 $string['certifiableusers'] = 'Ready to certify:<br/><b>{$a} user(s)</b>';
-$string['pdcertificate'] = 'Verification for certificate code:';
-$string['pdcertificatecaption'] = 'Certificate Caption';
-$string['pdcertificatefile'] = 'Certificate file';
-$string['pdcertificatefilenoaccess'] = 'you must have a valid account and be logged in to access the certificate document';
-$string['pdcertificatename'] = 'Certificate Name';
-$string['pdcertificateremoved'] = 'Certificate removed';
-$string['pdcertificatereport'] = 'Certificates Report';
-$string['pdcertificatesfor'] = 'Certificates for';
-$string['pdcertificateverification'] = 'Certificates Check';
-$string['pdcertificateverifiedstate'] = 'The certificate code you tested is recognized and matches the following information:';
 $string['certification'] = 'Certification';
-$string['pdcertificatelock'] = 'Certificate lock';
-$string['pdcertificatedefaultlock'] = 'Certificate locked by default';
-$string['pdcertificatetype'] = 'Certificate model';
 $string['certificationmatchednotdeliverable'] = 'You have matched the requirements for being certified, but the settings of the certificate needs it be delivered to you by an administrative person. You cannot get the pdcertificate document by yourself on this site.';
 $string['certifiedusers'] = 'Certified users:<br/><b>{$a} user(s)</b>';
-$string['certify'] = 'This is to certify that';
+$string['certifierid'] = 'Certifier';
+$string['chaining'] = 'Chaining';
 $string['clearprintborders'] = 'Clear this file area';
 $string['clearprintseal'] = 'Clear this file area';
 $string['clearprintsignature'] = 'Clear this file area';
 $string['clearprintwmark'] = 'Clear this file area';
 $string['code'] = 'Code';
 $string['completiondate'] = 'Course Completion';
+$string['completiondelivered'] = 'Check the box for waiting effective delivery of the certificate to mark the activity completed';
+$string['completiondeliveredgroup'] = 'Special';
 $string['course'] = 'For';
+$string['coursechaining'] = 'Course chaining';
+$string['coursedependencies'] = 'Course dependancies';
 $string['coursegrade'] = 'Course Grade';
 $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
-$string['headertext'] = 'Custom Header Text';
 $string['customtext'] = 'Custom Text';
-$string['footertext'] = 'Custom Footer Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
-$string['datefmt_help'] = 'Choose a date format to print the date on the certificate. Or, choose the last option to have the date printed in the format of the user\'s chosen language.';
 $string['datehelp'] = 'Date';
 $string['defaultpropagategroups'] = 'Propagate groups when chaining (default)';
 $string['defaultpropagategroups_desc'] = 'If checked, group information will be replicated in the chained course';
 $string['definitive'] = 'Valid (definitive)';
 $string['deletissuedpdcertificates'] = 'Delete issued pdcertificates';
 $string['delivery'] = 'Delivery';
+$string['deliveredon'] = 'Delivered on';
 $string['designoptions'] = 'Design Options';
 $string['destroyselection'] = 'Destroy selection ';
 $string['download'] = 'Force download';
-$string['emailpdcertificate'] = 'Email (Must also choose save!)';
+$string['editpdcertificatelayout'] = 'Edit Layout';
 $string['emailothers'] = 'Email Others';
 $string['emailothers_help'] = 'Enter the email addresses here, separated by a comma, of those who should be alerted with an email whenever students receive a certificate.';
+$string['emailpdcertificate'] = 'Email (Must also choose save!)';
 $string['emailstudenttext'] = 'Attached is your pdcertificate for {$a->course}.';
 $string['emailteachers'] = 'Email Teachers';
-$string['emailteachers_help'] = 'If enabled, then teachers are alerted with an email whenever students receive a certificate.';
 $string['entercode'] = 'Enter pdcertificate code to verify:';
 $string['errorinvalidinstance'] = 'Error : certificate instance does not exist';
 $string['errornocapabilitytodelete'] = 'You have no capability to delete certificates';
 $string['expiredon'] = 'Expired on';
 $string['followercourse'] = 'Follower course : {$a->rolename} in {$a->coursename}. This module is prerequisite : {$a->prerequisite}';
 $string['followers'] = 'Following course(s) in learning path';
+$string['footertext'] = 'Custom Footer Text';
+$string['freemono'] = 'Monospace';
 $string['freesans'] = 'Sans serif';
 $string['freeserif'] = 'Serif';
-$string['freemono'] = 'Monospace';
 $string['generate'] = 'Generate';
 $string['generateall'] = 'Generate all possible certificates ({$a})';
 $string['generateselection'] = 'Generate selection ';
@@ -109,7 +103,7 @@ $string['gradeletter'] = 'Letter Grade';
 $string['gradepercent'] = 'Percentage Grade';
 $string['gradepoints'] = 'Points Grade';
 $string['groupspecificcontent'] = 'Group specific information';
-$string['groupspecificcontent_help'] = '';
+$string['headertext'] = 'Custom Header Text';
 $string['imagetype'] = 'Image Type';
 $string['incompletemessage'] = 'In order to download your certificate, you must first complete all required '.'activities. Please return to the course to complete your coursework.';
 $string['intro'] = 'Introduction';
@@ -120,20 +114,26 @@ $string['issueoptions'] = 'Issue Options';
 $string['landscape'] = 'Landscape';
 $string['lastviewed'] = 'You last received this certificate on:';
 $string['letter'] = 'Letter';
+$string['linkedcourse'] = 'Linked to course';
 $string['lockingoptions'] = 'Locking Options';
 $string['lockoncoursecompletion'] = 'Locked by course completion';
 $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT be retrievable if the current course has not be completed.';
+$string['managedelivery'] = 'Manage certificates delivery';
+$string['mandatoryreq'] = 'Mandatory req';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
+$string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
 $string['modulenameplural'] = 'PD Certificates';
 $string['mypdcertificates'] = 'My PD Certificates';
 $string['needsmorework'] = 'This certificate needs more work';
+$string['noauthority'] = 'No authority';
 $string['nocertifiables'] = 'No one to certify';
+$string['nofileselected'] = 'Must choose a file to upload!';
+$string['nogrades'] = 'No grades available';
+$string['none'] = 'None';
 $string['nopdcertificates'] = 'There are no certificates';
 $string['nopdcertificatesissued'] = 'There are no certificates that have been issued';
 $string['nopdcertificatesreceived'] = 'has not received any course certificates.';
-$string['nofileselected'] = 'Must choose a file to upload!';
-$string['nogrades'] = 'No grades available';
 $string['notapplicable'] = 'N/A';
 $string['notfound'] = 'The certificate number could not be validated.';
 $string['notissued'] = 'Not Issued';
@@ -145,40 +145,41 @@ $string['openbrowser'] = 'Open in new window';
 $string['opendownload'] = 'Click the button below to save your certificate to your computer.';
 $string['openemail'] = 'Click the button below and your certificate will be sent to you as an email attachment.';
 $string['openwindow'] = 'Click the button below to open your certificate in a new browser window.';
-$string['outcome'] = 'Outcome';
 $string['or'] = 'Or';
+$string['outcome'] = 'Outcome';
+$string['pdcertificate'] = 'Verification for certificate code:';
+$string['pdcertificatecaption'] = 'Certificate Caption';
+$string['pdcertificatedefaultlock'] = 'Certificate locked by default';
+$string['pdcertificatefile'] = 'Certificate file';
+$string['pdcertificatefilenoaccess'] = 'you must have a valid account and be logged in to access the certificate document';
+$string['pdcertificatelock'] = 'Certificate lock';
+$string['pdcertificatename'] = 'Certificate Name';
+$string['pdcertificateremoved'] = 'Certificate removed';
+$string['pdcertificatereport'] = 'Certificates Report';
+$string['pdcertificatesfor'] = 'Certificates for';
+$string['pdcertificatetype'] = 'Certificate model';
+$string['pdcertificateverification'] = 'Certificates Check';
+$string['pdcertificateverifiedstate'] = 'The certificate code you tested is recognized and matches the following information:';
 $string['pluginadministration'] = 'Certificate administration';
 $string['pluginname'] = 'PD Certificate';
 $string['portrait'] = 'Portrait';
 $string['prerequisites'] = 'Prerequisites';
 $string['previewpdcertificate'] = 'Preview the certificate';
-$string['printoptions'] = 'Print Options';
+$string['printborders'] = 'Borders or background';
 $string['printdate'] = 'Print Date';
-$string['printdate_help'] = 'This is the date that will be printed, if a print date is selected. If the course completion date is selected but the student has not completed the course, the date received will be printed. You can also choose to print the date based on when an activity was graded. If a certificate is issued before that activity is graded, the date received will be printed.';
 $string['printerfriendly'] = 'Printer-friendly page';
+$string['printfontfamily'] = 'Font family';
+$string['printfontsize'] = 'Font base size';
 $string['printgrade'] = 'Print Grade';
-$string['printgrade_help'] = 'You can choose any available course grade items from the gradebook to print the user\'s grade received for that item on the certificate.  The grade items are listed in the order in which they appear in the gradebook. Choose the format of the grade below.';
 $string['printhours'] = 'Credit Hours';
-$string['printhours_help'] = 'Enter here the number of credit hours to be printed on the certificate. rhis wil need using the {info:certificate_credit_hours} tag in the certificate template text.';
-/*
-$string['printcode'] = 'Print Code';
-$string['printcode_help'] = 'A unique 10-digit code of random letters and numbers can be printed on the certificate. This number can then be verified by comparing it to the code number displayed in the certificates report.';
-*/
-$string['printqrcode'] = 'Print QR Code';
-$string['printqrcode_help'] = 'A square QR scannable code can be printed on the certificate. This code contains an URL that can be used to check if the certificate is valid.';
+$string['printoptions'] = 'Print Options';
 $string['printoutcome'] = 'Outcome to print';
 $string['printoutcome_help'] = 'You can choose any course outcome to print the name of the outcome and the user\'s received outcome on the certificate.  An example might be: Assignment Outcome: Proficient. This will need using the {info:certificate_outcome} tag in the certificate template text.';
-$string['printborders'] = 'Borders or background';
-$string['printfontsize'] = 'Font base size';
-$string['printfontfamily'] = 'Font family';
+$string['printqrcode'] = 'Print QR Code';
 $string['printseal'] = 'Seal or Logo Image';
-$string['printseal_help'] = 'This option allows you to select a seal or logo to print on the certificate. You can offset the seal from it\'s default location.';
 $string['printsignature'] = 'Signature Image';
-$string['printsignature_help'] = 'This option allows you to print a signature image. You can print a graphic representation of a signature, or print a line for a written signature. You can offset the signature position from it\'s default location.';
 $string['printteacher'] = 'Print Teacher Name(s)';
-$string['printteacher_help'] = 'For printing the teacher name on the certificate, set the role of teacher at the module level.  Do this if, for example, you have more than one teacher for the course or you have more than one pdcertificate in the course and you want to print different teacher names on each pdcertificate.  Click to edit the pdcertificate, then click on the Locally assigned roles tab.  Then assign the role of Teacher (editing teacher) to the pdcertificate (they do not HAVE to be a teacher in the course--you can assign that role to anyone).  Those names will be printed on the certificate for teacher.';
 $string['printwmark'] = 'Watermark Image';
-$string['printwmark_help'] = 'A watermark file can be placed in the background of the certificate. A watermark is a faded graphic. Fading is performed internally. A watermark could be a logo, seal, crest, wording, or whatever you want to use as a graphic background.';
 $string['propagategroups'] = 'Propagate groups when chaining';
 $string['receivedcerts'] = 'Received certificates';
 $string['receiveddate'] = 'Date Received';
@@ -187,25 +188,33 @@ $string['releaseselection'] = 'Release selection ';
 $string['removecert'] = 'Issued certificates removed';
 $string['report'] = 'Report';
 $string['reportcert'] = 'Report Certificates';
-$string['reportcert_help'] = 'If you choose yes here, then this certificate\'s date received, code number, and the course name will be shown on the user certificate reports.  If you choose to print a grade on this certificate, then that grade will also be shown on the certificate report.';
+$string['requiredcoursecompletion'] = 'This certificate requires you have completed the course to be delivered.';
 $string['requiredtimenotmet'] = 'You must spend at least a minimum of {$a->requiredtime} minutes in the course before you can access this certificate';
 $string['requiredtimenotvalid'] = 'The required time must be a valid number greater than 0';
-$string['requiredcoursecompletion'] = 'This certificate requires you have completed the course to be delivered.';
 $string['reviewpdcertificate'] = 'Review your certificate';
+$string['rolereq'] = 'Role req';
 $string['savecert'] = 'Save Certificates';
-$string['editpdcertificatelayout'] = 'Edit Layout';
-$string['savelayout'] = 'Save Layout';
 $string['savecert_help'] = 'If you choose this option, then a copy of each user\'s certificate pdf file is saved in the course files moddata folder for that certificate. A link to each user\'s saved pdcertificate will be displayed in the certificate report.';
+$string['savelayout'] = 'Save Layout';
 $string['seal'] = 'Seal';
 $string['sealoffset'] = 'Seal offset';
+$string['sealoffset'] = 'Seal offset';
+$string['setcertification'] = 'Role on certification';
+$string['setcertificationcontext'] = 'Context';
 $string['sigline'] = 'line';
 $string['signature'] = 'Signature';
+$string['signatureoffset'] = 'Signature offset';
+$string['sitecourse'] = 'Site course';
 $string['specialgroupoptions'] = 'Special group related options';
 $string['state'] = 'Status';
 $string['statement'] = 'has completed the course';
 $string['summary'] = 'Course summary';
-$string['summaryofattempts'] = 'Summary of Previously Received Certificates';
+$string['getattempts'] = 'Get your Certificates';
+$string['system'] = 'System level';
+$string['teacherview'] = 'Teacher tools';
 $string['textoptions'] = 'Text Options';
+$string['thiscategory'] = 'This category';
+$string['thiscourse'] = 'This course';
 $string['title'] = 'CERTIFICATE of ACHIEVEMENT';
 $string['to'] = 'Awarded to';
 $string['totalcount'] = 'Total concerned users';
@@ -214,6 +223,9 @@ $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
 $string['userdateformat'] = 'User\'s Language Date Format';
+$string['usersdelivered'] = 'Users delivered : {$a}';
+$string['usersgenerated'] = 'Users generated not yet delivered : {$a}';
+$string['userstocertify'] = 'Users yet to complete certification : {$a}';
 $string['validate'] = 'Verify';
 $string['validity'] = 'Validity period';
 $string['validitytime'] = 'Validity period';
@@ -222,19 +234,17 @@ $string['verifypdcertificate'] = 'Verify Certificate';
 $string['view_pageitem_directlink_to_follower'] = 'View with direct links to follower courses';
 $string['viewall'] = 'View all';
 $string['viewalladvice'] = 'Care that big groups may ask a big load to the moodle server';
-$string['viewpdcertificateviews'] = 'View {$a} issued certificates';
 $string['viewed'] = 'You received this certificate on:';
 $string['viewless'] = 'View less';
+$string['viewpdcertificateviews'] = 'View {$a} issued certificates';
 $string['viewtranscript'] = 'View Certificates';
 $string['watermark'] = 'Watermark';
+$string['watermarkoffset'] = 'Watermark offset';
 $string['withsel'] = 'With selected: ';
 $string['yetcertifiable'] = 'Ready to issue';
 $string['yetcertified'] = 'Issued';
 $string['youcango'] = 'You can continue to this course';
 $string['youcantgo'] = 'You do not have enough achievements to continue in this course';
-$string['watermarkoffset'] = 'Watermark offset';
-$string['sealoffset'] = 'Seal offset';
-$string['signatureoffset'] = 'Signature offset';
 
 $string['unlimited'] = "Unlimited";
 $string['oneday'] = "One day";
@@ -250,7 +260,7 @@ $string['tenyears'] = "Ten years";
 
 // Help strings
 
-$string['validitytime_help'] = 'when setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
+$string['validitytime_help'] = 'When setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
 
 $string['pdcertificatetype_help'] = 'This is where you determine the layout of the certificate. The certificate type folder includes four default certificates:
 A4 Embedded prints on A4 size paper with embedded font.
@@ -262,7 +272,31 @@ The non-embedded types use the Helvetica and Times fonts.  If you feel your user
 
 New type folders can be added to the pdcertificate/type folder. The name of the folder and any new language strings for the new type must be added to the certificate language file.';
 
-$string['coursetimereq_help'] = 'Enter here the minimum amount of time, in minutes, that a student must be logged into the course before they will be able to receive the certificate.';
+$string['printdate_help'] = 'This is the date that will be printed, if a print date is selected. If the course completion date is selected but the student has not completed the course, the date received will be printed. You can also choose to print the date based on when an activity was graded. If a certificate is issued before that activity is graded, the date received will be printed.';
+
+$string['printgrade_help'] = 'You can choose any available course grade items from the gradebook to print the user\'s grade received for that item on the certificate.  The grade items are listed in the order in which they appear in the gradebook. Choose the format of the grade below.';
+
+$string['printsignature_help'] = 'This option allows you to print a signature image. You can print a graphic representation of a signature, or print a line for a written signature. You can offset the signature position from it\'s default location.';
+
+$string['printhours_help'] = 'Enter here the number of credit hours to be printed on the certificate. rhis wil need using the {info:certificate_credit_hours} tag in the certificate template text.';
+
+$string['printqrcode_help'] = 'A square QR scannable code can be printed on the certificate. This code contains an URL that can be used to check if the certificate is valid.';
+
+$string['printseal_help'] = 'This option allows you to select a seal or logo to print on the certificate. You can offset the seal from it\'s default location.';
+
+$string['printteacher_help'] = 'For printing the teacher name on the certificate, set the role of teacher at the module level.  Do this if, for example, you have more than one teacher for the course or you have more than one pdcertificate in the course and you want to print different teacher names on each pdcertificate.  Click to edit the pdcertificate, then click on the Locally assigned roles tab.  Then assign the role of Teacher (editing teacher) to the pdcertificate (they do not HAVE to be a teacher in the course--you can assign that role to anyone).  Those names will be printed on the certificate for teacher.';
+
+$string['printwmark_help'] = 'A watermark file can be placed in the background of the certificate. A watermark is a faded graphic. Fading is performed internally. A watermark could be a logo, seal, crest, wording, or whatever you want to use as a graphic background.';
+
+$string['reportcert_help'] = 'If you choose yes here, then this certificate\'s date received, code number, and the course name will be shown on the user certificate reports.  If you choose to print a grade on this certificate, then that grade will also be shown on the certificate report.';
+
+$string['setcertificationcontext_help'] = 'The context where the certified role will be given';
+
+$string['certifierid_help'] = 'Defining a certfifier account will print the certification authority identity if the certificate template allows it';
+
+$string['setcertification_help'] = 'The role that will be assigned to the user when certified. Note that this is NOT en enrollment. To enroll a user after certification, use course chaining feature.';
+
+$string['chaining_help'] = 'Chaining courses allow people getting the certificate to be assigned a new role in a new course';
 
 $string['headertext_help'] = '';
 $string['customtext_help'] = '';
@@ -302,6 +336,12 @@ $string['propagategroups_help'] = 'If checked, group information will be replica
 
 $string['pdcertificatelock_help'] = 'You may ask the certificates are administratively locked for delivery, until some external condition is available, such as an online paiment.';
 
+$string['datefmt_help'] = 'Choose a date format to print the date on the certificate. Or, choose the last option to have the date printed in the format of the user\'s chosen language.';
+
+$string['emailteachers_help'] = 'If enabled, then teachers are alerted with an email whenever students receive a certificate.';
+
+$string['groupspecificcontent_help'] = 'If some Group Specific Html blocks are present in the course, you may retrieve the group specific content from one of those blocks to print on the certificate.';
+
 $string['defaultcertificateheader_tpl'] = '';
 
 $string['defaultcertificatebody_tpl'] = '
@@ -320,34 +360,3 @@ $string['defaultcertificatebody_tpl'] = '
 ';
 
 $string['defaultcertificatefooter_tpl'] = '<center>{info:site_fullname}</center>';
-
-// Extensions
-$string['none'] = 'None';
-$string['noauthority'] = 'No authority';
-$string['coursedependencies'] = 'Course dependancies';
-$string['linkedcourse'] = 'Linked to course';
-$string['mandatoryreq'] = 'Mandatory req';
-$string['rolereq'] = 'Role req';
-$string['addcourselabel'] = 'Add course';
-$string['coursechaining'] = 'Course chaining';
-$string['setcertificationcontext'] = 'Context';
-$string['setcertificationcontext_help'] = 'The context where the certified role will be given';
-$string['certifierid'] = 'Certifier';
-$string['certifierid_help'] = 'Defining a certfifier account will print the certification authority identity if the certificate template allows it';
-$string['setcertification'] = 'Role on certification';
-$string['setcertification_help'] = 'The role that will be assigned to the user when certified. Note that this is NOT en enrollment. To enroll a user after certification, use course chaining feature.';
-$string['thiscourse'] = 'This course';
-$string['thiscategory'] = 'This category';
-$string['sitecourse'] = 'Site course';
-$string['system'] = 'System level';
-$string['chaining'] = 'Chaining';
-$string['chaining_help'] = 'Chaining courses allow people getting the certificate to be assigned a new role in a new course';
-$string['addcoursetitle'] = 'Add course title';
-
-$string['completiondeliveredgroup'] = 'Special';
-$string['completiondelivered'] = 'Check the box for waiting effective delivery of the certificate to mark the activity completed';
-
-$string['userstocertify'] = 'Users yet to complete certification : {$a}';
-$string['usersgenerated'] = 'Users generated not yet delivered : {$a}';
-$string['usersdelivered'] = 'Users delivered : {$a}';
-

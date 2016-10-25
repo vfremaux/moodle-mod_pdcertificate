@@ -100,11 +100,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('setcertification', 0 + @$CFG->pdcertificate_certification_authority); // choose the default system designed
         $mform->addHelpButton('certifierid', 'certifierid', 'pdcertificate');
 
-        $roleoptions = $this->assignableroles;
-        $roleoptions['0'] = get_string('none', 'pdcertificate');
-        ksort($roleoptions);
+        $roleoptions = array('' => get_string('none', 'pdcertificate'));
+        $roleoptions = array_merge($roleoptions, $this->assignableroles);
         $mform->addElement('select', 'setcertification',get_string('setcertification', 'pdcertificate'), $roleoptions);
-        $mform->setDefault('setcertification', max(array_keys($roleoptions))); // choose the weaker role (further from admin role)
+        $mform->setDefault('setcertification', ''); // choose the weaker role (further from admin role)
         $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
 
         $contextoptions = pdcertificate_get_possible_contexts();
@@ -228,14 +227,17 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
         $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
 
-        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), 1);
+        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
+        $mform->setDefault('printqrcode', true);
 
         // this needs groupspecifichtml block installed for providing group addressed content
         if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
-            $groupspecificoptions = pdcertificate_get_groupspecific_block_instances();
-            $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'),$groupspecificoptions);
-            $mform->setDefault('groupspecificcontent', 0);
-            $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
+            $hasoptions = pdcertificate_get_groupspecific_block_instances($groupspecificoptions);
+            if (!empty($groupspecificoptions)) {
+                $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'), $groupspecificoptions);
+                $mform->setDefault('groupspecificcontent', 0);
+                $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
+            }
         }
 
         // Design Options
