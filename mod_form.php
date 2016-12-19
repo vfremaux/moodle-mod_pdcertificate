@@ -90,7 +90,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $authorities = array();
         $authorities[0] = get_string('noauthority', 'pdcertificate');
-        if ($authorities_candidates = get_users_by_capability(context_course::instance($COURSE->id), 'mod/pdcertificate:isauthority', 'u.id,'.get_all_user_name_fields(true, 'u'), 'lastname,firstname')){
+        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
+        $context = context_course::instance($COURSE->id);
+        if ($authorities_candidates = get_users_by_capability($context, 'mod/pdcertificate:isauthority', $fields, 'lastname,firstname')){
             foreach ($authorities_candidates as $ac) {
                 $authorities[$ac->id] = fullname($ac);
             }
@@ -119,7 +121,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
 //-------------------------------------------------------------------------------
         $mform->addElement('header', 'lockingoptions', get_string('lockingoptions', 'pdcertificate'));
-        
+
         $this->restrictoptions = array();
         $this->restrictoptions[0]  = get_string('no');
         for ($i = 100; $i > 0; $i--) {
@@ -172,7 +174,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
         $mform->registerNoSubmitButton('addcourse');
 
-        // Text Options
+        // Text Options.
         $mform->addElement('header', 'textoptions', get_string('printoptions', 'pdcertificate'));
 
         $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
