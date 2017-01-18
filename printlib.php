@@ -1,4 +1,18 @@
 <?php
+// This file is part of the Certificate module for Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
  * Sends text to output given the following params.
@@ -12,7 +26,7 @@
  * @param int $size font size in points
  * @param string $text the text to print
  */
-function pdcertificate_print_text($pdf, $x, $y, $align, $font='freeserif', $style, $size=10, $text) {
+function pdcertificate_print_text($pdf, $x, $y, $align, $font = 'freeserif', $style, $size = 10, $text) {
     $pdf->setFont($font, $style, $size);
     $pdf->SetXY($x, $y);
     $pdf->writeHTMLCell(0, 0, '', '', $text, 0, 0, 0, true, $align);
@@ -30,7 +44,7 @@ function pdcertificate_print_text($pdf, $x, $y, $align, $font='freeserif', $styl
  * @param int $size font size in points
  * @param string $text the text to print
  */
-function pdcertificate_print_textbox($pdf, $w, $x, $y, $align, $font='freeserif', $style, $size=10, $text) {
+function pdcertificate_print_textbox($pdf, $w, $x, $y, $align, $font = 'freeserif', $style, $size = 10, $text) {
     $pdf->setFont($font, $style, $size);
     $pdf->SetXY($x, $y);
     $pdf->writeHTMLCell($w, 0, '', '', $text, 0, 0, 0, true, $align);
@@ -48,26 +62,27 @@ function pdcertificate_draw_frame($pdf, $pdcertificate) {
 
     if (@$printconfig->bordercolor > 0) {
         if ($printconfig->bordercolor == 1) {
-            $color = array(0, 0, 0); // black
+            $color = array(0, 0, 0); // Black.
         }
         if ($printconfig->bordercolor == 2) {
-            $color = array(153, 102, 51); // brown
+            $color = array(153, 102, 51); // Brown.
         }
         if ($printconfig->bordercolor == 3) {
-            $color = array(0, 51, 204); // blue
+            $color = array(0, 51, 204); // Blue.
         }
         if ($printconfig->bordercolor == 4) {
-            $color = array(0, 180, 0); // green
+            $color = array(0, 180, 0); // Green.
         }
+
         switch ($pdcertificate->orientation) {
             case 'L':
-                // create outer line border in selected color
+                // Create outer line border in selected color.
                 $pdf->SetLineStyle(array('width' => 1.5, 'color' => $color));
                 $pdf->Rect(10, 10, 277, 190);
-                // create middle line border in selected color
+                // Create middle line border in selected color.
                 $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
                 $pdf->Rect(13, 13, 271, 184);
-                // create inner line border in selected color
+                // Create inner line border in selected color.
                 $pdf->SetLineStyle(array('width' => 1.0, 'color' => $color));
                 $pdf->Rect(16, 16, 265, 178);
             break;
@@ -93,42 +108,42 @@ function pdcertificate_draw_frame($pdf, $pdcertificate) {
  * @param stdClass $pdcertificate
  */
 function pdcertificate_draw_frame_letter($pdf, $pdcertificate) {
-    
+
     $printconfig = unserialize($pdcertificate->printconfig);
-    
+
     if (@$printconfig->bordercolor > 0) {
         if ($printconfig->bordercolor == 1) {
-            $color = array(0, 0, 0); //black
+            $color = array(0, 0, 0); // Black.
         }
         if ($printconfig->bordercolor == 2) {
-            $color = array(153, 102, 51); //brown
+            $color = array(153, 102, 51); // Brown.
         }
         if ($printconfig->bordercolor == 3) {
-            $color = array(0, 51, 204); //blue
+            $color = array(0, 51, 204); // Blue.
         }
         if ($printconfig->bordercolor == 4) {
-            $color = array(0, 180, 0); //green
+            $color = array(0, 180, 0); // Green.
         }
         switch ($pdcertificate->orientation) {
             case 'L':
-                // create outer line border in selected color
+                // Create outer line border in selected color.
                 $pdf->SetLineStyle(array('width' => 4.25, 'color' => $color));
                 $pdf->Rect(28, 28, 736, 556);
-                // create middle line border in selected color
+                // Create middle line border in selected color.
                 $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
                 $pdf->Rect(37, 37, 718, 538);
-                // create inner line border in selected color
+                // Create inner line border in selected color.
                 $pdf->SetLineStyle(array('width' => 2.8, 'color' => $color));
                 $pdf->Rect(46, 46, 700, 520);
                 break;
             case 'P':
-                // create outer line border in selected color
+                // Create outer line border in selected color.
                 $pdf->SetLineStyle(array('width' => 1.5, 'color' => $color));
                 $pdf->Rect(25, 20, 561, 751);
-                // create middle line border in selected color
+                // Create middle line border in selected color.
                 $pdf->SetLineStyle(array('width' => 0.2, 'color' => $color));
                 $pdf->Rect(40, 35, 531, 721);
-                // create inner line border in selected color
+                // Create inner line border in selected color.
                 $pdf->SetLineStyle(array('width' => 1.0, 'color' => $color));
                 $pdf->Rect(51, 46, 509, 699);
             break;
@@ -153,8 +168,8 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
     $cm = get_coursemodule_from_instance('pdcertificate', $pdcertificate->id);
     $context = context_module::instance($cm->id);
 
-    switch($type) {
-        case PDCERT_IMAGE_BORDER :
+    switch ($type) {
+        case PDCERT_IMAGE_BORDER:
             $attr = 'borderstyle';
             $defaultpath = "$CFG->dirroot/mod/pdcertificate/pix/$type/defaultborder.jpg";
 
@@ -165,9 +180,9 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             } else {
                 return;
             }
-
             break;
-        case PDCERT_IMAGE_SEAL :
+
+        case PDCERT_IMAGE_SEAL:
             $attr = 'printseal';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printseal', 0, 'itemid, filepath, filename', false);
@@ -177,9 +192,9 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             } else {
                 return;
             }
-
             break;
-        case PDCERT_IMAGE_SIGNATURE :
+
+        case PDCERT_IMAGE_SIGNATURE:
             $attr = 'printsignature';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printsignature', 0, 'itemid, filepath, filename', false);
@@ -189,9 +204,9 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             } else {
                 return;
             }
-
             break;
-        case PDCERT_IMAGE_WATERMARK :
+
+        case PDCERT_IMAGE_WATERMARK:
             $attr = 'printwmark';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printwmark', 0, 'itemid, filepath, filename', false);
@@ -201,7 +216,6 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             } else {
                 return;
             }
-
             break;
     }
 
@@ -223,9 +237,9 @@ function pdcertificate_print_qrcode($pdf, $code, $x, $y) {
             'vpadding' => 'auto',
             'hpadding' => 'auto',
             'fgcolor' => array(0, 0, 0),
-            'bgcolor' => array(255,255,255), //false
-            'module_width' => 1, // width of a single module in points
-            'module_height' => 1 // height of a single module in points
+            'bgcolor' => array(255, 255, 255), // False.
+            'module_width' => 1, // Width of a single module in points.
+            'module_height' => 1 // Height of a single module in points.
     );
 
     $codeurl = new moodle_url('/mod/pdcertificate/verify.php', array('code' => $code));
@@ -240,7 +254,8 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     $cm = get_coursemodule_from_instance('pdcertificate', $pdcertificate->id);
 
     $context = context_module::instance($cm->id);
-    if ($teachers = get_users_by_capability($context, 'mod/pdcertificate:printteacher', 'u.id,'.get_all_user_name_fields(true, 'u'), $sort = 'u.lastname ASC', '', '', '', '', false)) {
+    $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
+    if ($teachers = get_users_by_capability($context, 'mod/pdcertificate:printteacher', $fields, $sort = 'u.lastname ASC', '', '', '', '', false)) {
         foreach ($teachers as $teacher) {
             $teacherfullnames[] = fullname($teacher);
         }
@@ -295,10 +310,6 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         $replacements['{info:completion_date}'] = date($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
     }
 
-    if ($pdcertificate->certifierid) {
-        $replacements['{info:certifier_name}'] = fullname($certifier);
-    }
-
     if (file_exists($CFG->dirroot.'/blocks/use_stats/locallib.php')) {
         require_once($CFG->dirroot.'/blocks/use_stats/locallib.php');
         $now = time();
@@ -313,11 +324,15 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     }
 
     if (isset($teacherfullnames)) {
+        $replacements['{info:certificate_teachers}'] = implode(', ', $teacherfullnames);
+        // Keep it for compatibility.
         $replacements['{info:pdcertificate_teachers}'] = implode(', ', $teacherfullnames);
     }
 
     if ($pdcertificate->certifierid) {
         if ($certifier = $DB->get_records('user', array('id' => $pdcertificate->certifierid))) {
+            $replacements['{info:certificate_certifier}'] = fullname($certifier);
+            // Keep it for compatibility.
             $replacements['{info:pdcertificate_certifier}'] = fullname($certifier);
         }
     }
@@ -326,7 +341,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         $text = str_replace($patt, $replacement, $text);
     }
 
-    // Eliminate remaining unresolved injection patterns
+    // Eliminate remaining unresolved injection patterns.
     $text = preg_replace('/\{info:.*?\}/', '', $text);
 
     return $text;

@@ -35,7 +35,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
     var $instance;
 
-    function definition() {
+    public function definition() {
         global $CFG, $DB, $COURSE;
 
         $mform =& $this->_form;
@@ -172,7 +172,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
         $mform->registerNoSubmitButton('addcourse');
 
-        // Text Options
+        // Text Options.
         $mform->addElement('header', 'textoptions', get_string('printoptions', 'pdcertificate'));
 
         $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
@@ -240,7 +240,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             }
         }
 
-        // Design Options
+        // Design Options.
         $mform->addElement('header', 'designoptions', get_string('designoptions', 'pdcertificate'));
 
         $mform->addElement('select', 'pdcertificatetype', get_string('pdcertificatetype', 'pdcertificate'), pdcertificate_types());
@@ -299,7 +299,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
     /**
      *
      */
-    function set_data($defaults) {
+    public function set_data($defaults) {
 
         // Saves draft customization image files into definitive filearea.
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
@@ -327,7 +327,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
  * we can act on previous added values that haven't been committed to the database.
  * Check for an 'addlink' button. If the linked activities fields are all full, add an empty one.
  */
-    function definition_after_data() {
+    public function definition_after_data() {
         global $COURSE;
 
         // Start process core datas (conditions, etc.)..
