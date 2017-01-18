@@ -26,7 +26,6 @@
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->dirroot.'/grade/lib.php');
 require_once($CFG->dirroot.'/grade/querylib.php');
-require_once($CFG->dirroot.'/lib/conditionlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/printlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
@@ -55,18 +54,25 @@ define('PDCERT_MAX_PER_PAGE', 200);
  */
 function pdcertificate_supports($feature) {
     switch ($feature) {
-        case FEATURE_GROUPS:                  return true;
-        case FEATURE_GROUPINGS:               return true;
-        case FEATURE_GROUPMEMBERSONLY:        return true;
-        case FEATURE_MOD_INTRO:               return true;
-        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
-        case FEATURE_BACKUP_MOODLE2:          return true;
-        case FEATURE_SHOW_DESCRIPTION:        return true;
+        case FEATURE_GROUPS:
+            return true;
+        case FEATURE_GROUPINGS:
+            return true;
+        case FEATURE_GROUPMEMBERSONLY:
+            return true;
+        case FEATURE_MOD_INTRO:
+            return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS:
+            return true;
+        case FEATURE_BACKUP_MOODLE2:
+            return true;
+        case FEATURE_SHOW_DESCRIPTION:
+            return true;
 
-        default: return null;
+        default:
+            return null;
     }
 }
-
 
 /**
  * Add pdcertificate instance.
@@ -85,13 +91,17 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->lockoncoursecompletion = 0;
     }
 
-    // Compact print options
+    // Compact print options.
     $printconfig = new StdClass;
     $printconfig->printhours = $pdcertificate->printhours;
     $printconfig->printoutcome = $pdcertificate->printoutcome;
     $printconfig->printqrcode = @$pdcertificate->printqrcode;
     $printconfig->fontbasesize = $pdcertificate->fontbasesize;
     $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
+    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
+    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
+    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
 
@@ -105,7 +115,6 @@ function pdcertificate_add_instance($pdcertificate) {
                 $clm->courseid = $linkid;
                 $clm->mandatory = 0 + @$pdcertificate->courselinkmandatory[$key];
                 $clm->roletobegiven = $pdcertificate->courselinkrole[$key];
-                // $clm->timemodified = $pdcertificate->timemodified;
                 $retval = $DB->insert_record('pdcertificate_linked_courses', $clm) and $retval;
             }
         }
@@ -116,7 +125,7 @@ function pdcertificate_add_instance($pdcertificate) {
         // Allow not processing files when migrating.
         $context = context_module::instance($pdcertificate->coursemodule);
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
-    
+
         foreach ($instancefiles as $if) {
             $draftitemid = 0 + @$pdcertificate->$if;
             file_save_draft_area_files($draftitemid, $context->id, 'mod_pdcertificate', $if, 0);
@@ -136,8 +145,12 @@ function pdcertificate_update_instance($pdcertificate) {
     global $DB;
 
 
-    $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry']; // again this weird situation
-    // of Quickform loosing params on form bounces
+    $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
+
+    /*
+     * again this weird situation
+     * of Quickform loosing params on form bounces
+     */
 
     if (empty($pdcertificate->lockoncoursecompletion)) {
         $pdcertificate->lockoncoursecompletion = 0;
@@ -157,10 +170,10 @@ function pdcertificate_update_instance($pdcertificate) {
                     $clc->courseid = $linkid;
                     $clc->mandatory = 0 + @$pdcertificate->courselinkmandatory[$key];
                     $clc->roletobegiven = $pdcertificate->courselinkrole[$key];
-                    // $clm->timemodified = $pdcertificate->timemodified;
-                    $retval = $DB->update_record('pdcertificate_linked_courses', $clc) and $retval;
+                    $retval = $DB->update_record('pdcertificate_linked_courses', $clc) && $retval;
                 } else {
-                    $retval = $DB->delete_records('pdcertificate_linked_courses', array('id' => $pdcertificate->courselinkentry[$key])) and $retval;
+                    $params = array('id' => $pdcertificate->courselinkentry[$key]);
+                    $retval = $DB->delete_records('pdcertificate_linked_courses', $params) && $retval;
                 }
             } else if ($linkid > 0) {
                 $clc = new StdClass;
@@ -168,8 +181,8 @@ function pdcertificate_update_instance($pdcertificate) {
                 $clc->courseid = $linkid;
                 $clc->mandatory = 0 + @$pdcertificate->courselinkmandatory[$key];
                 $clc->roletobegiven = $pdcertificate->courselinkrole[$key];
-                // $clc->timemodified = $pdcertificate->timemodified;
-                if (!$oldone = $DB->get_record('pdcertificate_linked_courses', array('courseid' => $linkid, 'pdcertificateid' => $pdcertificate->id))){
+                $params = array('courseid' => $linkid, 'pdcertificateid' => $pdcertificate->id);
+                if (!$oldone = $DB->get_record('pdcertificate_linked_courses', $params)) {
                     $retval = $DB->insert_record('pdcertificate_linked_courses', $clc) and $retval;
                 } else {
                     $clc->id = $oldone->id;
@@ -179,13 +192,17 @@ function pdcertificate_update_instance($pdcertificate) {
         }
     }
 
-    // compact print options
+    // Compact print options.
     $printconfig = new StdClass;
     $printconfig->printhours = $pdcertificate->printhours;
     $printconfig->printoutcome = $pdcertificate->printoutcome;
     $printconfig->printqrcode = 0 + @$pdcertificate->printqrcode;
     $printconfig->fontbasesize = $pdcertificate->fontbasesize;
     $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
+    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
+    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
+    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
 
@@ -276,13 +293,11 @@ function pdcertificate_cm_info_dynamic(&$cminfo) {
  * This function will remove all posts from the specified pdcertificate
  * and clean up any related data.
  *
- * Written by Jean-Michel Vedrine
- *
  * @param $data the data submitted from the reset course.
  * @return array status array
  */
 function pdcertificate_reset_userdata($data) {
-    global $CFG, $DB;
+    global $DB, $COURSE;
 
     $componentstr = get_string('modulenameplural', 'pdcertificate');
     $status = array();
@@ -293,6 +308,16 @@ function pdcertificate_reset_userdata($data) {
                 WHERE cert.course = :courseid";
         $DB->delete_records_select('pdcertificate_issues', "pdcertificateid IN ($sql)", array('courseid' => $data->courseid));
         $status[] = array('component' => $componentstr, 'item' => get_string('pdcertificateremoved', 'pdcertificate'), 'error' => false);
+
+        $fs = get_file_storage();
+        // Get all pdcertificates course modules in course and remove files.
+        $module = $DB->get_record('modules', array('name' => 'pdcertificate'));
+        if ($cms = $DB->get_records('course_modules', array('course' => $COURSE->id, 'module' => $module->id))) {
+            foreach($cms as $cm) {
+                $context = context_module::instance($cm->id);
+                $fs->delete_area_files($context->id);
+            }
+        }
     }
 
     // Updating dates - shift may be negative too

@@ -154,7 +154,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
     $context = context_module::instance($cm->id);
 
     switch($type) {
-        case PDCERT_IMAGE_BORDER :
+        case PDCERT_IMAGE_BORDER:
             $attr = 'borderstyle';
             $defaultpath = "$CFG->dirroot/mod/pdcertificate/pix/$type/defaultborder.jpg";
 
@@ -167,7 +167,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             }
 
             break;
-        case PDCERT_IMAGE_SEAL :
+        case PDCERT_IMAGE_SEAL:
             $attr = 'printseal';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printseal', 0, 'itemid, filepath, filename', false);
@@ -179,7 +179,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             }
 
             break;
-        case PDCERT_IMAGE_SIGNATURE :
+        case PDCERT_IMAGE_SIGNATURE:
             $attr = 'printsignature';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printsignature', 0, 'itemid, filepath, filename', false);
@@ -191,7 +191,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
             }
 
             break;
-        case PDCERT_IMAGE_WATERMARK :
+        case PDCERT_IMAGE_WATERMARK:
             $attr = 'printwmark';
 
             $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printwmark', 0, 'itemid, filepath, filename', false);
@@ -210,7 +210,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
     // Uploaded path will superseed.
     if (file_exists($uploadpath)) {
         $pdf->Image($uploadpath, $x, $y, $w, $h);
-    } elseif (file_exists($defaultpath)) {
+    } else if (file_exists($defaultpath)) {
         $pdf->Image($path, $x, $y, $w, $h);
     }
 }

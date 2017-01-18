@@ -33,10 +33,19 @@ $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
+$printconfig = unserialize($pdcertificate->printconfig);
+
 // Define variables
 // Landscape
 $x = 10;
 $y = 30;
+
+if (!empty($printconfig->margingroup['marginx'])) {
+    $x = $printconfig->margingroup['marginx'];
+}
+if (!empty($printconfig->margingroup['marginy'])) {
+    $y = $printconfig->margingroup['marginy'];
+}
 
 $brdrx = 0;
 $brdry = 0;
@@ -48,11 +57,32 @@ $wmarky = 31;
 $wmarkw = 212;
 $wmarkh = 148;
 
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsetx'])) {
+    $wmarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+}
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
+    $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+}
+
 $sealx = 200;
 $sealy = 144;
 
+if (!empty($printconfig->sealoffsetgroup['sealoffsetx'])) {
+    $sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
+}
+if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
+    $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
+}
+
 $sigx = 47;
 $sigy = 155;
+
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
+    $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
+}
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
+    $sigy = $printconfig->signatureoffsetgroup['signatureoffsety'];
+}
 
 $qrcx = 250;
 $qrcy = 155;
@@ -71,23 +101,23 @@ $footerx = 20;
 $footery = 180;
 $footerw = 257;
 
-$printconfig = unserialize($pdcertificate->printconfig);
+if (empty($user)) {
+    $user = $USER;
+}
 
-if (empty($user)) $user = $USER;
-
-// Add images and lines
+// Add images and lines.
 pdcertificate_draw_frame($pdf, $pdcertificate);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 
-// Set alpha to semi-transparency
+// Set alpha to semi-transparency.
 $pdf->SetAlpha(0.2);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SEAL, $sealx, $sealy, '', '');
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
 
-// Add text
+// Add text.
 $pdf->SetTextColor(0, 0, 0);
 
 $headertext = pdcertificate_insert_data($pdcertificate->headertext, $pdcertificate, $certrecord, $course, $user);
