@@ -36,6 +36,13 @@ $pdf->AddPage();
 $x = 10;
 $y = 40;
 
+if (!empty($printconfig->margingroup['marginx'])) {
+    $x = $printconfig->margingroup['marginx'];
+}
+if (!empty($printconfig->margingroup['marginy'])) {
+    $y = $printconfig->margingroup['marginy'];
+}
+
 $brdrx = 0;
 $brdry = 0;
 $brdrw = 210;
@@ -46,11 +53,32 @@ $wmarky = 58;
 $wmarkw = 158;
 $wmarkh = 170;
 
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsetx'])) {
+    $wmarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+}
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
+    $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+}
+
 $sealx = 150;
 $sealy = 220;
 
+if (!empty($printconfig->sealoffsetgroup['sealoffsetx'])) {
+    $sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
+}
+if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
+    $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
+}
+
 $sigx = 30;
 $sigy = 230;
+
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
+    $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
+}
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
+    $sigy = $printconfig->signatureoffsetgroup['signatureoffsety'];
+}
 
 $qrcx = 180;
 $qrcy = 10;
