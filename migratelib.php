@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Handles viewing a pdcertificate
  *
@@ -24,6 +22,7 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 /**
  * library for porting all certificates data to pdcertificate
@@ -41,7 +40,7 @@ function pdcertificate_migrate_certificates($instances) {
     if (!empty($instances)) {
         $instancesnum = count($instances);
         $report = "Migrating $instancesnum certificates \n\n";
-        foreach($instances as $c) {
+        foreach ($instances as $c) {
             $report .= pdcertificate_migrate_one_certificate($c, $newmod);
         }
     }
@@ -122,7 +121,7 @@ function pdcertificate_migrate_one_certificate($certificate, $mod) {
         }
     }
 
-    // Mutate file store
+    // Mutate file store.
     $report = "... Migrating file storage \n";
     $sql = "
         UPDATE
@@ -134,7 +133,7 @@ function pdcertificate_migrate_one_certificate($certificate, $mod) {
     ";
     $DB->execute($sql, array('contextid' => $context->id));
 
-    // Mutate events
+    // Mutate events.
     $report = "... Migrating logs \n";
     $sql = "
         UPDATE

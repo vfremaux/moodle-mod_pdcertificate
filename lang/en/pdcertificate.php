@@ -183,6 +183,7 @@ $string['printsignature'] = 'Signature Image';
 $string['printteacher'] = 'Print Teacher Name(s)';
 $string['printwmark'] = 'Watermark Image';
 $string['propagategroups'] = 'Propagate groups when chaining';
+$string['qrcodeoffset'] = 'QR Code offset (x,y)';
 $string['receivedcerts'] = 'Received certificates';
 $string['receiveddate'] = 'Date Received';
 $string['regenerate'] = 'Regenerate';

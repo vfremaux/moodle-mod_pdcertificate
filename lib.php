@@ -22,6 +22,7 @@
  * @copyright  Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->dirroot.'/grade/lib.php');
@@ -101,6 +102,7 @@ function pdcertificate_add_instance($pdcertificate) {
     $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
     $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
     $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
     $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
@@ -148,8 +150,8 @@ function pdcertificate_update_instance($pdcertificate) {
     $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
 
     /*
-     * again this weird situation
-     * of Quickform loosing params on form bounces
+     * Again this weird situation
+     * of Quickform loosing params on form bounces.
      */
 
     if (empty($pdcertificate->lockoncoursecompletion)) {
@@ -202,6 +204,7 @@ function pdcertificate_update_instance($pdcertificate) {
     $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
     $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
     $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
     $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
@@ -218,7 +221,7 @@ function pdcertificate_update_instance($pdcertificate) {
         $draftitemid = $draftidarr[$if];
         $clearif = 'clear'.$if;
         if (!empty($draftidarr[$clearif])) {
-            // Delete existing zone
+            // Delete existing zone.
             $fs->delete_area_files($context->id, 'mod_pdcertificate', $if, 0);
         } else {
             file_save_draft_area_files($draftitemid, $context->id, 'mod_pdcertificate', $if, 0);
@@ -239,12 +242,12 @@ function pdcertificate_update_instance($pdcertificate) {
 function pdcertificate_delete_instance($id) {
     global $DB;
 
-    // Ensure the pdcertificate exists
+    // Ensure the pdcertificate exists.
     if (!$pdcertificate = $DB->get_record('pdcertificate', array('id' => $id))) {
         return false;
     }
 
-    // Prepare file record object
+    // Prepare file record object.
     if (!$cm = get_coursemodule_from_instance('pdcertificate', $id)) {
         return false;
     }
@@ -255,7 +258,7 @@ function pdcertificate_delete_instance($id) {
         $result = false;
     }
 
-    // Delete any files associated with the pdcertificate
+    // Delete any files associated with the pdcertificate.
     $context = context_module::instance($cm->id);
     $fs = get_file_storage();
     $fs->delete_area_files($context->id);
@@ -276,7 +279,8 @@ function pdcertificate_cm_info_dynamic(&$cminfo) {
 
     // Apply role restriction here.
     if ($pdcertificate = $DB->get_record('pdcertificate', array('id' => $cminfo->instance))) {
-        if ($pdcertificate->lockoncoursecompletion && !has_capability('mod/pdcertificate:manage', $cminfo->context)) {
+        if ($pdcertificate->lockoncoursecompletion &&
+                !has_capability('mod/pdcertificate:manage', $cminfo->context)) {
             $completioninfo = new completion_info($COURSE);
             if (!$completioninfo->is_course_complete($USER->id)) {
                 $cminfo->set_no_view_link();
@@ -320,7 +324,7 @@ function pdcertificate_reset_userdata($data) {
         }
     }
 
-    // Updating dates - shift may be negative too
+    // Updating dates - shift may be negative too.
     if ($data->timeshift) {
         shift_course_mod_dates('pdcertificate', array('timeopen', 'timeclose'), $data->timeshift, $data->courseid);
         $status[] = array('component' => $componentstr, 'item' => get_string('datechanged'), 'error' => false);
@@ -368,7 +372,8 @@ function pdcertificate_user_outline($course, $user, $mod, $pdcertificate) {
     global $DB;
 
     $result = new stdClass;
-    if ($issue = $DB->get_record('pdcertificate_issues', array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id))) {
+    $params = array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id);
+    if ($issue = $DB->get_record('pdcertificate_issues', $params)) {
         $result->info = get_string('issued', 'pdcertificate');
         $result->time = $issue->timecreated;
     } else {
@@ -391,7 +396,8 @@ function pdcertificate_user_outline($course, $user, $mod, $pdcertificate) {
 function pdcertificate_user_complete($course, $user, $mod, $pdcertificate) {
    global $DB, $OUTPUT;
 
-   if ($issue = $DB->get_record('pdcertificate_issues', array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id))) {
+    $params = array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id);
+    if ($issue = $DB->get_record('pdcertificate_issues', $params)) {
         echo $OUTPUT->box_start();
         echo get_string('issued', 'pdcertificate') . ": ";
         echo userdate($issue->timecreated);
@@ -439,12 +445,12 @@ function pdcertificate_get_teachers($pdcertificate, $user, $course, $cm) {
         return array();
     }
     $teachers = array();
-    if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS) {   // Separate groups are being used
-        if ($groups = groups_get_all_groups($course->id, $user->id)) {  // Try to find all groups
+    if (groups_get_activity_groupmode($cm, $course) == SEPARATEGROUPS) {   // Separate groups are being used.
+        if ($groups = groups_get_all_groups($course->id, $user->id)) {  // Try to find all groups.
             foreach ($groups as $group) {
                 foreach ($potteachers as $t) {
                     if ($t->id == $user->id) {
-                        continue; // do not send self
+                        continue; // Do not send self.
                     }
                     if (groups_is_member($group->id, $t->id)) {
                         $teachers[$t->id] = $t;
@@ -452,12 +458,12 @@ function pdcertificate_get_teachers($pdcertificate, $user, $course, $cm) {
                 }
             }
         } else {
-            // user not in group, try to find teachers without group
+            // User not in group, try to find teachers without group.
             foreach ($potteachers as $t) {
                 if ($t->id == $USER->id) {
-                    continue; // do not send self
+                    continue; // Do not send self.
                 }
-                if (!groups_get_all_groups($course->id, $t->id)) { //ugly hack
+                if (!groups_get_all_groups($course->id, $t->id)) { // Ugly hack.
                     $teachers[$t->id] = $t;
                 }
             }
@@ -509,17 +515,19 @@ function pdcertificate_pluginfile($course, $cm, $context, $filearea, $args, $for
             return false;
         }
 
-        if ($USER->id != $certrecord->userid and !has_capability('mod/pdcertificate:manage', $context)) {
+        if ($USER->id != $certrecord->userid &&
+                !has_capability('mod/pdcertificate:manage', $context)) {
             return false;
         }
 
         $relativepath = implode('/', $args);
         $fullpath = "/{$context->id}/mod_pdcertificate/issue/$certrecord->id/$relativepath";
 
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) ||
+                $file->is_directory()) {
             return false;
         }
-        send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+        send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
     } else {
         if (!in_array($filearea, array('printseal', 'printborders', 'printwatermark', 'printsignature'))) {
             return false;
@@ -528,10 +536,11 @@ function pdcertificate_pluginfile($course, $cm, $context, $filearea, $args, $for
         $relativepath = implode('/', $args);
         $fullpath = "/{$context->id}/mod_pdcertificate/{$filearea}{$certrecord->id}/$relativepath";
 
-        if (!$file = $fs->get_file_by_hash(sha1($fullpath)) or $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) ||
+                $file->is_directory()) {
             return false;
         }
-        send_stored_file($file, 0, 0, true); // download MUST be forced - security!
+        send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
     }
 }
 
@@ -609,14 +618,14 @@ function pdcertificate_get_mod_grade($course, $moduleid, $userid) {
 function pdcertificate_get_completion_state($course, $cm, $userid, $type) {
     global $CFG, $DB;
 
-    // Get pdcertificate details
+    // Get pdcertificate details.
     if (!($pdcertificate = $DB->get_record('pdcertificate', array('id' => $cm->instance)))) {
         throw new Exception("Can't find pdcertificate {$cm->instance}");
     }
 
     $result = $type; // Default return value
     
-    // completion condition 1 : being delivered to user
+    // Completion condition 1 : being delivered to user.
 
     if ($pdcertificate->completiondelivered) {
     }
@@ -624,38 +633,38 @@ function pdcertificate_get_completion_state($course, $cm, $userid, $type) {
     return $result;
 }
 
-function pdcertificate_get_string($identifier, $subplugin, $a = '', $lang = ''){
+function pdcertificate_get_string($identifier, $subplugin, $a = '', $lang = '') {
     global $CFG;
-    
+
     static $typestrings = array();
-    
-    if (empty($typestrings[$subplugin])){
-    
+
+    if (empty($typestrings[$subplugin])) {
+
         if (empty($lang)) $lang = current_language();
-        
-        if (file_exists($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/en/'.$subplugin.'.php')){
-            include $CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/en/'.$subplugin.'.php';
+
+        if (file_exists($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/en/'.$subplugin.'.php')) {
+            include($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/en/'.$subplugin.'.php');
         } else {
             debugging('English lang file must exist', DEBUG_DEVELOPER);
         }
-    
-        // override with lang file if exists
-        if (file_exists($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/'.$lang.'/'.$subplugin.'.php')){
-            include $CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/'.$lang.'/'.$subplugin.'.php';
+
+        // Override with lang file if exists.
+        if (file_exists($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/'.$lang.'/'.$subplugin.'.php')) {
+            include($CFG->dirroot.'/mod/pdcertificate/type/'.$subplugin.'/lang/'.$lang.'/'.$subplugin.'.php');
         }
         $typestrings[$subplugin] = $string;
     }
-    
-    if (array_key_exists($identifier, $typestrings[$subplugin])){
+
+    if (array_key_exists($identifier, $typestrings[$subplugin])) {
         $result = $typestrings[$subplugin][$identifier];
-        if ($a !== NULL) {
+        if ($a !== null) {
             if (is_object($a) or is_array($a)) {
                 $a = (array)$a;
                 $search = array();
                 $replace = array();
                 foreach ($a as $key => $value) {
                     if (is_int($key)) {
-                        // we do not support numeric keys - sorry!
+                        // We do not support numeric keys - sorry!
                         continue;
                     }
                     $search[]  = '{$a->'.$key.'}';
@@ -668,7 +677,7 @@ function pdcertificate_get_string($identifier, $subplugin, $a = '', $lang = ''){
                 $result = str_replace('{$a}', (string)$a, $result);
             }
         }
-        // Debugging feature lets you display string identifier and component
+        // Debugging feature lets you display string identifier and component.
         if (!empty($CFG->debugstringids) || optional_param('strings', 0, PARAM_INT)) {
             $result .= ' {' . $identifier . '/' . $subplugin . '}';
         }
