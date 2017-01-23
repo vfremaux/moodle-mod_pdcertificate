@@ -48,9 +48,6 @@ require_login($course->id, false, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/pdcertificate:view', $context);
 
-// Log update.
-// add_to_log($course->id, 'pdcertificate', 'view', "view.php?id=$cm->id", $pdcertificate->id, $cm->id);
-
 // Trigger module viewed event.
 $eventparams = array(
     'objectid' => $pdcertificate->id,
@@ -94,7 +91,8 @@ if ($PAGE->user_allowed_editing()) {
 if ($pdcertificate->lockoncoursecompletion && !has_capability('mod/pdcertificate:manage', $context)) {
     $completioninfo = new completion_info($course);
     if (!$completioninfo->is_course_complete($USER->id)) {
-        echo $OUTPUT->notification(get_string('requiredcoursecompletion', 'pdcertificate'), new moodle_url('/course/view.php', array('id' => $course->id)));
+        $notifurl = new moodle_url('/course/view.php', array('id' => $course->id));
+        echo $OUTPUT->notification(get_string('requiredcoursecompletion', 'pdcertificate'), $notifurl);
     }
 }
 
@@ -154,14 +152,6 @@ if (empty($action)) {
         $str = get_string('openemail', 'pdcertificate');
     }
 
-    /*
-    echo html_writer::tag('p', $str, array('style' => 'text-align:center'));
-    $linkname = get_string('getpdcertificate', 'pdcertificate');
-    $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
-    $button = new single_button($link, $linkname);
-    $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
-    */
-
     $coursecontext = context_course::instance($COURSE->id);
 
     if (has_capability('mod/pdcertificate:getown', $context, $USER->id, false)) {
@@ -195,7 +185,8 @@ if (empty($action)) {
     echo $OUTPUT->footer();
 
     exit;
-} else { // Output to pdf
+} else {
+    // Output to pdf.
 
     // Trigger module viewed event.
     $eventparams = array(
@@ -209,22 +200,22 @@ if (empty($action)) {
     $event->add_record_snapshot('pdcertificate', $pdcertificate);
     $event->trigger();
 
-    // Remove full-stop at the end if it exists, to avoid "..pdf" being created and being filtered by clean_filename
+    // Remove full-stop at the end if it exists, to avoid "..pdf" being created and being filtered by clean_filename.
     $certname = rtrim($pdcertificate->name, '.');
     $filename = clean_filename("$certname.pdf");
     pdcertificate_confirm_issue($user, $pdcertificate, $cm);
     if ($pdcertificate->savecert == 1) {
-        // PDF contents are now in $file_contents as a string
+        // PDF contents are now in $file_contents as a string.
        $file_contents = $pdf->Output('', 'S');
        pdcertificate_save_pdf($file_contents, $certrecord->id, $filename, $context->id);
     }
     if ($pdcertificate->delivery == 0) {
-        $pdf->Output($filename, 'I'); // open in browser
-    } elseif ($pdcertificate->delivery == 1) {
-        $pdf->Output($filename, 'D'); // force download when create
-    } elseif ($pdcertificate->delivery == 2) {
+        $pdf->Output($filename, 'I'); // Open in browser.
+    } else if ($pdcertificate->delivery == 1) {
+        $pdf->Output($filename, 'D'); // Force download when create.
+    } else if ($pdcertificate->delivery == 2) {
         pdcertificate_email_student($course, $pdcertificate, $certrecord, $context);
-        $pdf->Output($filename, 'I'); // open in browser
-        $pdf->Output('', 'S'); // send
+        $pdf->Output($filename, 'I'); // Open in browser.
+        $pdf->Output('', 'S'); // Send.
     }
 }

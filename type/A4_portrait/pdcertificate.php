@@ -33,8 +33,17 @@ $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
-$x = 10;
-$y = 40;
+$printconfig = unserialize($pdcertificate->printconfig);
+
+$x = 20;
+$y = 20;
+
+if (!empty($printconfig->margingroup['marginx'])) {
+    $x = $printconfig->margingroup['marginx'];
+}
+if (!empty($printconfig->margingroup['marginy'])) {
+    $y = $printconfig->margingroup['marginy'];
+}
 
 $brdrx = 0;
 $brdry = 0;
@@ -46,46 +55,74 @@ $wmarky = 58;
 $wmarkw = 158;
 $wmarkh = 170;
 
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsetx'])) {
+    $wmarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+}
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
+    $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+}
+
 $sealx = 150;
 $sealy = 220;
+
+if (!empty($printconfig->sealoffsetgroup['sealoffsetx'])) {
+    $sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
+}
+if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
+    $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
+}
 
 $sigx = 30;
 $sigy = 230;
 
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
+    $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
+}
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
+    $sigy = $printconfig->signatureoffsetgroup['signatureoffsety'];
+}
+
 $qrcx = 180;
 $qrcy = 10;
 
-// Text boxes
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodex'])) {
+    $qrcx = $printconfig->qrcodeoffsetgroup['qrcodex'];
+}
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodey'])) {
+    $qrcy = $printconfig->qrcodeoffsetgroup['qrcodey'];
+}
 
-$headx = 20;
-$heady = 20;
-$headw = 170;
+// Text boxes.
 
-$custx = 20;
+$headx = $x;
+$heady = $y;
+$headw = 210 - (2 * $x);
+
+$custx = $x;
 $custy = 50;
-$custw = 170;
+$custw = 210 - (2 * $x);
 
-$footerx = 20;
+$footerx = $x;
 $footery = 247;
-$footerw = 170;
+$footerw = 210 - (2 * $x);
 
-$printconfig = unserialize($pdcertificate->printconfig);
+if (empty($user)) {
+    $user = $USER;
+}
 
-if (empty($user)) $user = $USER;
-
-// Add images and lines
+// Add images and lines.
 pdcertificate_draw_frame($pdf, $pdcertificate);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 
-// Set alpha to semi-transparency
+// Set alpha to semi-transparency.
 $pdf->SetAlpha(0.2);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SEAL, $sealx, $sealy, '', '');
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
 
-// Add text
+// Add text.
 $pdf->SetTextColor(0, 0, 0);
 
 $headertext = pdcertificate_insert_data($pdcertificate->headertext, $pdcertificate, $certrecord, $course, $user);

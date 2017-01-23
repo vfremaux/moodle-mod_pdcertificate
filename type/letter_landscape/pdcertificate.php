@@ -23,9 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.'); // It must be included from view.php
-}
+defined('MOODLE_INTERNAL') || die();
 
 $pdf = new PDF('L', 'pt', 'Letter', true, 'UTF-8', false);
 
@@ -35,59 +33,97 @@ $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
-// Define variables
-// Landscape
-$x = 28;
-$y = 125;
+$printconfig = unserialize($pdcertificate->printconfig);
 
-$sealx = 590;
-$sealy = 425;
+// Define variables.
+// Landscape.
+$x = 20;
+$y = 20;
 
-$sigx = 130;
-$sigy = 440;
+if (!empty($printconfig->margingroup['marginx'])) {
+    $x = $printconfig->margingroup['marginx'];
+}
+if (!empty($printconfig->margingroup['marginy'])) {
+    $y = $printconfig->margingroup['marginy'];
+}
+
+$sealx = 190;
+$sealy = 144;
+
+if (!empty($printconfig->sealoffsetgroup['sealoffsetx'])) {
+    $sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
+}
+if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
+    $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
+}
+
+$sigx = 30;
+$sigy = 170;
+
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
+    $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
+}
+if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
+    $sigy = $printconfig->signatureoffsetgroup['signatureoffsety'];
+}
 
 $wmarkx = 100;
 $wmarky = 90;
 $wmarkw = 600;
 $wmarkh = 420;
 
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsetx'])) {
+    $wmarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+}
+if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
+    $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+}
+
 $brdrx = 0;
 $brdry = 0;
-$brdrw = 792;
-$brdrh = 612;
+$brdrw = 279;
+$brdrh = 215;
 
-$qrcx = 505;
-$qrcy = 505;
+$qrcx = 250;
+$qrcy = 155;
 
-// Text boxes
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodex'])) {
+    $qrcx = $printconfig->qrcodeoffsetgroup['qrcodex'];
+}
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodey'])) {
+    $qrcy = $printconfig->qrcodeoffsetgroup['qrcodey'];
+}
 
-$headx = 20;
-$heady = 20;
-$headw = 170;
+// Text boxes.
+
+$headx = $x;
+$heady = $y;
+$headw = 279 - (2 * $x);
 
 $custx = 133;
 $custy = 440;
-$custw = 170;
+$custw = 279 - (2 * $x);
 
 $footerx = 20;
-$footery = 247;
-$footerw = 170;
+$footery = 195;
+$footerw = 279 - (2 * $x);
 
-$printconfig = unserialize($pdcertificate->printconfig);
+if (empty($user)) {
+    $user = $USER;
+}
 
-if (empty($user)) $user = $USER;
-
-// Add images and lines
+// Add images and lines.
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 pdcertificate_draw_frame_letter($pdf, $pdcertificate);
-// Set alpha to semi-transparency
+
+// Set alpha to semi-transparency.
 $pdf->SetAlpha(0.1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SEAL, $sealx, $sealy, '', '');
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
 
-// Add text
+// Add text.
 $pdf->SetTextColor(0, 0, 0);
 
 $headertext = pdcertificate_insert_data($pdcertificate->headertext, $pdcertificate, $certrecord, $course, $user);
