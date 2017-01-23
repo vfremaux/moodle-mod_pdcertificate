@@ -195,6 +195,7 @@ $string['printsignature'] = 'Image de signature';
 $string['printteacher'] = 'Imprimer le nom du formateur';
 $string['printwmark'] = 'Filigrane';
 $string['propagategroups'] = 'Propagation des groupes';
+$string['qrcodeoffset'] = 'Position du QR code (x,y)';
 $string['receivedcerts'] = 'Attestations reçus';
 $string['receiveddate'] = 'Date de réception';
 $string['regenerate'] = 'Régénérer';

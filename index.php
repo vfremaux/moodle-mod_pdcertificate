@@ -26,43 +26,40 @@
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 
-$id = required_param('id', PARAM_INT);           // Course Module ID
+$id = required_param('id', PARAM_INT); // Course Module ID.
 
-// Ensure that the course specified is valid
+// Ensure that the course specified is valid.
 if (!$course = $DB->get_record('course', array('id'=> $id))) {
     print_error('Course ID is incorrect');
 }
 
-// Requires a login
+// Requires a login.
 require_course_login($course);
 
-// Declare variables
+// Declare variables.
 $currentsection = "";
 $printsection = "";
 $timenow = time();
 
-// Strings used multiple times
+// Strings used multiple times.
 $strpdcertificates = get_string('modulenameplural', 'pdcertificate');
 $strissued  = get_string('issued', 'pdcertificate');
 $strname  = get_string("name");
 $strsectionname = get_string('sectionname', 'format_'.$course->format);
 
-// Print the header
+// Print the header.
 $PAGE->set_pagelayout('incourse');
 $PAGE->set_url('/mod/pdcertificate/index.php', array('id'=>$course->id));
 $PAGE->navbar->add($strpdcertificates);
 $PAGE->set_title($strpdcertificates);
 $PAGE->set_heading($course->fullname);
 
-// Add the page view to the Moodle log
-// add_to_log($course->id, 'pdcertificate', 'view all', 'index.php?id='.$course->id, '');
-
 // Trigger instances list viewed event.
 $event = \mod_pdcertificate\event\course_module_instance_list_viewed::create(array('context' => $context));
 $event->add_record_snapshot('course', $course);
 $event->trigger();
 
-// Get the pdcertificates, if there are none display a notice
+// Get the pdcertificates, if there are none display a notice.
 if (!$pdcertificates = get_all_instances_in_course('pdcertificate', $course)) {
     echo $OUTPUT->header();
     notice(get_string('nopdcertificates', 'pdcertificate'), "$CFG->wwwroot/course/view.php?id=$course->id");
@@ -84,11 +81,11 @@ if ($usesections) {
 
 foreach ($pdcertificates as $pdcertificate) {
     if (!$pdcertificate->visible) {
-        // Show dimmed if the mod is hidden
+        // Show dimmed if the mod is hidden.
         $link = html_writer::tag('a', $pdcertificate->name, array('class' => 'dimmed',
             'href' => $CFG->wwwroot . '/mod/pdcertificate/view.php?id=' . $pdcertificate->coursemodule));
     } else {
-        // Show normal if the mod is visible
+        // Show normal if the mod is visible.
         $link = html_writer::tag('a', $pdcertificate->name, array('class' => 'dimmed',
             'href' => $CFG->wwwroot . '/mod/pdcertificate/view.php?id=' . $pdcertificate->coursemodule));
     }
@@ -96,12 +93,12 @@ foreach ($pdcertificates as $pdcertificate) {
         if ($pdcertificate->section) {
             $printsection = $pdcertificate->section;
         }
-        if ($currentsection !== "") {
+        if ($currentsection !== '') {
             $table->data[] = 'hr';
         }
         $currentsection = $pdcertificate->section;
     }
-    // Get the latest pdcertificate issue
+    // Get the latest pdcertificate issue.
     if ($certrecord = $DB->get_record('pdcertificate_issues', array('userid' => $USER->id, 'pdcertificateid' => $pdcertificate->id))) {
         $issued = userdate($certrecord->timecreated);
     } else {

@@ -35,10 +35,10 @@ $pdf->AddPage();
 
 $printconfig = unserialize($pdcertificate->printconfig);
 
-// Define variables
-// Landscape
-$x = 10;
-$y = 30;
+// Define variables.
+// Landscape.
+$x = 20;
+$y = 20;
 
 if (!empty($printconfig->margingroup['marginx'])) {
     $x = $printconfig->margingroup['marginx'];
@@ -87,19 +87,26 @@ if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
 $qrcx = 250;
 $qrcy = 155;
 
-// Text boxes
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodex'])) {
+    $qrcx = $printconfig->qrcodeoffsetgroup['qrcodex'];
+}
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodey'])) {
+    $qrcy = $printconfig->qrcodeoffsetgroup['qrcodey'];
+}
 
-$headx = 20;
-$heady = 20;
-$headw = 257;
+// Text boxes.
 
-$custx = 20;
+$headx = $x;
+$heady = $y;
+$headw = 297 - (2 * $x);
+
+$custx = $x;
 $custy = 50;
-$custw = 257;
+$custw = 297 - (2 * $x);
 
-$footerx = 20;
+$footerx = $x;
 $footery = 180;
-$footerw = 257;
+$footerw = 297 - 2 * $x;
 
 if (empty($user)) {
     $user = $USER;
@@ -120,9 +127,9 @@ pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $
 // Add text.
 $pdf->SetTextColor(0, 0, 0);
 
-$headertext = pdcertificate_insert_data($pdcertificate->headertext, $pdcertificate, $certrecord, $course, $user);
-$customtext = pdcertificate_insert_data($pdcertificate->customtext, $pdcertificate, $certrecord, $course, $user);
-$footertext = pdcertificate_insert_data($pdcertificate->footertext, $pdcertificate, $certrecord, $course, $user);
+$headertext = pdcertificate_insert_data(format_text($pdcertificate->headertext), $pdcertificate, $certrecord, $course, $user);
+$customtext = pdcertificate_insert_data(format_text($pdcertificate->customtext), $pdcertificate, $certrecord, $course, $user);
+$footertext = pdcertificate_insert_data(format_text($pdcertificate->footertext), $pdcertificate, $certrecord, $course, $user);
 
 pdcertificate_print_textbox($pdf, $headw, $headx, $heady, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $headertext);
 pdcertificate_print_textbox($pdf, $custw, $custx, $custy, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $customtext);

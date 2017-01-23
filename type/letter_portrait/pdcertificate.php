@@ -23,9 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-if (!defined('MOODLE_INTERNAL')) {
-    die('Direct access to this script is forbidden.'); // It must be included from view.php
-}
+defined('MOODLE_INTERNAL') || die();
 
 $pdf = new PDF('P', 'pt', 'Letter', true, 'UTF-8', false);
 
@@ -35,8 +33,10 @@ $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
-$x = 28;
-$y = 170;
+$printconfig = unserialize($pdcertificate->printconfig);
+
+$x = 20;
+$y = 20;
 
 if (!empty($printconfig->margingroup['marginx'])) {
     $x = $printconfig->margingroup['marginx'];
@@ -55,8 +55,8 @@ if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
     $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
 }
 
-$sigx = 85;
-$sigy = 580;
+$sigx = 30;
+$sigy = 235;
 
 if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
     $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
@@ -77,48 +77,56 @@ if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
     $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
 }
 
-$brdrx = 10;
-$brdry = 10;
-$brdrw = 594;
-$brdrh = 771;
+$brdrx = 0;
+$brdry = 0;
+$brdrw = 279;
+$brdrh = 215;
 
-$qrcx = 30;
-$qrcy = 660;
+$qrcx = 149;
+$qrcy = 30;
 
-// Text boxes
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodex'])) {
+    $qrcx = $printconfig->qrcodeoffsetgroup['qrcodex'];
+}
+if (!empty($printconfig->qrcodeoffsetgroup['qrcodey'])) {
+    $qrcy = $printconfig->qrcodeoffsetgroup['qrcodey'];
+}
 
-$headx = 20;
-$heady = 20;
-$headw = 170;
+// Text boxes.
 
-$custx = 88;
-$custy = 580;
-$custw = 170;
+$headx = $x;
+$heady = $y;
+$headw = 215 - (2 * $x);
 
-$footerx = 20;
-$footery = 247;
-$footerw = 170;
+$custx = $x;
+$custy = 440;
+$custw = 215 - (2 * $x);
 
-$printconfig = unserialize($pdcertificate->printconfig);
+$footerx = $x;
+$footery = 237;
+$footerw = 215 - (2 * $x);
 
-if (empty($user)) $user = $USER;
+if (empty($user)) {
+    $user = $USER;
+}
 
-// Add images and lines
+// Add images and lines.
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
 pdcertificate_draw_frame_letter($pdf, $pdcertificate);
-// Set alpha to semi-transparency
+
+// Set alpha to semi-transparency.
 $pdf->SetAlpha(0.1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
 $pdf->SetAlpha(1);
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SEAL, $sealx, $sealy, '', '');
 pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
 
-// Add text
+// Add text.
 $pdf->SetTextColor(0, 0, 0);
 
-$headertext = pdcertificate_insert_data($pdcertificate->headertext, $pdcertificate, $certrecord, $course, $user);
-$customtext = pdcertificate_insert_data($pdcertificate->customtext, $pdcertificate, $certrecord, $course, $user);
-$footertext = pdcertificate_insert_data($pdcertificate->footertext, $pdcertificate, $certrecord, $course, $user);
+$headertext = pdcertificate_insert_data(format_text($pdcertificate->headertext), $pdcertificate, $certrecord, $course, $user);
+$customtext = pdcertificate_insert_data(format_text($pdcertificate->customtext), $pdcertificate, $certrecord, $course, $user);
+$footertext = pdcertificate_insert_data(format_text($pdcertificate->footertext), $pdcertificate, $certrecord, $course, $user);
 
 pdcertificate_print_textbox($pdf, $headw, $headx, $heady, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $headertext);
 pdcertificate_print_textbox($pdf, $custw, $custx, $custy, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $customtext);
