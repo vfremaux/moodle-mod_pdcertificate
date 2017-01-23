@@ -24,11 +24,11 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
  */
 
-$plugin->version   = 2016061502; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2010112400; // Requires this Moodle version
+$plugin->version   = 2016061502; // The current module version (Date: YYYYMMDDXX).
+$plugin->requires  = 2014110400; // Requires this Moodle version.
 $plugin->component = 'mod_pdcertificate';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = "2.7.0 (2016061501)"; // User-friendly version number
+$plugin->release   = "2.8.0 (2016061502)"; // User-friendly version number.
 
 // Non Moodle attributes.
-$plugin->codeincrement = '2.7.0001';
+$plugin->codeincrement = '2.8.0001';

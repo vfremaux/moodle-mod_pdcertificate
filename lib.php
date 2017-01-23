@@ -27,7 +27,6 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/course/lib.php');
 require_once($CFG->dirroot.'/grade/lib.php');
 require_once($CFG->dirroot.'/grade/querylib.php');
-require_once($CFG->dirroot.'/lib/conditionlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/printlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
