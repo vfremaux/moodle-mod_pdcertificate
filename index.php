@@ -22,6 +22,7 @@
  * @copyright  Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 
@@ -35,7 +36,7 @@ if (!$course = $DB->get_record('course', array('id'=> $id))) {
 // Requires a login.
 require_course_login($course);
 
-// Declare variables
+// Declare variables.
 $currentsection = "";
 $printsection = "";
 $timenow = time();

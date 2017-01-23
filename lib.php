@@ -100,6 +100,11 @@ function pdcertificate_add_instance($pdcertificate) {
     $printconfig->printqrcode = @$pdcertificate->printqrcode;
     $printconfig->fontbasesize = $pdcertificate->fontbasesize;
     $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
+    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
+    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
+    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
+    $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
 
@@ -123,7 +128,7 @@ function pdcertificate_add_instance($pdcertificate) {
         // Allow not processing files when migrating.
         $context = context_module::instance($pdcertificate->coursemodule);
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
-    
+
         foreach ($instancefiles as $if) {
             $draftitemid = 0 + @$pdcertificate->$if;
             file_save_draft_area_files($draftitemid, $context->id, 'mod_pdcertificate', $if, 0);
@@ -143,11 +148,12 @@ function pdcertificate_update_instance($pdcertificate) {
     global $DB;
 
 
+    $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
+
     /*
      * Again this weird situation
      * of Quickform loosing params on form bounces.
      */
-    $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
 
     if (empty($pdcertificate->lockoncoursecompletion)) {
         $pdcertificate->lockoncoursecompletion = 0;
@@ -196,6 +202,11 @@ function pdcertificate_update_instance($pdcertificate) {
     $printconfig->printqrcode = 0 + @$pdcertificate->printqrcode;
     $printconfig->fontbasesize = $pdcertificate->fontbasesize;
     $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
+    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
+    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
+    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
+    $printconfig->margingroup = $pdcertificate->margingroup;
 
     $pdcertificate->printconfig = serialize($printconfig);
 
@@ -287,13 +298,11 @@ function pdcertificate_cm_info_dynamic(&$cminfo) {
  * This function will remove all posts from the specified pdcertificate
  * and clean up any related data.
  *
- * Written by Jean-Michel Vedrine
- *
  * @param $data the data submitted from the reset course.
  * @return array status array
  */
 function pdcertificate_reset_userdata($data) {
-    global $CFG, $DB;
+    global $DB, $COURSE;
 
     $componentstr = get_string('modulenameplural', 'pdcertificate');
     $status = array();
@@ -302,12 +311,18 @@ function pdcertificate_reset_userdata($data) {
         $sql = "SELECT cert.id
                 FROM {pdcertificate} cert
                 WHERE cert.course = :courseid";
-        $select = "pdcertificateid IN ($sql)";
-        $DB->delete_records_select('pdcertificate_issues', $select, array('courseid' => $data->courseid));
-        $status[] = array('component' => $componentstr,
-                          'item' => get_string('pdcertificateremoved',
-                          'pdcertificate'),
-                          'error' => false);
+        $DB->delete_records_select('pdcertificate_issues', "pdcertificateid IN ($sql)", array('courseid' => $data->courseid));
+        $status[] = array('component' => $componentstr, 'item' => get_string('pdcertificateremoved', 'pdcertificate'), 'error' => false);
+
+        $fs = get_file_storage();
+        // Get all pdcertificates course modules in course and remove files.
+        $module = $DB->get_record('modules', array('name' => 'pdcertificate'));
+        if ($cms = $DB->get_records('course_modules', array('course' => $COURSE->id, 'module' => $module->id))) {
+            foreach($cms as $cm) {
+                $context = context_module::instance($cm->id);
+                $fs->delete_area_files($context->id);
+            }
+        }
     }
 
     // Updating dates - shift may be negative too.
@@ -501,14 +516,16 @@ function pdcertificate_pluginfile($course, $cm, $context, $filearea, $args, $for
             return false;
         }
 
-        if ($USER->id != $certrecord->userid && !has_capability('mod/pdcertificate:manage', $context)) {
+        if ($USER->id != $certrecord->userid &&
+                !has_capability('mod/pdcertificate:manage', $context)) {
             return false;
         }
 
         $relativepath = implode('/', $args);
         $fullpath = "/{$context->id}/mod_pdcertificate/issue/$certrecord->id/$relativepath";
 
-        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) ||
+                $file->is_directory()) {
             return false;
         }
         send_stored_file($file, 0, 0, true); // Download MUST be forced - security!
@@ -520,7 +537,8 @@ function pdcertificate_pluginfile($course, $cm, $context, $filearea, $args, $for
         $relativepath = implode('/', $args);
         $fullpath = "/{$context->id}/mod_pdcertificate/{$filearea}{$certrecord->id}/$relativepath";
 
-        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) || $file->is_directory()) {
+        if ((!$file = $fs->get_file_by_hash(sha1($fullpath))) ||
+                $file->is_directory()) {
             return false;
         }
         send_stored_file($file, 0, 0, true); // Download MUST be forced - security!

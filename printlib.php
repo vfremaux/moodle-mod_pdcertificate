@@ -224,7 +224,7 @@ function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) 
     // Uploaded path will superseed.
     if (file_exists($uploadpath)) {
         $pdf->Image($uploadpath, $x, $y, $w, $h);
-    } elseif (file_exists($defaultpath)) {
+    } else if (file_exists($defaultpath)) {
         $pdf->Image($path, $x, $y, $w, $h);
     }
 }
@@ -308,6 +308,10 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
         $ccompletion = new completion_completion($params);
         $replacements['{info:completion_date}'] = date($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+    }
+
+    if ($pdcertificate->certifierid) {
+        $replacements['{info:certifier_name}'] = fullname($certifier);
     }
 
     if (file_exists($CFG->dirroot.'/blocks/use_stats/locallib.php')) {
