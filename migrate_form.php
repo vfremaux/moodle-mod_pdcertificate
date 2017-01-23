@@ -14,8 +14,6 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Handles viewing a pdcertificate
  *
@@ -24,20 +22,22 @@ defined('MOODLE_INTERNAL') || die();
  * @copyright  Valery Fremaux <valery.fremaux@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/lib/formslib.php');
 
 class Migrate_Form extends moodleform {
 
-    function definition() {
+    public function definition() {
         $mform = $this->_form;
 
         $courses = array();
-        foreach($this->_customdata['courses'] as $c) {
+        foreach ($this->_customdata['courses'] as $c) {
             $courses[$c->id] = "[$c->shortname] $c->fullname";
         }
 
-        $select = $mform->addElement('select', 'courses', get_string('courses'), $courses, array('size' => 20, 'style' => 'width:800px'));
+        $attrs = array('size' => 20, 'style' => 'width:800px');
+        $select = $mform->addElement('select', 'courses', get_string('courses'), $courses, $attrs);
         $select->setMultiple(true);
 
         $this->add_action_buttons(true, get_string('migrate', 'pdcertificate'));

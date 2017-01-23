@@ -35,8 +35,12 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
     var $instance;
 
-    function definition() {
+    public function definition() {
         global $CFG, $DB, $COURSE;
+
+        $maxbytes = $COURSE->maxbytes;
+        $maxfiles = 1;
+        $this->jpgoptions = array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => $maxfiles, 'accepted_types' => '.jpg');
 
         $mform =& $this->_form;
 
@@ -92,25 +96,25 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $authorities[0] = get_string('noauthority', 'pdcertificate');
         $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $context = context_course::instance($COURSE->id);
-        if ($authorities_candidates = get_users_by_capability($context, 'mod/pdcertificate:isauthority', $fields, 'lastname,firstname')){
+        if ($authorities_candidates = get_users_by_capability($context, 'mod/pdcertificate:isauthority', $fields, 'lastname,firstname')) {
             foreach ($authorities_candidates as $ac) {
                 $authorities[$ac->id] = fullname($ac);
             }
         }
 
         $mform->addElement('select', 'certifierid', get_string('certifierid', 'pdcertificate'), $authorities);
-        $mform->setDefault('setcertification', 0 + @$CFG->pdcertificate_certification_authority); // choose the default system designed
+        $mform->setDefault('setcertification', 0 + @$CFG->pdcertificate_certification_authority); // Choose the default system designed.
         $mform->addHelpButton('certifierid', 'certifierid', 'pdcertificate');
 
         $roleoptions = array('' => get_string('none', 'pdcertificate'));
         $roleoptions = array_merge($roleoptions, $this->assignableroles);
         $mform->addElement('select', 'setcertification',get_string('setcertification', 'pdcertificate'), $roleoptions);
-        $mform->setDefault('setcertification', ''); // choose the weaker role (further from admin role)
+        $mform->setDefault('setcertification', ''); // Choose the weaker role (further from admin role).
         $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
 
         $contextoptions = pdcertificate_get_possible_contexts();
         $mform->addElement('select', 'setcertificationcontext',get_string('setcertificationcontext', 'pdcertificate'), $contextoptions);
-        $mform->setDefault('setcertificationcontext', max(array_keys($contextoptions))); // choose the weaker context
+        $mform->setDefault('setcertificationcontext', max(array_keys($contextoptions))); // Choose the weaker context.
         $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
 
         $mform->addElement('checkbox', 'propagategroups', get_string('propagategroups', 'pdcertificate'));
@@ -168,7 +172,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addGroup($formgroup, 'courselabel', get_string('coursedependencies', 'pdcertificate'), array(' '), false);
         $mform->addHelpButton('courselabel', 'chaining', 'pdcertificate');
 
-/// The linked course portion goes here, but is forced in in the 'definition_after_data' function so that we can get any elements added in the form and not overwrite them with what's in the database.
+        // The linked course portion goes here, but is forced in in the 'definition_after_data' function so that we can get any elements added in the form and not overwrite them with what's in the database.
 
         $mform->addElement('submit', 'addcourse', get_string('addcourselabel', 'pdcertificate'),
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
@@ -232,7 +236,14 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
         $mform->setDefault('printqrcode', true);
 
-        // this needs groupspecifichtml block installed for providing group addressed content
+        $group = array();
+        $group[] = $mform->createElement('text', 'qrcodex', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'qrcodey', '', array('size' => 4));
+        $mform->addGroup($group, 'qrcodeoffsetgroup', get_string('qrcodeoffset', 'pdcertificate'), '', array(''), false);
+        $mform->setType('qrcodeoffsetgroup[qrcodex]', PARAM_INT);
+        $mform->setType('qrcodeoffsetgroup[qrcodey]', PARAM_INT);
+
+        // This needs groupspecifichtml block installed for providing group addressed content.
         if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
             $hasoptions = pdcertificate_get_groupspecific_block_instances($groupspecificoptions);
             if (!empty($groupspecificoptions)) {
@@ -242,7 +253,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             }
         }
 
-        // Design Options
+        // Design Options.
         $mform->addElement('header', 'designoptions', get_string('designoptions', 'pdcertificate'));
 
         $mform->addElement('select', 'pdcertificatetype', get_string('pdcertificatetype', 'pdcertificate'), pdcertificate_types());
@@ -250,42 +261,52 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('pdcertificatetype', 'pdcertificatetype', 'pdcertificate');
 
         $group = array();
-        $group[] = $mform->createElement('filepicker', 'printborders', get_string('printborders', 'pdcertificate'), array('courseid' => $COURSE->id, 'accepted_types' => '.jpg'));
+        $group[] = $mform->createElement('text', 'marginx', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'marginy', '', array('size' => 4));
+        $mform->addGroup($group, 'margingroup', get_string('margins', 'pdcertificate'), '', array(''), false);
+        $mform->setType('margingroup[marginx]', PARAM_INT);
+        $mform->setType('margingroup[marginy]', PARAM_INT);
+
+        $group = array();
+        $label = get_string('printborders', 'pdcertificate');
+        $attrs = array('courseid' => $COURSE->id, 'accepted_types' => '.jpg');
+        $group[] = $mform->createElement('filepicker', 'printborders', $label, $attrs);
         $group[] = $mform->createElement('checkbox', 'clearprintborders', '', get_string('clearprintborders', 'pdcertificate'));
         $mform->addGroup($group, 'printbordersgroup', get_string('printborders', 'pdcertificate'), '', array(''), false);
 
         $group = array();
-        $group[] = $mform->createElement('filepicker', 'printwmark', get_string('printwmark', 'pdcertificate'), array('courseid' => $COURSE->id, 'accepted_types' => '.jpg'));
+        $label = get_string('printwmark', 'pdcertificate');
+        $group[] = $mform->createElement('filepicker', 'printwmark', $label, $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintwmark', '', get_string('clearprintwmark', 'pdcertificate'));
         $mform->addGroup($group, 'printwmarkgroup', get_string('printwmark', 'pdcertificate'), '', array(''), false);
 
         $group = array();
-        $group[] = $mform->createElement('text', 'watermarkoffsetx', '');
-        $group[] = $mform->createElement('text', 'watermarkoffsety', '');
+        $group[] = $mform->createElement('text', 'watermarkoffsetx', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'watermarkoffsety', '', array('size' => 4));
         $mform->addGroup($group, 'watermarkoffsetgroup', get_string('watermarkoffset', 'pdcertificate'), '', array(''), false);
         $mform->setType('watermarkoffsetgroup[watermarkoffsetx]', PARAM_INT);
         $mform->setType('watermarkoffsetgroup[watermarkoffsety]', PARAM_INT);
 
         $group = array();
-        $group[] = $mform->createElement('filepicker', 'printsignature', get_string('printsignature', 'pdcertificate'), array('courseid' => $COURSE->id, 'accepted_types' => '.jpg'));
+        $group[] = $mform->createElement('filepicker', 'printsignature', get_string('printsignature', 'pdcertificate'), $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintsignature', '', get_string('clearprintsignature', 'pdcertificate'));
         $mform->addGroup($group, 'printsignaturegroup', get_string('printsignature', 'pdcertificate'), '', array(''), false);
 
         $group = array();
-        $group[] = $mform->createElement('text', 'signatureoffsetx', '');
-        $group[] = $mform->createElement('text', 'signatureoffsety', '');
+        $group[] = $mform->createElement('text', 'signatureoffsetx', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'signatureoffsety', '', array('size' => 4));
         $mform->addGroup($group, 'signatureoffsetgroup', get_string('signatureoffset', 'pdcertificate'), '', array(''), false);
         $mform->setType('signatureoffsetgroup[signatureoffsetx]', PARAM_INT);
         $mform->setType('signatureoffsetgroup[signatureoffsety]', PARAM_INT);
 
         $group = array();
-        $group[] = $mform->createElement('filepicker', 'printseal', get_string('printseal', 'pdcertificate'), array('courseid' => $COURSE->id, 'accepted_types' => '.xml'));
+        $group[] = $mform->createElement('filepicker', 'printseal', get_string('printseal', 'pdcertificate'), $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintseal', '', get_string('clearprintseal', 'pdcertificate'));
         $mform->addGroup($group, 'printsealgroup', get_string('printseal', 'pdcertificate'), '', array(''), false);
 
         $group = array();
-        $group[] = $mform->createElement('text', 'sealoffsetx', '');
-        $group[] = $mform->createElement('text', 'sealoffsety', '');
+        $group[] = $mform->createElement('text', 'sealoffsetx', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'sealoffsety', '', array('size' => 4));
         $mform->addGroup($group, 'sealoffsetgroup', get_string('sealoffset', 'pdcertificate'), '', array(''), false);
         $mform->setType('sealoffsetgroup[sealoffsetx]', PARAM_INT);
         $mform->setType('sealoffsetgroup[sealoffsety]', PARAM_INT);
@@ -306,7 +327,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         // Saves draft customization image files into definitive filearea.
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
 
-        // Extract print options and feed print defaults
+        // Extract print options and feed print defaults.
         $printconfigarr = (array)unserialize(@$defaults->printconfig);
         foreach ($printconfigarr as $key => $value) {
             $defaults->$key = $value;
@@ -316,7 +337,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $draftitemid = file_get_submitted_draft_itemid($if);
             $maxbytes = -1;
             $maxfiles = 1;
-            file_prepare_draft_area($draftitemid, $this->context->id, 'mod_pdcertificate', $if, 0, array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => $maxfiles));
+            file_prepare_draft_area($draftitemid, $this->context->id, 'mod_pdcertificate', $if, 0, $this->jpgoptions);
             $groupname = $if.'group';
             $defaults->$groupname = array($if => $draftitemid);
         }
@@ -329,14 +350,16 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
  * we can act on previous added values that haven't been committed to the database.
  * Check for an 'addlink' button. If the linked activities fields are all full, add an empty one.
  */
-    function definition_after_data() {
+    public function definition_after_data() {
         global $COURSE;
 
-        // Start process core datas (conditions, etc.)..
+        // Start process core datas (conditions, etc.).
         parent::definition_after_data();
 
-        /// This gets called more than once, and there's no way to tell which time this is, so set a
-        /// variable to make it as called so we only do this processing once.
+        /*
+         * This gets called more than once, and there's no way to tell which time this is, so set a
+         * variable to make it as called so we only do this processing once.
+         */
         if (!empty($this->def_after_data_done)) {
             return;
         }
@@ -404,7 +427,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
     }
 
     // here the pdcertificate will add is own extra rule to achieve itself.
-    function add_completion_rules() {
+    public function add_completion_rules() {
         global $DB;
 
         $mform =& $this->_form;
@@ -417,11 +440,11 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         return array('completiondeliveredgroup');
    }
 
-    function completion_rule_enabled($data) {
+    public function completion_rule_enabled($data) {
         return true;
     }
 
-    function data_preprocessing(&$default_values) {
+    public function data_preprocessing(&$default_values) {
         parent::data_preprocessing($default_values);
 
         // Set up the completion checkboxes which aren't part of standard data.
