@@ -35,13 +35,12 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
     var $instance;
 
-    function definition() {
+    public function definition() {
         global $CFG, $DB, $COURSE;
 
         $maxbytes = $COURSE->maxbytes;
         $maxfiles = 1;
         $this->jpgoptions = array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => $maxfiles, 'accepted_types' => '.jpg');
-        $this->xmloptions = array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => $maxfiles, 'accepted_types' => '.xml');
 
         $mform =& $this->_form;
 
@@ -236,6 +235,13 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
         $mform->setDefault('printqrcode', true);
+
+        $group = array();
+        $group[] = $mform->createElement('text', 'qrcodex', '', array('size' => 4));
+        $group[] = $mform->createElement('text', 'qrcodey', '', array('size' => 4));
+        $mform->addGroup($group, 'qrcodeoffsetgroup', get_string('qrcodeoffset', 'pdcertificate'), '', array(''), false);
+        $mform->setType('qrcodeoffsetgroup[qrcodex]', PARAM_INT);
+        $mform->setType('qrcodeoffsetgroup[qrcodey]', PARAM_INT);
 
         // This needs groupspecifichtml block installed for providing group addressed content.
         if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
