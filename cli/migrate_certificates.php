@@ -107,7 +107,7 @@ if ($allinstances) {
     foreach ($allinstances as $instance) {
         // Make new record
 
-        $newinstance = (clone)$instance;
+        $newinstance = clone($instance);
         unset($newinstance->id);
 
         // make other model conversions/cleanup
