@@ -26,7 +26,7 @@ global $CLI_VMOODLE_PRECHECK;
 
 define('CLI_SCRIPT', true);
 define('CACHE_DISABLE_ALL', true);
-$CLI_VMOODLE_PRECHECK = true; // force first config to be minimal
+$CLI_VMOODLE_PRECHECK = true; // Force first config to be minimal.
 
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 
@@ -34,7 +34,7 @@ if (!isset($CFG->dirroot)) {
     die ('$CFG->dirroot must be explicitely defined in moodle config.php for this script to be used');
 }
 
-require_once($CFG->dirroot.'/lib/clilib.php');         // cli only functions
+require_once($CFG->dirroot.'/lib/clilib.php');         // Cli only functions.
 
 // CLI options.
 list($options, $unrecognized) = cli_get_params(
@@ -64,7 +64,7 @@ Example from Moodle root directory:
     exit(empty($options['help']) ? 1 : 0);
 }
 
-// now get cli options
+// Now get cli options.
 
 if ($unrecognized) {
     $unrecognized = implode("\n  ", $unrecognized);
@@ -82,9 +82,9 @@ if (!empty($options['host'])) {
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php'); // Global moodle config file.
 echo('Config check : playing for '.$CFG->wwwroot."\n");
 
-// Migrates community certificates to pdcertificates
+// Migrates community certificates to pdcertificates.
 
-// Copy filestores
+// Copy filestores.
 
 $fs = get_file_storage();
 
@@ -97,7 +97,7 @@ if ($allfiles) {
     }
 }
 
-// Copy instances
+// Copy instances.
 $moduleid = $DB->get_field('modules', 'id', array('shortname' => 'pdcertificate'));
 
 $convert_backup_ids = array();
@@ -107,53 +107,53 @@ if ($allinstances) {
     foreach ($allinstances as $instance) {
         // Make new record
 
-        $newinstance = (clone)$instance;
+        $newinstance = clone($instance);
         unset($newinstance->id);
 
-        // make other model conversions/cleanup
+        // Make other model conversions/cleanup.
 
         $newinstance->id = $DB->insert_record('pdcertificate', $newinstance);
-        $convert_backup_ids['certificate']][$instance->id] = $newinstance->id;
+        $convert_backup_ids['certificate'][$instance->id] = $newinstance->id;
 
-        // Rebind course module
+        // Rebind course module.
         $cm = get_coursemodule_from_instance('certificate', $instance->id);
         $cm->moduleid = $moduleid;
         $DB->update_record('course_modules', $cm);
 
-        // Transfer all issues records
+        // Transfer all issues records.
         $issues = $DB->get_records('certificate_issues', array('certificateid' => $instance->id));
         if ($issues) {
             foreach ($issues as $issue) {
-                $newissue = (clone) $issue;
+                $newissue = clone($issue);
                 unset($newissue->id);
                 $newissue->pdcertificateid = $newinstance->id;
                 unset($newissue->certificateid);
                 $newissue->id = $DB->insert_record('pdcertificate_issues', $newissue);
-                $convert_backup_ids['certificate_issues']][$issue->id] = $newissue->id;
+                $convert_backup_ids['certificate_issues'][$issue->id] = $newissue->id;
             }
             $DB->delete_records('certificate_issues', array('certificateid' => $instance->id));
         }
 
-        // Transfer all course binding records
+        // Transfer all course binding records.
         $cbs = $DB->get_records('certificate_linked_course', array('certificateid' => $instance->id));
         if ($cbs) {
             foreach ($cbs as $cb) {
-                $newcb = (clone) $cb;
+                $newcb = clone($cb);
                 unset($newcb->id);
                 $newcb->pdcertificateid = $newinstance->id;
                 unset($newcb->certificateid);
                 $DB->insert_record('pdcertificate_linked_courses', $newcb);
-                $convert_backup_ids['certificate_linked_courses']][$cb->id] = $newcb->id;
+                $convert_backup_ids['certificate_linked_courses'][$cb->id] = $newcb->id;
             }
             $DB->delete_records('certificate_linked_courses', array('certificateid' => $instance->id));
         }
 
-        // Destroy original
+        // Destroy original.
         // Do delete one by one after processing in case of errors....
         $DB->delete_records('certificate', array('id' => $instance->id));
     }
 }
 
-// Update log records
+// Update log records.
 
-// Update some contents : Update only links that might use instance id. course module ids are not changed. 
+// Update some contents : Update only links that might use instance id. course module ids are not changed.
