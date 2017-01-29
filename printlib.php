@@ -265,10 +265,10 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         $certifier = $DB->get_record('user', array('id' => $pdcertificate->certifierid));
     }
 
-    $DATEFORMATS = array('1' => 'M d, Y',
-                         '2' => 'M d, Y',
-                         '3' => 'd M Y',
-                         '4' => 'M Y',
+    $DATEFORMATS = array('1' => '%B %d, %Y',
+                         '2' => '%B %d, %Y',
+                         '3' => '%d %B %Y',
+                         '4' => '%B %Y',
                          '5' => get_string('userdateformat', 'pdcertificate')
     );
 
@@ -291,7 +291,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         '{info:course_category}' => $DB->get_field('course_categories', 'name', array('id' => $course->category)),
         '{info:course_idnumber}' => $course->idnumber,
         '{info:course_grade}' => pdcertificate_get_grade($pdcertificate, $course),
-        '{info:certificate_date}' => date($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
+        '{info:certificate_date}' => strftime($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
         '{info:certificate_outcome}' => pdcertificate_get_outcome($pdcertificate, $course),
         '{info:certificate_credit_hours}' => get_string('credithours', 'pdcertificate').': '.$printconfig->printhours,
         '{info:certificate_code}' => strtoupper($certrecord->code),
@@ -307,7 +307,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         );
 
         $ccompletion = new completion_completion($params);
-        $replacements['{info:completion_date}'] = date($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+        $replacements['{info:completion_date}'] = strftime($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
     }
 
     if ($pdcertificate->certifierid) {

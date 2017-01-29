@@ -33,6 +33,7 @@ $string['pdcertificate:isauthority'] = 'Est autorité de certification';
 $string['pdcertificate:getown'] = 'Retirer sa propre attestation';
 $string['pdcertificate:apply'] = 'Peut obtenir une attestation';
 $string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
+$string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
 
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';

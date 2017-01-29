@@ -32,6 +32,7 @@ $string['pdcertificate:deletepdcertificates'] = 'Can delete generated certificat
 $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:view'] = 'View a certificate';
+$string['pdcertificate:download'] = 'Download certificate using API';
 
 $string['authority'] = 'Authority';
 $string['addcourselabel'] = 'Add course';
