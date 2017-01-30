@@ -23,12 +23,13 @@
  * @copyright   Valery Fremaux (http://www.mylearningfactory.com)
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
  */
+defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2016061502; // The current module version (Date: YYYYMMDDXX)
-$plugin->requires  = 2010112400; // Requires this Moodle version
+$plugin->version   = 2017012300; // The current module version (Date: YYYYMMDDXX).
+$plugin->requires  = 2010112400; // Requires this Moodle version.
 $plugin->component = 'mod_pdcertificate';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = "2.7.0 (2016061501)"; // User-friendly version number
+$plugin->release   = "2.7.0 (2017012300)"; // User-friendly version number.
 
 // Non Moodle attributes.
 $plugin->codeincrement = '2.7.0001';
