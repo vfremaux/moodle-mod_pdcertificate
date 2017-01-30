@@ -18,10 +18,10 @@
 /**
  * Language strings for the pdcertificate module
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Mark Nelson <markn@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_pdcertificate
+ * @category    mod 
+ * @copyright   Mark Nelson <markn@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 // Capabilities
@@ -33,6 +33,7 @@ $string['pdcertificate:isauthority'] = 'Est autorité de certification';
 $string['pdcertificate:getown'] = 'Retirer sa propre attestation';
 $string['pdcertificate:apply'] = 'Peut obtenir une attestation';
 $string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
+$string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
 
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';

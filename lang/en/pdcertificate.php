@@ -17,10 +17,10 @@
 /**
  * Language strings for the pdcertificate module
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Mark Nelson <markn@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_pdcertificate
+ * @category    mod
+ * @copyright   Mark Nelson <markn@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 // Capabilities.
@@ -32,6 +32,7 @@ $string['pdcertificate:deletepdcertificates'] = 'Can delete generated certificat
 $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:view'] = 'View a certificate';
+$string['pdcertificate:download'] = 'Download certificate using API';
 
 $string['authority'] = 'Authority';
 $string['addcourselabel'] = 'Add course';
