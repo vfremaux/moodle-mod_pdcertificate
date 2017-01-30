@@ -23,6 +23,7 @@
  * @copyright   Valery Fremaux (http://www.mylearningfactory.com)
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
  */
+defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2017012300; // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2010112400; // Requires this Moodle version.
