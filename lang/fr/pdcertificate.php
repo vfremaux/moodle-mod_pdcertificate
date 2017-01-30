@@ -18,10 +18,10 @@
 /**
  * Language strings for the pdcertificate module
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Mark Nelson <markn@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_pdcertificate
+ * @category    mod 
+ * @copyright   Mark Nelson <markn@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 // Capabilities
@@ -33,14 +33,15 @@ $string['pdcertificate:isauthority'] = 'Est autorité de certification';
 $string['pdcertificate:getown'] = 'Retirer sa propre attestation';
 $string['pdcertificate:apply'] = 'Peut obtenir une attestation';
 $string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
+$string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
 
-$string['authority'] = 'Autorité';
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';
 $string['addlinklabel'] = 'Ajouter un nouveau lien vers une activité';
 $string['addlinktitle'] = 'Cliquer pour ajouter un nouveau lien vers une activité';
 $string['antecedantcourse'] = 'Cours lié : {$a->coursename}. Prérequis obligatoire: {$a->prerequisite}';
 $string['areaintro'] = 'Description';
+$string['authority'] = 'Autorité';
 $string['awarded'] = 'Decerné à ';
 $string['awardedto'] = 'Décerné à ';
 $string['back'] = 'Revenir';
@@ -59,15 +60,15 @@ $string['certificationmatchednotdeliverable'] = 'Vous avez validé les attendus 
 $string['certifiedusers'] = 'Certifiés:<br/><b>{$a} étudiants(s)</b>';
 $string['certifierid'] = 'Autorité attestante';
 $string['chaining'] = 'Chaînage';
+$string['clearprintborders'] = 'Supprimer ce fichier';
 $string['clearprintseal'] = 'Supprimer ce fichier';
 $string['clearprintsignature'] = 'Supprimer ce fichier';
 $string['clearprintwmark'] = 'Supprimer ce fichier';
 $string['code'] = 'Code';
 $string['completiondate'] = 'Achèvement du cours';
+$string['completiondelivered'] = 'L\'attestation doit être effectivement délivrée (retirée par le candidat ou postée) pour marquer comme achevé';
 $string['course'] = 'pour le cours';
-$string['coursechaining'] = 'Chainage de cours';
 $string['coursechaining'] = 'Chaînage de cours';
-$string['coursedependencies'] = 'Cours dépendants';
 $string['coursedependencies'] = 'Cours dépendants';
 $string['courseenddate'] = 'Date de fin de formation (doit être renseignée!)';
 $string['coursegrade'] = 'Note des cours';
@@ -84,9 +85,10 @@ $string['defaultpropagategroups'] = 'Propagation des groupes (défaut)';
 $string['defaultpropagategroups_desc'] = 'Si coché, les informations de groupe seront copiées dans le cours chainé lors du passage des utilisateurs.';
 $string['definitive'] = 'Valide (définitif)';
 $string['deletissuedpdcertificates'] = 'Supprimer les attestations délivrées';
-$string['delivery'] = 'Délivrance';
 $string['deliveredon'] = 'Retiré le';
+$string['delivery'] = 'Délivrance';
 $string['designoptions'] = 'Mise en forme';
+$string['description'] = 'Description';
 $string['destroyselection'] = 'Détruire les attestations ';
 $string['download'] = 'Forcer le téléchargement';
 $string['emailothers'] = 'Autres destinataires';
@@ -106,6 +108,7 @@ $string['freeserif'] = 'Sérif';
 $string['generate'] = 'Générer';
 $string['generateall'] = 'Générer les {$a} attestations disponibles';
 $string['generateselection'] = 'Générer les attestations ';
+$string['getattempts'] = 'Retirer mes attestations';
 $string['getpdcertificate'] = 'Obtenez votre attestation';
 $string['gettestpdcertificate'] = 'Tester le retrait d\'attestation';
 $string['grade'] = 'avec la note';
@@ -138,6 +141,7 @@ $string['migration'] = 'Assistant de migration des certificats';
 $string['modulename'] = 'Attestation Pro';
 $string['modulenameplural'] = 'Attestations';
 $string['mypdcertificates'] = 'Mes attestations';
+$string['margins'] = 'Marges (x,y)';
 $string['needsmorework'] = 'Il y a encore des travaux requis pour activer cette attestation';
 $string['noauthority'] = 'Pas d\'autorité';
 $string['nocertifiables'] = 'Aucun utilisateur à attester';
@@ -192,6 +196,7 @@ $string['printsignature'] = 'Image de signature';
 $string['printteacher'] = 'Imprimer le nom du formateur';
 $string['printwmark'] = 'Filigrane';
 $string['propagategroups'] = 'Propagation des groupes';
+$string['qrcodeoffset'] = 'Position du QR code (x,y)';
 $string['receivedcerts'] = 'Attestations reçus';
 $string['receiveddate'] = 'Date de réception';
 $string['regenerate'] = 'Régénérer';
@@ -217,7 +222,6 @@ $string['specialgroupoptions'] = 'Options spéciales relatives au groupes';
 $string['state'] = 'Statut';
 $string['statement'] = 'a achevé le cours';
 $string['summary'] = 'Résumé';
-$string['getattempts'] = 'Retirer mes attestations';
 $string['system'] = 'Niveau système';
 $string['teacherview'] = 'Outils de l\'enseignant';
 $string['textoptions'] = 'Options de texte';
@@ -236,7 +240,7 @@ $string['uploadimage'] = 'Télécharger une image';
 $string['uploadimagedesc'] = 'Ce bouton vous amène à un autre écran où vous pouvez téléverser une image.';
 $string['userdateformat'] = 'Format de date de l\'utilisateur';
 $string['usersdelivered'] = 'Attestations délivrées : {$a}';
-$string['usersgenerated'] = 'Attestations générées non retirées : {$a}';
+$string['usersgenerated'] = 'Attestations générées non retirées&nbsp;: {$a}';
 $string['userstocertify'] = 'Reste à attester : {$a}';
 $string['validate'] = 'Vérifier';
 $string['validity'] = 'Validité';
@@ -251,7 +255,7 @@ $string['viewless'] = 'En voir moins';
 $string['viewpdcertificateviews'] = 'Voir les {$a} attestations délivrées';
 $string['viewtranscript'] = 'Voir les attestations';
 $string['watermark'] = 'Filigrane';
-$string['withsel'] = 'Avec la sélection : ';
+$string['withsel'] = 'Avec la sélection&nbsp;:&ensp;';
 $string['wmarkoffset'] = 'Position du filigrane (x,y)';
 $string['yetcertifiable'] = 'Prêts à générer';
 $string['yetcertified'] = 'Générés';

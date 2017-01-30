@@ -57,11 +57,11 @@ class backup_pdcertificate_activity_task extends backup_activity_task {
 
         // Link to the list of pdcertificates
         $search="/(".$base."\/mod\/pdcertificate\/index.php\?id\=)([0-9]+)/";
-        $content= preg_replace($search, '$@CERTIFICATEINDEX*$2@$', $content);
+        $content= preg_replace($search, '$@PDCERTIFICATEINDEX*$2@$', $content);
 
         // Link to pdcertificate view by moduleid
         $search="/(".$base."\/mod\/pdcertificate\/view.php\?id\=)([0-9]+)/";
-        $content= preg_replace($search, '$@CERTIFICATEVIEWBYID*$2@$', $content);
+        $content= preg_replace($search, '$@PDCERTIFICATEVIEWBYID*$2@$', $content);
 
         return $content;
     }

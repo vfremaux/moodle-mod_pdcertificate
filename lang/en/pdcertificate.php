@@ -17,10 +17,10 @@
 /**
  * Language strings for the pdcertificate module
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Mark Nelson <markn@moodle.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_pdcertificate
+ * @category    mod
+ * @copyright   Mark Nelson <markn@moodle.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 // Capabilities.
@@ -32,6 +32,7 @@ $string['pdcertificate:deletepdcertificates'] = 'Can delete generated certificat
 $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:view'] = 'View a certificate';
+$string['pdcertificate:download'] = 'Download certificate using API';
 
 $string['authority'] = 'Authority';
 $string['addcourselabel'] = 'Add course';
@@ -74,6 +75,7 @@ $string['delivery'] = 'Delivery';
 $string['deliveredon'] = 'Delivered on';
 $string['designoptions'] = 'Design Options';
 $string['destroyselection'] = 'Destroy selection ';
+$string['description'] = 'Description';
 $string['download'] = 'Force download';
 $string['editpdcertificatelayout'] = 'Edit Layout';
 $string['emailothers'] = 'Email Others';
@@ -120,6 +122,7 @@ $string['lockoncoursecompletion'] = 'Locked by course completion';
 $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT be retrievable if the current course has not be completed.';
 $string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
+$string['margins'] = 'Margins (x,y)';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
@@ -181,6 +184,7 @@ $string['printsignature'] = 'Signature Image';
 $string['printteacher'] = 'Print Teacher Name(s)';
 $string['printwmark'] = 'Watermark Image';
 $string['propagategroups'] = 'Propagate groups when chaining';
+$string['qrcodeoffset'] = 'QR Code offset (x,y)';
 $string['receivedcerts'] = 'Received certificates';
 $string['receiveddate'] = 'Date Received';
 $string['regenerate'] = 'Regenerate';
@@ -197,13 +201,12 @@ $string['savecert'] = 'Save Certificates';
 $string['savecert_help'] = 'If you choose this option, then a copy of each user\'s certificate pdf file is saved in the course files moddata folder for that certificate. A link to each user\'s saved pdcertificate will be displayed in the certificate report.';
 $string['savelayout'] = 'Save Layout';
 $string['seal'] = 'Seal';
-$string['sealoffset'] = 'Seal offset';
-$string['sealoffset'] = 'Seal offset';
+$string['sealoffset'] = 'Seal offset (x,y)';
 $string['setcertification'] = 'Role on certification';
 $string['setcertificationcontext'] = 'Context';
 $string['sigline'] = 'line';
 $string['signature'] = 'Signature';
-$string['signatureoffset'] = 'Signature offset';
+$string['signatureoffset'] = 'Signature offset (x,y)';
 $string['sitecourse'] = 'Site course';
 $string['specialgroupoptions'] = 'Special group related options';
 $string['state'] = 'Status';
@@ -239,7 +242,7 @@ $string['viewless'] = 'View less';
 $string['viewpdcertificateviews'] = 'View {$a} issued certificates';
 $string['viewtranscript'] = 'View Certificates';
 $string['watermark'] = 'Watermark';
-$string['watermarkoffset'] = 'Watermark offset';
+$string['watermarkoffset'] = 'Watermark offset (x,y)';
 $string['withsel'] = 'With selected: ';
 $string['yetcertifiable'] = 'Ready to issue';
 $string['yetcertified'] = 'Issued';
@@ -260,7 +263,7 @@ $string['tenyears'] = "Ten years";
 
 // Help strings
 
-$string['validitytime_help'] = 'when setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
+$string['validitytime_help'] = 'When setting a validity preriod, the certificate state verification will fail when certificate is obsoleted by date.';
 
 $string['pdcertificatetype_help'] = 'This is where you determine the layout of the certificate. The certificate type folder includes four default certificates:
 A4 Embedded prints on A4 size paper with embedded font.

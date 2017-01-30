@@ -17,10 +17,10 @@
 /**
  * Handles viewing a pdcertificate
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Valery Fremaux <valery.fremaux@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod_pdcertificate
+ * @category    mod
+ * @copyright   Valery Fremaux <valery.fremaux@gmail.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 /**
@@ -66,8 +66,6 @@ $courses = $DB->get_records_sql($sql, array($certificatemodule->id));
 $mform = new Migrate_Form($url, array('courses' => $courses));
 
 if ($data = $mform->get_data()) {
-
-    // print_object($data);
 
     $certs = $DB->get_records_list('certificate', 'course', $data->courses);
 

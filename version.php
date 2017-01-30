@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -16,22 +15,21 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Code fragment to define the version of the pdcertificate module
+ * Version details.
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Valery Fremaux <valery.fremaux@gmail.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
+ * @package     mod_pdcertificate
+ * @category    mod
+ * @author      Valery Fremaux <valery.fremaux@gmail.com>
+ * @copyright   Valery Fremaux (http://www.mylearningfactory.com)
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
  */
+defined('MOODLE_INTERNAL') || die();
 
-$module->version   = 2016061502; // The current module version (Date: YYYYMMDDXX)
-$module->requires  = 2015050500; // Requires this Moodle version
-$module->cron      = 0; // Period for cron to check this module (secs)
-$module->component = 'mod_pdcertificate';
+$plugin->version   = 2017012300; // The current module version (Date: YYYYMMDDXX).
+$plugin->requires  = 2015050500; // Requires this Moodle version.
+$plugin->component = 'mod_pdcertificate';
+$plugin->maturity  = MATURITY_STABLE;
+$plugin->release   = '2.9.0 (Build 2017012300)'; // User-friendly version number.
 
-$module->maturity  = MATURITY_STABLE;
-$module->release   = "2.9.0 (2016061501)"; // User-friendly version number
-
-// Non Moodle fields
+// Non Moodle attributes.
 $plugin->codeincrement = '2.9.0001';
-

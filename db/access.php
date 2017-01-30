@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -23,6 +22,7 @@
  * @copyright  Mark Nelson <markn@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+defined('MOODLE_INTERNAL') || die;
 
 $capabilities = array(
 
@@ -49,10 +49,11 @@ $capabilities = array(
         )
     ),
 
-    // if this capability is NOT set, the owner CANNOT 
-    // retrieve his own certification document. When having a "view"
-    // capability although, the owner will be able to see his certification final "state"
-
+    /*
+     * if this capability is NOT set, the owner CANNOT 
+     * retrieve his own certification document. When having a "view"
+     * capability although, the owner will be able to see his certification final "state"
+     */
     'mod/pdcertificate:getown' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
@@ -85,7 +86,6 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
-            'manager' => CAP_ALLOW
         )
     ),
 
@@ -102,6 +102,17 @@ $capabilities = array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
+            'manager' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW
+        )
+    ),
+
+    'mod/pdcertificate:download' => array(
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'manager' => CAP_ALLOW,
+            'coursecreator' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW
         )
     ),
