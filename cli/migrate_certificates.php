@@ -34,7 +34,7 @@ if (!isset($CFG->dirroot)) {
     die ('$CFG->dirroot must be explicitely defined in moodle config.php for this script to be used');
 }
 
-require_once($CFG->dirroot.'/lib/clilib.php');         // Cli only functions.
+require_once($CFG->dirroot.'/lib/clilib.php'); // Cli only functions.
 
 // CLI options.
 list($options, $unrecognized) = cli_get_params(
@@ -105,7 +105,7 @@ $convert_backup_ids = array();
 $allinstances = $DB->get_records('certificate');
 if ($allinstances) {
     foreach ($allinstances as $instance) {
-        // Make new record
+        // Make new record.
 
         $newinstance = clone($instance);
         unset($newinstance->id);
