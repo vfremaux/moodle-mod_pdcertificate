@@ -236,6 +236,7 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
 function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
     global $DB;
     static $CACHE;
+    static $coursecacheclean = false;
 
     if (empty($CACHE)) {
         $CACHE = array();
@@ -258,7 +259,11 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
 
         // Conditions to view and generate pdcertificate.
         // Mainly must check the conditional locks on the current instance.
-        rebuild_course_cache($course->id);
+        if (!$coursecacheclean) {
+            // Performance fix.
+            rebuild_course_cache($course->id);
+            $coursecacheclean = true;
+        }
         $modinfo = get_fast_modinfo($course);
 
         try {
