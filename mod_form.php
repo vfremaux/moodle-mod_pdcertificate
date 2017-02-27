@@ -441,7 +441,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
    }
 
     public function completion_rule_enabled($data) {
-        return true;
+        return(!empty($data['completiondelivered']));
     }
 
     public function data_preprocessing(&$default_values) {
