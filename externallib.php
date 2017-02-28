@@ -285,21 +285,19 @@ class mod_pdcertificate_external extends external_api {
      * @return external_description
      */
     public static function get_certificate_info_returns() {
-        return new external_multiple_structure(
-            new external_single_structure(
-                array(
-                    'id' => new external_value(PARAM_INT, 'Issue id'),
-                    'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
-                    'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
-                    'certidnumber' => new external_value(PARAM_INT, 'PDCertificate ID Number'),
-                    'user' => new external_value(PARAM_TEXT, 'Appliant identity'),
-                    'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDnumber'),
-                    'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code'),
-                    'timecreated' => new external_value(PARAM_INT, 'Issue id'),
-                    'timedelivered' => new external_value(PARAM_INT, 'Time of delivery'),
-                    'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?'),
-                    'authority' => new external_value(PARAM_TEXT, 'Authority person')
-                )
+        return new external_single_structure(
+            array(
+                'id' => new external_value(PARAM_INT, 'Issue id'),
+                'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
+                'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
+                'certidnumber' => new external_value(PARAM_INT, 'PDCertificate ID Number'),
+                'user' => new external_value(PARAM_TEXT, 'Appliant identity'),
+                'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDnumber'),
+                'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code'),
+                'timecreated' => new external_value(PARAM_INT, 'Issue id'),
+                'timedelivered' => new external_value(PARAM_INT, 'Time of delivery'),
+                'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?'),
+                'authority' => new external_value(PARAM_TEXT, 'Authority person')
             )
         );
     }
@@ -321,32 +319,17 @@ class mod_pdcertificate_external extends external_api {
     }
 
     /**
-     * Commits the version that has ben previously uploaded using the webservice/upload.php facility.
+     * Get all users info from a pdcertificate instance.
      *
-     * @param string $vridsource the source field for the resource identifier.
-     * @param string $vrid the pdcertificate id
+     * @param string $pdcidsource the source field for the resource identifier.
+     * @param string $pdcid the pdcertificate id
      * @param int $draftitemid the temporary draft id of the uploaded file. This has been given by the upload return.
      *
      * @return external_description
      */
-    public static function get_certificate_infos($vridsource, $vrid, $draftitemid, $jsoninfo) {
+    public static function get_certificate_infos($pdcidsource, $pdcid) {
         global $CFG;
 
-        $parameters = array(
-            'vridsource'  => $vridsource,
-            'vrid'  => $vrid,
-            'draftitemid'  => $draftitemid,
-            'jsoninfo'  => $jsoninfo
-        );
-        $params = self::validate_parameters(self::commit_version_parameters(), $parameters);
-
-        if (versionned_resource::plugin_supports('api/commit')) {
-            include_once($CFG->dirroot.'/mod/pdcertificate/pro/lib.php');
-            $vid = mod_versionned_resource_commit($vridsource, $vrid, $draftitemid, $jsoninfo);
-            return $vid;
-        } else {
-            throw new moodle_exception('unsupportedinversion');
-        }
     }
 
     /**
@@ -355,7 +338,23 @@ class mod_pdcertificate_external extends external_api {
      * @return external_description
      */
     public static function get_certificate_infos_returns() {
-        return new external_value(PARAM_INT, 'Version id');
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'Issue id'),
+                    'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
+                    'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
+                    'certidnumber' => new external_value(PARAM_INT, 'PDCertificate ID Number'),
+                    'user' => new external_value(PARAM_TEXT, 'Appliant identity'),
+                    'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDnumber'),
+                    'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code'),
+                    'timecreated' => new external_value(PARAM_INT, 'Issue id'),
+                    'timedelivered' => new external_value(PARAM_INT, 'Time of delivery'),
+                    'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?'),
+                    'authority' => new external_value(PARAM_TEXT, 'Authority person')
+                )
+            )
+        );
     }
 
     // Internal APIs -------------------------------------------------------------------.
