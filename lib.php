@@ -628,6 +628,16 @@ function pdcertificate_get_completion_state($course, $cm, $userid, $type) {
     // Completion condition 1 : being delivered to user.
 
     if ($pdcertificate->completiondelivered) {
+        $params = array('userid' => $userid, 'pdcertificateid' => $cm->instance, 'delivered' => 1);
+        $delivered = $DB->count_records('pdcertificate_issues', $params);
+        if ($type == COMPLETION_AND) {
+            $result = $result && $delivered;
+        } else {
+            $result = $result || $delivered;
+        }
+    } else {
+        // Completion option is not enabled so just return $type.
+        return $type;
     }
 
     return $result;

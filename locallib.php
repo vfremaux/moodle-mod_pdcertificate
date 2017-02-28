@@ -29,6 +29,8 @@ require_once($CFG->dirroot.'/availability/classes/info_module.php');
 /**
  * get all groupspecifichtml instances in the current course and get it back
  * as a list for select options.
+ * @param arrayref &$blockoptions An array to fill with bloc instance candidates
+ * @return true if some blocks were found
  */
 function pdcertificate_get_groupspecific_block_instances(&$blockoptions) {
     global $COURSE, $DB;
@@ -44,7 +46,7 @@ function pdcertificate_get_groupspecific_block_instances(&$blockoptions) {
     if (!$gsis = $DB->get_records_select('block_instances', $select, array($COURSE->id, $parentcontext->id))) {
         foreach ($gsis as $gsi) {
             $blockinstance = block_instance('groupspecifichtml', $gsi);
-            $blockoptions["{$gsi->id}"] = $blockinstance->config->title;
+            $blockoptions[$gsi->id] = $blockinstance->config->title;
             $hasoptions = true;
         }
     }
@@ -199,13 +201,19 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $state->totalcertifiedcount = 0;
     $state->notyetusers = 0;
     if (!empty($group)) {
-        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id,'.get_all_user_name_fields(true, 'u'), '', '', '', $group, '', false);
+        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
+        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, '', false);
         $state->totalcount = count($total);
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email', 'lastname,firstname', $page * $pagesize, $pagesize, $group, '', false);
+        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
+        $sort = 'lastname,firstname';
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, $group, '', false);
     } else {
-        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id,'.get_all_user_name_fields(true, 'u'), '', '', '', '', '', false);
+        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
+        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', '', false);
         $state->totalcount = count($total);
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email', 'lastname,firstname', $page * $pagesize, $pagesize, '', '', false);
+        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
+        $sort = 'lastname,firstname';
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, '', '', false);
     }
 
     // This may be quite costfull on large courses. Not for MOOCS !!
@@ -228,6 +236,7 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
 function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
     global $DB;
     static $CACHE;
+    static $modinfo = null;
 
     if (empty($CACHE)) {
         $CACHE = array();
@@ -240,18 +249,6 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
 
         $CACHE[$pdcertificate->id][$userid] = false;
 
-        // Course time check.
-        /*
-        if (($pdcertificate->requiredtime > 0) && !has_capability('mod/pdcertificate:manage', $context, $userid)) {
-            if (pdcertificate_get_course_time($course->id) < ($pdcertificate->requiredtime * 60)) {
-                $a = new stdClass;
-                $a->requiredtime = $pdcertificate->requiredtime;
-                $CACHE[$pdcertificate->id][$userid] = get_string('requiredtimenotmet', 'pdcertificate', $a);
-                return $CACHE[$pdcertificate->id][$userid];
-            }
-        }
-        */
-
         if ($pdcertificate->lockoncoursecompletion && !has_capability('mod/pdcertificate:manage', $context, $userid)) {
             $completioninfo = new completion_info($course);
             if (!$completioninfo->is_course_complete($userid)) {
@@ -262,8 +259,11 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
 
         // Conditions to view and generate pdcertificate.
         // Mainly must check the conditional locks on the current instance.
-        rebuild_course_cache($course->id);
-        $modinfo = get_fast_modinfo($course);
+        if (is_null($modinfo)) {
+            // Performance fix. Maintain one modinfo structure in memory for all calls.
+            rebuild_course_cache($course->id);
+            $modinfo = get_fast_modinfo($course);
+        }
 
         try {
             $cminfo = $modinfo->get_cm($cm->id);
@@ -295,6 +295,12 @@ function pdcertificate_confirm_issue($user, $pdcertificate, $cm) {
 
 function pdcertificate_process_chain($user, $pdcertificate) {
     global $DB;
+
+    // Process self postcertification setup.
+
+    if ($pdcertificate->setcertification && $pdcertificate->setcertificationcontext) {
+        role_assign($pdcertificate->setcertification, $user->id, $pdcertificate->setcertificationcontext);
+    }
 
     // Process chaining if any.
     if ($linked = $DB->get_records('pdcertificate_linked_courses', array('pdcertificateid' => $pdcertificate->id))) {
