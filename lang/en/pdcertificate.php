@@ -123,6 +123,7 @@ $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT b
 $string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
 $string['margins'] = 'Margins (x,y)';
+$string['manualenrolnotavailableontarget'] = 'The Manual Enrol method seems to be disabled on the target course. Chain will fail.';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
