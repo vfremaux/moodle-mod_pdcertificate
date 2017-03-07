@@ -111,11 +111,17 @@ function pdcertificate_get_linkable_courses() {
     }
 
     $discardedcourselist = implode("','", $discardedcourseids);
-    $select = " 
+
+    // Filters out non manually enrollable courses.
+    $manualenrollables = $DB->get_records_menu('enrol', array('status' => 0, 'enrol' => 'manual'), 'DISTINCT(id, courseid)');
+    $manualenrollableslist = implode("','", array_values($manualenrollables));
+
+    $select = "
         id NOT IN ('$discardedcourselist') AND
+        id IN ('$manualenrollableslist') AND
         visible = 1
     ";
-    $availablecourses = $DB->get_records_select_menu('course', $select, array(), 'fullname', 'id, fullname');    
+    $availablecourses = $DB->get_records_select_menu('course', $select, array(), 'fullname', 'id, fullname');
 
     // TODO check real accessibility of the course for real students (if category is hidden ?).
     $availablecourses[0] = get_string('none', 'pdcertificate');
@@ -135,7 +141,7 @@ function pdcertificate_get_linked_courses($certid) {
         return array();
     }
 
-    $fields = 'courseid,id,pdcertificateid,mandatory,roletobegiven';
+    $fields = 'courseid, id, pdcertificateid, mandatory, roletobegiven';
     if (is_numeric($certid)) {
         return $DB->get_records('pdcertificate_linked_courses', array('pdcertificateid' => $certid), 'id', $fields);
     } else {
@@ -158,7 +164,7 @@ function pdcertificate_print_linked_courses($courses) {
 
     $str .= '<center><br/>';
     $str .= '<table style="margin-top:10px;" id="courserequired" width="90%">';
-    $str .= "<tr><th>$coursestr</th><th>$mandatorystr</th></tr>";
+    $str .= '<tr><th>'.$coursestr.'</th><th>'.$mandatorystr.'</th></tr>';
     foreach ($courses as $course) {
         $coursename = format_string($course->fullname);
         $str .= '<tr>';
@@ -205,14 +211,14 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, '', false);
         $state->totalcount = count($total);
         $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
-        $sort = 'lastname,firstname';
+        $sort = 'lastname, firstname';
         $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, $group, '', false);
     } else {
         $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', '', false);
         $state->totalcount = count($total);
         $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
-        $sort = 'lastname,firstname';
+        $sort = 'lastname, firstname';
         $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, '', '', false);
     }
 
@@ -271,7 +277,7 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
             if (!$condinfo->is_available($information, false, $userid)) {
                 $CACHE[$pdcertificate->id][$userid] = get_string('needsmorework', 'pdcertificate');
             }
-        } catch(moodle_exception $e) {
+        } catch (moodle_exception $e) {
             return false;
         }
     }
@@ -296,6 +302,8 @@ function pdcertificate_confirm_issue($user, $pdcertificate, $cm) {
 function pdcertificate_process_chain($user, $pdcertificate) {
     global $DB;
 
+    $errormessage = '';
+
     // Process self postcertification setup.
 
     if ($pdcertificate->setcertification && $pdcertificate->setcertificationcontext) {
@@ -304,6 +312,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
 
     // Process chaining if any.
     if ($linked = $DB->get_records('pdcertificate_linked_courses', array('pdcertificateid' => $pdcertificate->id))) {
+
         /*
          * check no other mandatory requirements for each course. In case of we need 
          * to delay the new role assignation
@@ -328,9 +337,13 @@ function pdcertificate_process_chain($user, $pdcertificate) {
         if ($chainok) {
             $fromcourse = $DB->get_record('course', array('id' => $pdcertificate->course));
             $coursecontext = context_course::instance($link->courseid);
-            $enrol = $DB->get_record('enrol', array('enrol' => 'manual', 'courseid' => $link->courseid, 'status' => ENROL_INSTANCE_ENABLED));
-            $enrolplugin = enrol_get_plugin('manual');
-            $enrolplugin->enrol_user($enrol, $user->id, $link->roletobegiven, time(), 0, ENROL_USER_ACTIVE);
+            if ($enrol = $DB->get_record('enrol', array('enrol' => 'manual', 'courseid' => $link->courseid, 'status' => ENROL_INSTANCE_ENABLED))) {
+                $enrolplugin = enrol_get_plugin('manual');
+                $enrolplugin->enrol_user($enrol, $user->id, $link->roletobegiven, time(), 0, ENROL_USER_ACTIVE);
+            } else {
+                $errormessage = get_string('manualenrolnotavailableontarget', 'pdcertificate');
+                return $errormessage;
+            }
 
             // If required, propagate groups and memberships.
             if (!empty($pdcertificate->propagategroups)) {
@@ -608,10 +621,10 @@ function pdcertificate_email_teachers($course, $pdcertificate, $certrecord, $cm)
 }
 
 /**
- * Alerts others by email of received pdcertificates. First checks
- * whether the option to email others is set for this pdcertificate.
- * Uses the email_teachers info.
- * Code suggested by Eloy Lafuente
+ * Alerts others by email of received certificates. First checks
+ * whether the option to email others is set for this certificate.
+ * the function uses a faked guest user descriptor with twicked destination
+ * to handle non registered emails.
  *
  * @param stdClass $course
  * @param stdClass $pdcertificate
@@ -622,14 +635,21 @@ function pdcertificate_email_others($course, $pdcertificate, $certrecord, $cm) {
     global $USER, $CFG, $DB;
 
     if ($pdcertificate->emailothers) {
-       $others = explode(',', $pdcertificate->emailothers);
+
+        $others = explode(',', $pdcertificate->emailothers);
         if ($others) {
             $strawarded = get_string('awarded', 'pdcertificate');
+
+            $to = $DB->get_record('user', array('username' => 'guest'));
+            $to->firstname = 'Direct';
+            $to->lastname = 'External Address';
+            unset($to->username);
+            unset($to->password);
+
             foreach ($others as $other) {
                 $other = trim($other);
                 if (validate_email($other)) {
-                    $destination = new stdClass;
-                    $destination->email = $other;
+                    $to->email = $other;
                     $info = new stdClass;
                     $info->student = fullname($USER);
                     $info->course = format_string($course->fullname, true);
@@ -640,7 +660,7 @@ function pdcertificate_email_others($course, $pdcertificate, $certrecord, $cm) {
                     $posttext = pdcertificate_email_teachers_text($info);
                     $posthtml = pdcertificate_email_teachers_html($info);
 
-                    @email_to_user($destination, $from, $postsubject, $posttext, $posthtml);  // If it fails, oh well, too bad.
+                    @email_to_user($to, $from, $postsubject, $posttext, $posthtml);  // If it fails, oh well, too bad.
                 }
             }
         }
@@ -685,30 +705,36 @@ function pdcertificate_email_teachers_html($info) {
 function pdcertificate_email_student($course, $pdcertificate, $certrecord, $context) {
     global $DB, $USER;
 
-    // Get teachers.
-    if ($users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
-        '', '', '', '', false, true)) {
-        $users = sort_by_roleassignment_authority($users, $context);
-        $teacher = array_shift($users);
+    // If a certifier is defined.
+    if (!empty($certificate->certifierid)) {
+        $teacher = $DB->get_record('user', array('id' => 'certifierid'));
     }
 
-    // If we haven't found a teacher yet, look for a non-editing teacher in this course.
-    if (empty($teacher) && $users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
-        '', '', '', '', false, true)) {
-        $users = sort_by_roleassignment_authority($users, $context);
-        $teacher = array_shift($users);
+    if (empty($teacher)) {
+        // Get teachers.
+        if ($users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
+            '', '', '', '', false, true)) {
+            $users = sort_by_roleassignment_authority($users, $context);
+            $teacher = array_shift($users);
+        }
+
+        // If we haven't found a teacher yet, look for a non-editing teacher in this course.
+        if (empty($teacher) && $users = get_users_by_capability($context, 'moodle/course:update', 'u.*', 'u.id ASC',
+            '', '', '', '', false, true)) {
+            $users = sort_by_roleassignment_authority($users, $context);
+            $teacher = array_shift($users);
+        }
     }
 
     // Ok, no teachers, use administrator name.
     if (empty($teacher)) {
-        $teacher = fullname(get_admin());
+        $teacher = get_admin();
     }
 
     $info = new stdClass;
     $info->username = fullname($USER);
     $info->pdcertificate = format_string($pdcertificate->name, true);
     $info->course = format_string($course->fullname, true);
-    $from = fullname($teacher);
     $subject = $info->course . ': ' . $info->pdcertificate;
     $message = get_string('emailstudenttext', 'pdcertificate', $info) . "\n";
 
@@ -775,7 +801,7 @@ function pdcertificate_save_pdf($pdf, $certrecordid, $filename, $contextid) {
 
     $fs = get_file_storage();
 
-    // Prepare file record object
+    // Prepare file record object.
     $component = 'mod_pdcertificate';
     $filearea = 'issue';
     $filepath = '/';
