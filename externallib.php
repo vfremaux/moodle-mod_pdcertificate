@@ -208,7 +208,7 @@ class mod_pdcertificate_external extends external_api {
         return new external_value(PARAM_URL, 'An url to the file');
     }
 
-    // Get last branch file url ----------------------------------------------.
+    // Get certificate info ----------------------------------------------.
 
     /**
      * Returns description of method parameters
@@ -302,18 +302,20 @@ class mod_pdcertificate_external extends external_api {
         );
     }
 
-    // Get last branch file url ----------------------------------------------.
+    // Get set of certificates info ----------------------------------------------.
 
     /**
      * Returns description of method parameters
      *
      * @return external_function_parameters
      */
-    public static function get_certificate_infos_parameters() {
+    public static function get_certificates_infos_parameters() {
         return new external_function_parameters(
             array(
-                'pdcidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'idnumber\''),
-                'pdcid' => new external_value(PARAM_TEXT, 'Resource id'),
+                'cidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'idnumber\''),
+                'cid' => new external_value(PARAM_TEXT, 'course id'),
+                'uidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'username\', \'idnumber\' or \'email\''),
+                'uid' => new external_value(PARAM_TEXT, 'course id'),
             )
         );
     }
@@ -327,7 +329,7 @@ class mod_pdcertificate_external extends external_api {
      *
      * @return external_description
      */
-    public static function get_certificate_infos($pdcidsource, $pdcid) {
+    public static function get_certificates_infos($cidsource, $cid, $uidsource, $uid) {
         global $CFG;
 
     }
@@ -337,7 +339,7 @@ class mod_pdcertificate_external extends external_api {
      *
      * @return external_description
      */
-    public static function get_certificate_infos_returns() {
+    public static function get_certificates_infos_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
