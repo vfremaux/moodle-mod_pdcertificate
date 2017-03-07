@@ -17,12 +17,11 @@
 /**
  * Provides some custom settings for the pdcertificate module
  *
- * @package    mod
- * @subpackage pdcertificate
- * @copyright  Michael Avelar <michaela@moodlerooms.com>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package     mod
+ * @subpackage  pdcertificate
+ * @copyright   Michael Avelar <michaela@moodlerooms.com>
+ * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');

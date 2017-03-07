@@ -142,6 +142,7 @@ $string['modulename'] = 'Attestation Pro';
 $string['modulenameplural'] = 'Attestations';
 $string['mypdcertificates'] = 'Mes attestations';
 $string['margins'] = 'Marges (x,y)';
+$string['manualenrolnotavailableontarget'] = 'La méthode manuelle d\'inscription semble avoir été désactivée. Le chainage ne peut être réalisé.';
 $string['needsmorework'] = 'Il y a encore des travaux requis pour activer cette attestation';
 $string['noauthority'] = 'Pas d\'autorité';
 $string['nocertifiables'] = 'Aucun utilisateur à attester';
