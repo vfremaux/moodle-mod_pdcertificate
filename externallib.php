@@ -309,7 +309,7 @@ class mod_pdcertificate_external extends external_api {
      *
      * @return external_function_parameters
      */
-    public static function get_certificates_infos_parameters() {
+    public static function get_certificate_infos_parameters() {
         return new external_function_parameters(
             array(
                 'cidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'idnumber\''),
@@ -329,7 +329,7 @@ class mod_pdcertificate_external extends external_api {
      *
      * @return external_description
      */
-    public static function get_certificates_infos($cidsource, $cid, $uidsource, $uid) {
+    public static function get_certificate_infos($cidsource, $cid, $uidsource, $uid) {
         global $CFG;
 
     }
@@ -339,7 +339,7 @@ class mod_pdcertificate_external extends external_api {
      *
      * @return external_description
      */
-    public static function get_certificates_infos_returns() {
+    public static function get_certificate_infos_returns() {
         return new external_multiple_structure(
             new external_single_structure(
                 array(
