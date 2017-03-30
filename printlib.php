@@ -321,8 +321,8 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     $userdata = $DB->get_records_sql($sql, array($user->id));
 
     if (!empty($userdata)) {
-        foreach ($userdata as $name => $value) {
-            $replacements['user:'.$name] = $value;
+        foreach ($userdata as $userdatum) {
+            $replacements['user:'.$userdatum->shortname] = $userdatum->value;
         }
     }
 
