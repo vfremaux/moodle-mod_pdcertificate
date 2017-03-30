@@ -274,13 +274,21 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     $replacements = array(
         '{info:user_fullname}' => fullname($user),
+        '{user:fullname}' => fullname($user),
         '{info:user_firstname}' => $user->firstname,
+        '{user:firstname}' => $user->firstname,
         '{info:user_idnumber}' => $user->idnumber,
+        '{user:idnumber}' => $user->idnumber,
         '{info:user_lastname}' => $user->firstname,
+        '{user:lastname}' => $user->firstname,
         '{info:user_country}' => $user->country,
+        '{user:country}' => $user->country,
         '{info:user_city}' => $user->city,
+        '{user:city}' => $user->city,
         '{info:user_institution}' => $user->institution,
+        '{user:institution}' => $user->institution,
         '{info:user_department}' => $user->department,
+        '{user:department}' => $user->department,
         '{info:site_fullname}' => $SITE->fullname,
         '{info:site_shortname}' => $SITE->shortname,
         '{info:site_city}' => @$CFG->city,
@@ -297,6 +305,26 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         '{info:certificate_code}' => strtoupper($certrecord->code),
         '{info:group_specific}' => pdcertificate_get_groupspecific_content($pdcertificate)
     );
+
+    // Get and prepare additional custom info for replacements.
+    $sql = "
+        SELECT
+            uif.shortname,
+            uid.data
+        FROM
+            {user_info_field} uif,
+            {user_info_data} uid
+        WHERE
+            uif.id = uid.fieldid AND
+            uid.userid = ?
+    ";
+    $userdata = $DB->get_records_sql($sql, array($user->id));
+
+    if (!empty($userdata)) {
+        foreach ($userdata as $name => $value) {
+            $replacements['user:'.$name] = $value;
+        }
+    }
 
     if (completion_info::is_enabled_for_site()) {
         $completion = new completion_info($COURSE);
