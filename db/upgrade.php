@@ -505,26 +505,22 @@ function xmldb_pdcertificate_upgrade($oldversion=0) {
 
         $table  = new xmldb_table('pdcertificate');
 
-        $field = new xmldb_field('setcertification', XMLDB_TYPE_TEXT, 'small', null, null, null, null, 'printhours');
+        $field = new xmldb_field('setcertification', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'printhours');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        $field = new xmldb_field('setcertificationcontext', XMLDB_TYPE_INTEGER, '6', null, XMLDB_NOTNULL, null, '50', 'setcertification');
+        $field = new xmldb_field('setcertificationcontext', XMLDB_TYPE_INTEGER, '6', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '50', 'setcertification');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-           $field = new xmldb_field('groupspecificcontent', XMLDB_TYPE_CHAR, '10', null, null, null, null, 'setcertificationcontext');
-
-        // Launch add field pdcertificatecaption.
+        $field = new xmldb_field('groupspecificcontent', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'setcertificationcontext');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
 
-        $field = new xmldb_field('certifierid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, 0, 'printhours');
-
-        // Launch add field certifierid.
+        $field = new xmldb_field('certifierid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'printhours');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
@@ -602,7 +598,7 @@ function xmldb_pdcertificate_upgrade($oldversion=0) {
     if ($oldversion < 2016011801) {
         $table = new xmldb_table('pdcertificate');
 
-        $field = new xmldb_field('propagategroups', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'layout');
+        $field = new xmldb_field('propagategroups', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'layout');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
@@ -616,7 +612,7 @@ function xmldb_pdcertificate_upgrade($oldversion=0) {
     if ($oldversion < 2016041500) {
         $table = new xmldb_table('pdcertificate');
 
-        $field = new xmldb_field('lockoncoursecompletion', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'propagategroups');
+        $field = new xmldb_field('lockoncoursecompletion', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'propagategroups');
         if (!$dbman->field_exists($table, $field)) {
             $dbman->add_field($table, $field);
         }
@@ -642,6 +638,18 @@ function xmldb_pdcertificate_upgrade($oldversion=0) {
         upgrade_mod_savepoint(true, 2016061501, 'pdcertificate');
     }
 
+    if ($oldversion < 2017020600) {
+        $table = new xmldb_table('pdcertificate');
+
+        $field = new xmldb_field('completiondelivered', XMLDB_TYPE_INTEGER, 2, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'lockoncoursecompletion');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017020600, 'pdcertificate');
+    }
+
     return true;
 }
 
@@ -654,7 +662,7 @@ function pdcertificate_convert_config($dbman) {
     if (!$dbman->field_exists($table, $field)) {
         $dbman->add_field($table, $field);
 
-        // Process all pdcertificates to convert them
+        // Process all pdcertificates to convert them.
         if ($pdcertificates = $DB->get_records('pdcertificate', array())) {
             foreach ($pdcertificates as $c) {
                 $printconfig = new StdClass();
