@@ -1,5 +1,4 @@
 <?php
-
 // This file is part of the Certificate module for Moodle - http://moodle.org/
 //
 // Moodle is free software: you can redistribute it and/or modify
@@ -28,7 +27,7 @@ require('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
-$id = required_param('id', PARAM_INT); // Course module ID
+$id = required_param('id', PARAM_INT); // Course module ID.
 $sort = optional_param('sort', '', PARAM_RAW);
 $download = optional_param('download', '', PARAM_ALPHA);
 $action = optional_param('what', '', PARAM_ALPHA);
@@ -89,17 +88,15 @@ if (!$download) {
     $PAGE->navbar->add($strreport);
     $PAGE->set_title(format_string($pdcertificate->name).": $strreport");
     $PAGE->set_heading($course->fullname);
-    // Check to see if groups are being used in this choice
+    // Check to see if groups are being used in this choice.
     if ($groupmode = groups_get_activity_groupmode($cm)) {
         groups_get_activity_group($cm, true);
     }
 } else {
     $groupmode = groups_get_activity_groupmode($cm);
-    // Get all results when $page and $perpage are 0
+    // Get all results when $page and $perpage are 0.
     $page = $perpage = 0;
 }
-
-// add_to_log($course->id, 'pdcertificate', 'view', "report.php?id=$cm->id", '$pdcertificate->id', $cm->id);
 
 // Trigger module viewed event.
 $eventparams = array(
@@ -121,7 +118,7 @@ if ($groupmode) {
     $group = groups_get_activity_group($cm, true);
 }
 
-// ensure we are in a group
+// Ensure we are in a group.
 $allgroupaccess = has_capability('moodle/site:accessallgroups', $context, $USER->id);
 if (!$allgroupaccess) {
     if (!$group) {
@@ -139,7 +136,7 @@ $total = array();
 $certifiableusers = array();
 $state = pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, $total, $certifiableusers);
 
-// Now process certifiable users
+// Now process certifiable users.
 
 if (!$certifiableusers) {
     $PAGE->navbar->add($strreport);
@@ -173,7 +170,7 @@ if ($download == 'ods') {
     // Creating the first worksheet.
     $myxls = $workbook->add_worksheet($strreport);
 
-    // Print names of all the fields
+    // Print names of all the fields.
     $myxls->write_string(0, 0, get_string("lastname"));
     $myxls->write_string(0, 1, get_string("firstname"));
     $myxls->write_string(0, 2, get_string("idnumber"));
@@ -182,7 +179,7 @@ if ($download == 'ods') {
     $myxls->write_string(0, 5, $strgrade);
     $myxls->write_string(0, 6, $strcode);
 
-    // Generate the data for the body of the spreadsheet
+    // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($certs) {
@@ -205,7 +202,7 @@ if ($download == 'ods') {
         }
         $pos = 6;
     }
-    // Close the workbook
+    // Close the workbook.
     $workbook->close();
     exit;
 }
@@ -215,7 +212,7 @@ if ($download == 'xls') {
 
     // Calculate file name.
     $filename = clean_filename("$course->shortname " . rtrim($pdcertificate->name, '.') . '.xls');
-    // Creating a workbook
+    // Creating a workbook.
     $workbook = new MoodleExcelWorkbook("-");
     // Send HTTP headers.
     $workbook->send($filename);
@@ -231,7 +228,7 @@ if ($download == 'xls') {
     $myxls->write_string(0, 5, $strgrade);
     $myxls->write_string(0, 6, $strcode);
 
-    // Generate the data for the body of the spreadsheet
+    // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($certs) {
@@ -254,7 +251,7 @@ if ($download == 'xls') {
         }
         $pos = 6;
     }
-    // Close the workbook
+    // Close the workbook.
     $workbook->close();
     exit;
 }
@@ -268,7 +265,7 @@ if ($download == 'txt') {
     header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
     header("Pragma: public");
 
-    // Print names of all the fields
+    // Print names of all the fields.
     echo get_string("firstname"). "\t" .get_string("lastname") . "\t". get_string("idnumber") . "\t";
     echo get_string("group"). "\t";
     echo $strdate. "\t";
@@ -330,14 +327,6 @@ echo $OUTPUT->box_start();
 echo $renderer->global_counters($state);
 echo $OUTPUT->box_end();
 
-/*
-echo $OUTPUT->heading(get_string('modulenameplural', 'pdcertificate'));
-
-echo $OUTPUT->paging_bar($usercount, $page, $perpage, $url);
-echo '<br />';
-// echo html_writer::table($table);
-*/
-
 echo $OUTPUT->heading(get_string('modulenameplural', 'pdcertificate'));
 
 $table = new html_table();
@@ -355,11 +344,11 @@ foreach ($certifiableusers as $user) {
         $cert = $certs[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
         if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
-            // TODO : Move this capability to a more local cap
+            // TODO : Move this capability to a more local cap.
             $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
             $date .= ' <a href="'.$redrawurl.'">'.get_string('regenerate', 'pdcertificate').'</a>';
 
-            // Delete link
+            // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
                 $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'"><img src="'.$OUTPUT->pix_url('t/delete').'"></a>';
