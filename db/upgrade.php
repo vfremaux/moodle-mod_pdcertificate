@@ -662,7 +662,7 @@ function pdcertificate_convert_config($dbman) {
     if (!$dbman->field_exists($table, $field)) {
         $dbman->add_field($table, $field);
 
-        // Process all pdcertificates to convert them
+        // Process all pdcertificates to convert them.
         if ($pdcertificates = $DB->get_records('pdcertificate', array())) {
             foreach ($pdcertificates as $c) {
                 $printconfig = new StdClass();
