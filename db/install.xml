@@ -29,9 +29,13 @@
         <FIELD NAME="certifierid" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" ENUM="false"  />
         <FIELD NAME="caption" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" ENUM="false"  />
         <FIELD NAME="validitytime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="setcertification" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="setcertificationcontext" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="groupspecificcontent" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="propagategroups" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="lockoncoursecompletion" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="completiondelivered" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If this field is set to 1, then the activity will be marked as 'complete' once the user has got his certificate." PREVIOUS="langselection" />
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for pdcertificate"/>
@@ -47,6 +51,7 @@
         <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="delivered" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="timedelivered" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="timeexported" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="authorityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
       </FIELDS>
       <KEYS>
