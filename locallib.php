@@ -113,8 +113,8 @@ function pdcertificate_get_linkable_courses() {
     $discardedcourselist = implode("','", $discardedcourseids);
 
     // Filters out non manually enrollable courses.
-    $manualenrollables = $DB->get_records_menu('enrol', array('status' => 0, 'enrol' => 'manual'), 'DISTINCT(id, courseid)');
-    $manualenrollableslist = implode("','", array_values($manualenrollables));
+    $manualenrollables = $DB->get_records_menu('enrol', array('status' => 0, 'enrol' => 'manual'), 'courseid', 'courseid, enrol');
+    $manualenrollableslist = implode("','", array_keys($manualenrollables));
 
     $select = "
         id NOT IN ('$discardedcourselist') AND
