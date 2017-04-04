@@ -322,7 +322,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     if (!empty($userdata)) {
         foreach ($userdata as $userdatum) {
-            $replacements['user:'.$userdatum->shortname] = $userdatum->value;
+            $replacements['user:'.$userdatum->shortname] = $userdatum->data;
         }
     }
 
