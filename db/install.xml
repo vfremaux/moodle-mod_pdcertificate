@@ -30,8 +30,8 @@
         <FIELD NAME="caption" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" ENUM="false"  />
         <FIELD NAME="validitytime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="setcertification" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
-        <FIELD NAME="setcertificationcontext" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
-        <FIELD NAME="groupspecificcontent" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="setcertificationcontext" TYPE="int" LENGTH="11" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="groupspecificcontent" TYPE="int" LENGTH="11" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="propagategroups" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="lockoncoursecompletion" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
