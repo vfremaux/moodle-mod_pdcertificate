@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-require_once($CFG->dirroot . '/mod/pdcertificate/backup/moodle2/restore_pdcertificate_stepslib.php'); // Because it exists (must)
+require_once($CFG->dirroot.'/mod/pdcertificate/backup/moodle2/restore_pdcertificate_stepslib.php');
 
 /**
  * pdcertificate restore task that provides all the settings and steps to perform one
@@ -36,7 +36,8 @@ class restore_pdcertificate_activity_task extends restore_activity_task {
      * Define (add) particular settings this activity can have
      */
     protected function define_my_settings() {
-        // No particular settings for this activity
+        // No particular settings for this activity.
+        assert(1);
     }
 
     /**
@@ -119,31 +120,43 @@ class restore_pdcertificate_activity_task extends restore_activity_task {
         global $DB;
 
         // Get the new module
-        $sql = "SELECT c.*
-                FROM {pdcertificate} c
-                INNER JOIN {course_modules} cm
-                ON c.id = cm.instance
-                WHERE cm.id = :cmid";
-        if ($pdcertificate = $DB->get_record_sql($sql, (array('cmid'=>$this->get_moduleid())))) {
+        $sql = "
+            SELECT
+                c.*
+            FROM
+                {pdcertificate} c
+            INNER JOIN
+                {course_modules} cm
+            ON
+                c.id = cm.instance
+            WHERE
+                cm.id = :cmid
+        ";
+        if ($pdcertificate = $DB->get_record_sql($sql, (array('cmid' => $this->get_moduleid())))) {
 
             $printconfig = unserialize(@$pdcertificate->printconfig);
-            // A flag to check if we need to update the database or not
-            $update = false;
-            if (@$printconfig->printdate > 2) { // If greater than 2, then it is a grade item value
-                if ($newitem = restore_dbops::get_backup_ids_record($this->get_restoreid(), 'course_module', $printconfig->printdate)) {
-                    $update = true;
-                    $printconfig->printdate = $newitem->newitemid;
+            if ($printconfig) {
+                // A flag to check if we need to update the database or not.
+                $update = false;
+                if (@$printconfig->printdate > 2) {
+                    // If greater than 2, then it is a grade item value.
+                    if ($newitem = restore_dbops::get_backup_ids_record($this->get_restoreid(), 'course_module',
+                                                                        $printconfig->printdate)) {
+                        $update = true;
+                        $printconfig->printdate = $newitem->newitemid;
+                    }
                 }
-            }
-            if ($printconfig->printgrade > 2) {
-                if ($newitem = restore_dbops::get_backup_ids_record($this->get_restoreid(), 'course_module', $printconfig->printgrade)) {
-                    $update = true;
-                    $printconfig->printgrade = $newitem->newitemid;
+                if ($printconfig->printgrade > 2) {
+                    if ($newitem = restore_dbops::get_backup_ids_record($this->get_restoreid(), 'course_module',
+                                                                        $printconfig->printgrade)) {
+                        $update = true;
+                        $printconfig->printgrade = $newitem->newitemid;
+                    }
                 }
-            }
-            if ($update) {
-                // Update the pdcertificate
-                $DB->update_record('pdcertificate', $pdcertificate);
+                if ($update) {
+                    // Update the pdcertificate.
+                    $DB->update_record('pdcertificate', $pdcertificate);
+                }
             }
         }
     }
