@@ -95,7 +95,7 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2017020600, 'pdcertificate');
     }
 
-    if ($oldversion < 2017041200) {
+    if ($oldversion < 2017041201) {
 
         $table = new xmldb_table('pdcertificate');
 
@@ -115,7 +115,7 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         }
 
         // Certificate savepoint reached.
-        upgrade_mod_savepoint(true, 2017041200, 'pdcertificate');
+        upgrade_mod_savepoint(true, 2017041201, 'pdcertificate');
     }
 
     return true;
