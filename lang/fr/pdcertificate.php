@@ -196,6 +196,7 @@ $string['printseal'] = 'Image sceau ou logo';
 $string['printsignature'] = 'Image de signature';
 $string['printteacher'] = 'Imprimer le nom du formateur';
 $string['printwmark'] = 'Filigrane';
+$string['printdateformat'] = '';
 $string['propagategroups'] = 'Propagation des groupes';
 $string['qrcodeoffset'] = 'Position du QR code (x,y)';
 $string['receivedcerts'] = 'Attestations reçus';
