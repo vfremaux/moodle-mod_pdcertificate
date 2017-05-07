@@ -174,6 +174,7 @@ $string['printdate'] = 'Print Date';
 $string['printerfriendly'] = 'Printer-friendly page';
 $string['printfontfamily'] = 'Font family';
 $string['printfontsize'] = 'Font base size';
+$string['printdateformat'] = '';
 $string['printgrade'] = 'Print Grade';
 $string['printhours'] = 'Credit Hours';
 $string['printoptions'] = 'Print Options';
