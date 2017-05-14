@@ -930,11 +930,11 @@ function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
         $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
 
         if ($pdcertificate->gradefmt == 1) {
-            $grade = $strcoursegrade.':  '.$coursegrade->percentage;
+            $grade = $strcoursegrade.': '.$coursegrade->percentage;
         } else if ($pdcertificate->gradefmt == 2) {
-            $grade = $strcoursegrade.':  '.$coursegrade->points;
+            $grade = $strcoursegrade.': '.$coursegrade->points;
         } else if ($pdcertificate->gradefmt == 3) {
-            $grade = $strcoursegrade.':  '.$coursegrade->letter;
+            $grade = $strcoursegrade.': '.$coursegrade->letter;
         }
 
         return $grade;
