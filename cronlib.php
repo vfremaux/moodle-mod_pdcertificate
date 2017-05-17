@@ -15,21 +15,28 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Version details.
+ * Certificate module core interaction API
  *
- * @package     mod_pdcertificate
- * @category    mod
- * @author      Valery Fremaux <valery.fremaux@gmail.com>
- * @copyright   Valery Fremaux (http://www.mylearningfactory.com)
- * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or late
+ * @package    mod
+ * @subpackage pdcertificate
+ * @copyright  Mark Nelson <markn@moodle.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017051200; // The current module version (Date: YYYYMMDDXX).
-$plugin->requires  = 2016051900; // Requires this Moodle version.
-$plugin->component = 'mod_pdcertificate';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.1.0 (Build 2017041200)'; // User-friendly version number.
+function pdcertificate_cron_task() {
+    global $DB;
 
-// Non Moodle attributes.
-$plugin->codeincrement = '3.1.0002';
+    $cronedpdcertificates = $DB->get_records('pdcertificate', array('croned' => true));
+
+    foreach ($cronedpdcertificate as $cert) {
+
+        $users = get_enrolled_users($course);
+
+        $cm = get_coursemodule_from_instance('pdcertificzate', $cert->id);
+
+        $state = pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
+
+
+    }
+}

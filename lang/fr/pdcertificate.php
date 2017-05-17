@@ -77,6 +77,7 @@ $string['coursetime'] = 'Crédit horaire de formation requis';
 $string['coursetimedependency'] = 'Temps minimum requis dans le cours';
 $string['coursetimereq'] = 'Minutes minimum dans le cours';
 $string['credithours'] = 'Crédit d\'heures';
+$string['cron_task'] = 'Tâches de l\'attestation';
 $string['customtext'] = 'Texte personnalisé';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
@@ -373,3 +374,4 @@ $string['setcertification_help'] = 'Le rôle qui sera attribué lors de la déli
 
 $string['chaining_help'] = 'Le chaînage permet à un bénéficiaire d\'être inscrit dans un nouveau cours comme conséquence de la délivrance de l\'attestation';
 
+$string['croned_help'] = 'Si activé, cette attestation sera traitée par le cron pour générer les certificats validables en attente de creation.';

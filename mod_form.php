@@ -64,7 +64,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         // Issue options
         $mform->addElement('header', 'issueoptions', get_string('issueoptions', 'pdcertificate'));
+
         $ynoptions = array( 0 => get_string('no'), 1 => get_string('yes'));
+
         $mform->addElement('select', 'emailteachers', get_string('emailteachers', 'pdcertificate'), $ynoptions);
         $mform->setDefault('emailteachers', 0);
         $mform->addHelpButton('emailteachers', 'emailteachers', 'pdcertificate');
@@ -81,6 +83,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('select', 'savecert', get_string('savecert', 'pdcertificate'), $ynoptions);
         $mform->setDefault('savecert', 0);
         $mform->addHelpButton('savecert', 'savecert', 'pdcertificate');
+
+        $mform->addElement('select', 'croned', get_string('croned', 'pdcertificate'), $ynoptions);
+        $mform->setDefault('croned', 0);
+        $mform->addHelpButton('croned', 'croned', 'pdcertificate');
 
         $reportfile = "$CFG->dirroot/pdcertificates/index.php";
         if (file_exists($reportfile)) {
