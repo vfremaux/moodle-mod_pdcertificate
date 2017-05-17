@@ -298,7 +298,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         '{info:course_summary}' => $course->summary,
         '{info:course_category}' => $DB->get_field('course_categories', 'name', array('id' => $course->category)),
         '{info:course_idnumber}' => $course->idnumber,
-        '{info:course_grade}' => pdcertificate_get_grade($pdcertificate, $course),
+        '{info:course_grade}' => pdcertificate_get_grade($pdcertificate, $course, $user->id),
         '{info:certificate_date}' => strftime($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
         '{info:certificate_outcome}' => pdcertificate_get_outcome($pdcertificate, $course),
         '{info:certificate_credit_hours}' => get_string('credithours', 'pdcertificate').': '.$printconfig->printhours,
@@ -310,6 +310,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     $sql = "
         SELECT
             uif.shortname,
+            uif.datatype,
             uid.data
         FROM
             {user_info_field} uif,
@@ -322,7 +323,16 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     if (!empty($userdata)) {
         foreach ($userdata as $userdatum) {
-            $replacements['{user:'.$userdatum->shortname.'}'] = $userdatum->data;
+            if ($userdatum->datatype == 'datetime') {
+                $dateformat = get_string('printdateformat', 'pdcertificate');
+                if (!empty($dateformat)) {
+                    $replacements['{user:'.$userdatum->shortname.'}'] = strftime($dateformat, $userdatum->data);
+                } else {
+                    $replacements['{user:'.$userdatum->shortname.'}'] = userdate($userdatum->data);
+                }
+            } else {
+                $replacements['{user:'.$userdatum->shortname.'}'] = $userdatum->data;
+            }
         }
     }
 
@@ -375,6 +385,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     // Eliminate remaining unresolved injection patterns.
     $text = preg_replace('/\{info:.*?\}/', '', $text);
+    $text = preg_replace('/\{user:.*?\}/', '', $text);
 
     return $text;
 }
