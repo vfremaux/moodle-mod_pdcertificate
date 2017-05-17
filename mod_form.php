@@ -189,8 +189,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('datefmt', 0);
         $mform->addHelpButton('datefmt', 'datefmt', 'pdcertificate');
 
-        $gradeformatoptions = array( 1 => get_string('gradepercent', 'pdcertificate'), 2 => get_string('gradepoints', 'pdcertificate'),
-            3 => get_string('gradeletter', 'pdcertificate'));
+        $gradeformatoptions = array(1 => get_string('gradepercent', 'pdcertificate'),
+                                    2 => get_string('gradepoints', 'pdcertificate'),
+                                    3 => get_string('gradeletter', 'pdcertificate'));
         $mform->addElement('select', 'gradefmt', get_string('gradefmt', 'pdcertificate'), $gradeformatoptions);
         $mform->setDefault('gradefmt', 0);
         $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
