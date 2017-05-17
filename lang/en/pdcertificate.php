@@ -63,6 +63,8 @@ $string['coursedependencies'] = 'Course dependancies';
 $string['coursegrade'] = 'Course Grade';
 $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
+$string['croned'] = 'Generate issues by cron';
+$string['cron_task'] = 'PD Certificate scheduled task';
 $string['customtext'] = 'Custom Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
@@ -365,3 +367,6 @@ $string['defaultcertificatebody_tpl'] = '
 ';
 
 $string['defaultcertificatefooter_tpl'] = '<center>{info:site_fullname}</center>';
+
+$string['croned_help'] = 'If enabled, the cron will scan this pdcertificate to generate pending positive issues.';
+
