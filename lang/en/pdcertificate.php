@@ -126,6 +126,7 @@ $string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
 $string['margins'] = 'Margins (x,y)';
 $string['manualenrolnotavailableontarget'] = 'The Manual Enrol method seems to be disabled on the target course. Chain will fail.';
+$string['maxdocumentspercron'] = 'Max documents per cron';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
@@ -369,4 +370,7 @@ $string['defaultcertificatebody_tpl'] = '
 $string['defaultcertificatefooter_tpl'] = '<center>{info:site_fullname}</center>';
 
 $string['croned_help'] = 'If enabled, the cron will scan this pdcertificate to generate pending positive issues.';
+
+$string['maxdocumentspercron_desc'] = 'Max amount of PDF documents one single execution can generate con croned certificates.
+Consider setting this limit on big course audience to avoid a long running cron task. Further document generation will be delayed in time.';
 

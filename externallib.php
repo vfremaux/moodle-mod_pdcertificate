@@ -150,10 +150,10 @@ class mod_pdcertificate_external extends external_api {
     public static function get_certificate_file_url_parameters() {
         return new external_function_parameters(
             array(
-                'pdcidsource'  => new external_value(PARAM_ALPHA, 'Source for pdcertificate identifier, can be \'id\' or \'idnumber\''),
-                'pdcid'  => new external_value(PARAM_TEXT, 'Version resource id'),
-                'useridsource'  => new external_value(PARAM_TEXT, 'Source of user identifier, can be in set id,idnumber,email,username '),
-                'userid'  => new external_value(PARAM_TEXT, 'Version resource id')
+                'pdcidsource' => new external_value(PARAM_ALPHA, 'Source for pdcertificate identifier, can be \'id\', \'cmid\' or \'idnumber\''),
+                'pdcid'  => new external_value(PARAM_TEXT, 'PDCertificate id'),
+                'uidsource' => new external_value(PARAM_TEXT, 'Source of user identifier, can be in set id,idnumber,email,username '),
+                'uid'  => new external_value(PARAM_TEXT, 'The user id value')
             )
         );
     }
@@ -165,38 +165,43 @@ class mod_pdcertificate_external extends external_api {
      * @return array of course objects and warnings
      * @throws moodle_exception
      */
-    public static function get_certificate_file_url($pdcidsource, $pdcid, $useridsource, $userid) {
+    public static function get_certificate_file_url($pdcidsource, $pdcid, $uidsource, $uid) {
         global $DB, $CFG;
 
         $parameters = array(
             'pdcidsource'  => $pdcidsource,
             'pdcid'  => $pdcid,
-            'useridsource'  => $useridsource,
-            'userid'  => $userid,
+            'uidsource'  => $uidsource,
+            'uid'  => $uid,
         );
+
         $params = self::validate_parameters(self::get_certificate_file_url_parameters(), $parameters);
 
-        list($pdc, $user) = get_objects($pdcidsource, $pdcid, $useridsource, $userid);
+        list($pdc, $cm, $user) = self::get_objects($pdcidsource, $pdcid, $uidsource, $uid);
 
-        if (!$cm = get_coursemodule_from_instance('pdcertificate', $version->pdcertificateid)) {
-            throw new moodle_exception('badcoursemodule');
-        }
         $context = context_module::instance($cm->id);
-        $urlbase = "$CFG->httpswwwroot/webservice/pluginfile.php";
-        $context = context_user::instance($USER->id);
+
+        $params = array('userid' => $user->id, 'pdcertificateid' => $pdc->id);
+        $issue = $DB->get_record('pdcertificate_issues', $params);
+
+        if (!$issue) {
+            throw new invalid_response_exception('Not certified');
+        }
 
         $fs = get_file_storage();
-        $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'issue', $version->id, 'itemid, filepath', false);
+        $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'issue', $issue->id, 'itemid, filepath', false);
         if ($files) {
             // Should be only one.
             $file = array_pop($files);
 
             $filepath = $file->get_filepath();
             $filename = $file->get_filename();
-            return self::make_file_url($urlbase, "/{$context->id}/mod_pdcertificate/issue/{$version->id}".$filepath.$filename, true);
+
+            return moodle_url::make_webservice_pluginfile_url($context->id, 'mod_pdcertificate', 'issue', $issue->id, $filepath, $filename,
+                                               $forcedownload = true)->out();
         }
 
-        throw new moodle_exception('missingfile');
+        throw new invalid_response_exception('Missing file or unstored certificate');
     }
 
     /**
@@ -218,10 +223,10 @@ class mod_pdcertificate_external extends external_api {
     public static function get_certificate_info_parameters() {
         return new external_function_parameters(
             array(
-                'pdcidsource'  => new external_value(PARAM_ALPHA, 'Source for pdcertificate identifier, can be \'id\' or \'idnumber\''),
-                'pdcid'  => new external_value(PARAM_TEXT, 'Version resource id'),
-                'useridsource'  => new external_value(PARAM_TEXT, 'Source of user identifier, can be in set id,idnumber,email,username '),
-                'userid'  => new external_value(PARAM_TEXT, 'Version resource id')
+                'pdcidsource'  => new external_value(PARAM_ALPHA, 'Source for pdcertificate identifier, can be \'id\', \'cmid\' or \'idnumber\''),
+                'pdcid'  => new external_value(PARAM_TEXT, 'PD Certificate or course module identifier'),
+                'uidsource'  => new external_value(PARAM_TEXT, 'Source of user identifier, can be in set \'id\', \'idnumber\', \'email\' or \'username\''),
+                'uid'  => new external_value(PARAM_TEXT, 'the user identifier value')
             )
         );
     }
@@ -231,34 +236,40 @@ class mod_pdcertificate_external extends external_api {
      *
      * @param string $pdcidsource
      * @param string $pdcid
-     * @return array of course objects and warnings
+     * @param string $uidsource
+     * @param string $uid
+     * @return an info object
      * @throws moodle_exception
      */
-    public static function get_certificate_info($pdcidsource, $pdcid, $useridsource, $userid) {
+    public static function get_certificate_info($pdcidsource, $pdcid, $uidsource, $uid) {
         global $DB;
 
         $parameters = array(
             'pdcidsource'  => $pdcidsource,
-            'pdcid'  => $pdid,
-            'useridsource'  => $useridsource,
-            'userid' => $userid
+            'pdcid'  => $pdcid,
+            'uidsource'  => $uidsource,
+            'uid' => $uid
         );
-        $params = self::validate_parameters(self::get_last_branch_file_url_parameters(), $parameters);
+        $params = self::validate_parameters(self::get_certificate_info_parameters(), $parameters);
 
-        list($pdc, $user) = self::get_objects();
+        list($pdc, $cm, $user) = self::get_objects($pdcidsource, $pdcid, $uidsource, $uid);
 
-        $cm = get_coursemodule_from_instance('pdcertificate', $pdc->id);
+        $course = $DB->get_record('course', array('id' => $pdc->course), 'id,idnumber,shortname');
 
-        // Search issue for user
+        // Search issue for user.
 
-        $params = array('pdcertificateid' => $pd->id, 'userid' => $user->id);
+        $params = array('pdcertificateid' => $pdc->id, 'userid' => $user->id);
         if ($issue = $DB->get_record('pdcertificate_issues', $params)) {
             $issueout = new StdClass();
             $issueout->id = $issue->id;
+            $issueout->courseid = $pdc->course;
+            $issueout->courseidnumber = $course->idnumber;
+            $issueout->courseshortname = $course->shortname;
             $issueout->certid = $pdc->id;
             $issueout->certname = $pdc->name;
             $issueout->certidnumber = $cm->idnumber;
             $issueout->user = fullname($user);
+            $issueout->username = $user->username;
             $issueout->useridnumber = $user->idnumber;
             $issueout->issuecode = $issue->code;
             $issueout->timecreated = $issue->timecreated;
@@ -270,7 +281,7 @@ class mod_pdcertificate_external extends external_api {
                 $authority = $DB->get_record('user', array('id' => $issue->authorityid));
                 $issueout->authority = fullname($authority);
             } else {
-                $issueout->authority = '';
+                $issueout->authority = 'N.C.';
             }
 
             return $issueout;
@@ -288,16 +299,20 @@ class mod_pdcertificate_external extends external_api {
         return new external_single_structure(
             array(
                 'id' => new external_value(PARAM_INT, 'Issue id'),
+                'courseid' => new external_value(PARAM_INT, 'Course id'),
+                'courseidnumber' => new external_value(PARAM_TEXT, 'Course idnumber'),
+                'courseshortname' => new external_value(PARAM_TEXT, 'Course shortname'),
                 'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
                 'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
-                'certidnumber' => new external_value(PARAM_INT, 'PDCertificate ID Number'),
-                'user' => new external_value(PARAM_TEXT, 'Appliant identity'),
-                'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDnumber'),
-                'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code'),
-                'timecreated' => new external_value(PARAM_INT, 'Issue id'),
-                'timedelivered' => new external_value(PARAM_INT, 'Time of delivery'),
+                'certidnumber' => new external_value(PARAM_TEXT, 'PDCertificate ID Number'),
+                'user' => new external_value(PARAM_TEXT, 'Appliant readable identity'),
+                'username' => new external_value(PARAM_TEXT, 'Appliant username'),
+                'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDNumber'),
+                'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code of the issue'),
+                'timecreated' => new external_value(PARAM_INT, 'Issue creation date (Linux timestamp)'),
+                'timedelivered' => new external_value(PARAM_INT, 'Time of delivery (Linux timestamp)'),
                 'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?'),
-                'authority' => new external_value(PARAM_TEXT, 'Authority person')
+                'authority' => new external_value(PARAM_TEXT, 'Authority person (readable name)')
             )
         );
     }
@@ -312,26 +327,147 @@ class mod_pdcertificate_external extends external_api {
     public static function get_certificate_infos_parameters() {
         return new external_function_parameters(
             array(
-                'cidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'idnumber\''),
-                'cid' => new external_value(PARAM_TEXT, 'course id'),
-                'uidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\' or \'username\', \'idnumber\' or \'email\''),
-                'uid' => new external_value(PARAM_TEXT, 'course id'),
+                'cidsource' => new external_value(PARAM_ALPHA, 'source for the id, can be either \'id\', \'shortname\' or \'idnumber\''),
+                'cid' => new external_value(PARAM_TEXT, 'The course id'),
+                'issuedfrom' => new external_value(PARAM_TEXT, 'Return only issues from that date', VALUE_DEFAULT, 'last'),
             )
         );
     }
 
     /**
-     * Get all users info from a pdcertificate instance.
+     * Get all users certification info for a course instance.
      *
-     * @param string $pdcidsource the source field for the resource identifier.
-     * @param string $pdcid the pdcertificate id
-     * @param int $draftitemid the temporary draft id of the uploaded file. This has been given by the upload return.
+     * @param string $cidsource the source field for the course identifier.
+     * @param string $cid the course id
+     * @param string $issuedfrom a linux timestamp
      *
      * @return external_description
      */
-    public static function get_certificate_infos($cidsource, $cid, $uidsource, $uid) {
-        global $CFG;
+    public static function get_certificate_infos($cidsource, $cid, $issuedfrom) {
+        global $DB;
 
+        $parameters = array(
+            'cidsource'  => $cidsource,
+            'cid'  => $cid,
+            'issuedfrom' => $issuedfrom
+        );
+        $params = self::validate_parameters(self::get_certificate_infos_parameters(), $parameters);
+
+        $course = self::get_course($cidsource, $cid);
+
+        $sqlparams = array();
+        $courseclause = '';
+        $timeclause = '';
+
+        if (!empty($course)) {
+            $courseclause = '
+                AND
+                    pd.course = ?
+            ';
+            $sqlparams[] = $course->id;
+        }
+
+        if ($issuedfrom == 'last') {
+            $timeclause = 'AND
+                pdi.timeexported = 0
+            ';
+        }
+
+        if ($issuedfrom > 0) {
+            $timeclause = 'AND
+                pdi.timeexported > ?
+            ';
+            $sqlparams[] = $issuedfrom;
+        }
+
+        $sql = "
+            SELECT
+                pdi.id as id,
+                pdi.timecreated as timecreated,
+                pdi.timedelivered as timedelivered,
+                pdi.locked as locked,
+                pdi.code as code,
+                pdi.authorityid as authorityid,
+                pd.id as pdid,
+                pd.name as pdname,
+                u.idnumber as uidnum,
+                u.username,
+                cm.idnumber as cmidnumber
+            FROM
+                {pdcertificate_issues} pdi,
+                {pdcertificate} pd,
+                {course_modules} cm,
+                {modules} m,
+                {user} u
+            WHERE
+                pdi.pdcertificateid = pd.id AND
+                pdi.userid = u.id AND
+                pd.id = cm.instance AND
+                cm.module = m.id AND
+                m.name = 'pdcertificate'
+                $courseclause
+                $timeclause
+        ";
+
+        $records = $DB->get_records_sql($sql, $sqlparams);
+
+        $results = array();
+
+        $now = time();
+
+        if ($records) {
+            foreach ($records as $rec) {
+                $certdata = new StdClass;
+                $certdata->id = $rec->id;
+                $certdata->certid = $rec->pdid;
+                $certdata->certname = format_string($rec->pdname);
+                $certdata->certidnumber = $rec->cmidnumber;
+                $certdata->username = $rec->username;
+                $certdata->useridnumber = $rec->uidnum;
+                $certdata->issuecode = $rec->code;
+                $certdata->timecreated = $rec->timecreated;
+                $certdata->timedelivered = $rec->timedelivered;
+                $certdata->locked = $rec->locked;
+
+                if ($authority = $DB->get_record('user', array('id' => $rec->authorityid))) {
+                    $certdata->authority = fullname($authority);
+                } else {
+                    $certdata->authority = 'N.C.';
+                }
+
+                $results[] = $certdata;
+                $DB->set_field('pdcertificate_issues', 'timeexported', $now, array('id' => $rec->id));
+            }
+        }
+
+        return $results;
+    }
+
+    private static function get_course($cidsource, $cid) {
+        global $DB;
+
+        switch ($cidsource) {
+            case 'id':
+                $field = 'id';
+                break;
+
+            case 'idnumber':
+                $field = 'idnumber';
+                break;
+
+            case 'shortname':
+                $field = 'shortname';
+                break;
+
+            default:
+                throw new invalid_parameter_exception('Not accepted source for course id');
+        }
+
+        if (!$course = $DB->get_record('course', array($field => $cid))) {
+            throw new invalid_parameter_exception('Bad course id '.$cid);
+        }
+
+        return $course;
     }
 
     /**
@@ -346,8 +482,8 @@ class mod_pdcertificate_external extends external_api {
                     'id' => new external_value(PARAM_INT, 'Issue id'),
                     'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
                     'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
-                    'certidnumber' => new external_value(PARAM_INT, 'PDCertificate ID Number'),
-                    'user' => new external_value(PARAM_TEXT, 'Appliant identity'),
+                    'certidnumber' => new external_value(PARAM_TEXT, 'PDCertificate ID Number'),
+                    'username' => new external_value(PARAM_TEXT, 'Appliant identity'),
                     'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDnumber'),
                     'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code'),
                     'timecreated' => new external_value(PARAM_INT, 'Issue id'),
@@ -361,25 +497,48 @@ class mod_pdcertificate_external extends external_api {
 
     // Internal APIs -------------------------------------------------------------------.
 
-    protected function get_objects($pdcidsource, $pdcid, $useridsource, $userid) {
+    protected static function get_objects($pdcidsource, $pdcid, $uidsource, $uid) {
         global $DB;
 
         // Explicit mapping avoids injection.
-        switch ($pdcidsource) {
-            case 'idnumber':
-                $field = 'idnumber';
-                break;
-            default:
-                $field = 'id';
-                break;
-        }
+        if ($pdcidsource == 'id') {
 
-        if (!$pdc = $DB->get_record('pdcertificate', array($field => $pdcid))) {
-            throw new moodle_exception('missingmodule');
+            if (!$pdc = $DB->get_record('pdcertificate', array('id' => $pdcid))) {
+                throw new moodle_exception('missingmodule');
+            }
+
+            $cm = get_coursemodule_from_instance('pdcertificate', $pdc->id);
+        } else {
+
+            switch ($pdcidsource) {
+                case 'idnumber':
+                    $field = 'idnumber';
+                    break;
+
+                case 'cmid':
+                    $field = 'id';
+                    break;
+
+                default:
+                    throw new invalid_parameter_exception("Invalid instance identifier source '$pdcidsource'");
+            }
+
+            try {
+                $cm = $DB->get_record('course_modules', array($field => $pdcid));
+            } catch (Exception $e) {
+                throw new invalid_parameter_exception('Course module missing.');
+            }
+
+            $module = $DB->get_record('modules', array('id' => $cm->module));
+            if ($module->name != 'pdcertificate') {
+                throw new invalid_parameter_exception('Invalid module type. This course module is NOT a pdcertificate');
+            }
+
+            $pdc = $DB->get_record('pdcertificate', array('id' => $cm->instance));
         }
 
         // Explicit mapping avoids injection.
-        switch ($useridsource) {
+        switch ($uidsource) {
             case 'username':
                 $field = 'username';
                 break;
@@ -394,10 +553,15 @@ class mod_pdcertificate_external extends external_api {
                 break;
         }
 
-        if (!$user = $DB->get_record('user', array($field => $userid))) {
-            throw new moodle_exception('missinguser');
+        if (!$user = $DB->get_record('user', array($field => $uid))) {
+            throw new invalid_parameter_exception('The user '.$uid.' does not exist');
         }
 
-        return array($pdc, $user);
+        $context = context_module::instance($cm->id);
+        if (!has_capability('mod/pdcertificate:apply', $context, $user->id)) {
+            throw new invalid_parameter_exception('The user '.$uid.' cannot apply to certification');
+        }
+
+        return array($pdc, $cm, $user);
     }
 }

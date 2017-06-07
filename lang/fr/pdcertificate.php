@@ -144,6 +144,7 @@ $string['modulenameplural'] = 'Attestations';
 $string['mypdcertificates'] = 'Mes attestations';
 $string['margins'] = 'Marges (x,y)';
 $string['manualenrolnotavailableontarget'] = 'La méthode manuelle d\'inscription semble avoir été désactivée. Le chainage ne peut être réalisé.';
+$string['maxdocumentspercron'] = 'Nombre max de documents par cron';
 $string['needsmorework'] = 'Il y a encore des travaux requis pour activer cette attestation';
 $string['noauthority'] = 'Pas d\'autorité';
 $string['nocertifiables'] = 'Aucun utilisateur à attester';
@@ -375,3 +376,6 @@ $string['setcertification_help'] = 'Le rôle qui sera attribué lors de la déli
 $string['chaining_help'] = 'Le chaînage permet à un bénéficiaire d\'être inscrit dans un nouveau cours comme conséquence de la délivrance de l\'attestation';
 
 $string['croned_help'] = 'Si activé, cette attestation sera traitée par le cron pour générer les certificats validables en attente de creation.';
+
+$string['maxdocumentspercron_desc'] = 'Si supérieur à 0, le nombre maximum de certificats (documents PDF) qu\'une exécutnio de cron peut générer en un tour.
+Les documents restants seront générés pendant les crons suivants jusqu\'à épuisement du besoin.';

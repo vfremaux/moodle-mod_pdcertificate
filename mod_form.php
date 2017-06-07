@@ -75,7 +75,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setType('emailothers', PARAM_TEXT);
         $mform->addHelpButton('emailothers', 'emailothers', 'pdcertificate');
 
-        $deliveryoptions = array( 0 => get_string('openbrowser', 'pdcertificate'), 1 => get_string('download', 'pdcertificate'), 2 => get_string('emailpdcertificate', 'pdcertificate'));
+        $deliveryoptions = array(0 => get_string('openbrowser', 'pdcertificate'),
+                                 1 => get_string('download', 'pdcertificate'),
+                                 2 => get_string('emailpdcertificate', 'pdcertificate'));
         $mform->addElement('select', 'delivery', get_string('delivery', 'pdcertificate'), $deliveryoptions);
         $mform->setDefault('delivery', 0);
         $mform->addHelpButton('delivery', 'delivery', 'pdcertificate');

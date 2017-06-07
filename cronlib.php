@@ -27,16 +27,39 @@ defined('MOODLE_INTERNAL') || die();
 function pdcertificate_cron_task() {
     global $DB;
 
+    mtrace("PD Certificate cron task start...\n");
+    $config = get_config('pdcertificate');
+
     $cronedpdcertificates = $DB->get_records('pdcertificate', array('croned' => true));
 
+    $doccount = 0;
+
     foreach ($cronedpdcertificate as $cert) {
+        mtrace("\tProcessing PD Certificate $cert->id...\n");
 
-        $users = get_enrolled_users($course);
+        if ($cert->savecert == 0 && $cert->delivery < 2) {
+            mtrace("This certificate (id={$cert->id}) in course {$cert->course} can only deliver interactively.");
+            mtrace(" Author may change delivery options. Skipping.\n");
+            continue;
+        }
 
-        $cm = get_coursemodule_from_instance('pdcertificzate', $cert->id);
+        $cm = get_coursemodule_from_instance('pdcertificate', $cert->id);
+        $context = context_module::instance($cm->id);
 
-        $state = pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
+        pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
 
+        if (!empty($certifiableusers)) {
+            foreach ($certifiableusers as $cu) {
+                pdcertificate_make_certificate($cert, $context, '', $cu->id);
+                $doccount++;
 
+                if (!empty($config->maxdocumentspercron) && $doccount > $config->maxdocumentspercron) {
+                    // If we reached the limit, let further crons finish generating.
+                    return;
+                }
+            }
+        }
     }
+
+    mtrace('PD Certificate finished...');
 }
