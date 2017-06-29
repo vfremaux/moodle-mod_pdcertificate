@@ -30,6 +30,7 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
+require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
 
 class mod_pdcertificate_mod_form extends moodleform_mod {
 
@@ -219,10 +220,15 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
         $mform->setDefault('fontbasesize', 12);
 
+        /*
         $familyoptions = array('freesans' => get_string('freesans', 'pdcertificate'),
             'freeserif' => get_string('freeserif', 'pdcertificate'),
             'freemono' => get_string('freemono', 'pdcertificate')
         );
+        */
+        $pdf = new PDF();
+        $available = array_keys($pdf->get_font_families());
+        $familyoptions = array_combine($available, $available);
         $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
         $mform->setDefault('fontbasesize', 12);
 

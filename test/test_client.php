@@ -10,11 +10,29 @@ class test_client {
 
         // Setup this settings for tests
         $this->t->baseurl = 'http://dev.moodle31.fr'; // The remote Moodle url to push in.
-        $this->t->wstoken = 'fcd0e914d0b3ba30c677631a9f0d1664'; // the service token for access.
+        $this->t->wstoken = '4aee373f7809e71559f9c4ffeb450156'; // the service token for access.
         $this->t->filepath = ''; // Some physical location on your system.
 
         $this->t->uploadservice = '/webservice/upload.php';
         $this->t->service = '/webservice/rest/server.php';
+    }
+
+    public function test_get_certificates($cidsource = 'id', $cid = 0) {
+
+        if (empty($this->t->wstoken)) {
+            echo "No token to proceed\n";
+            return;
+        }
+
+        $params = array('wstoken' => $this->t->wstoken,
+                        'wsfunction' => 'mod_pdcertificate_get_certificates',
+                        'moodlewsrestformat' => 'json',
+                        'cidsource' => $cidsource,
+                        'cid' => $cid);
+
+        $serviceurl = $this->t->baseurl.$this->t->service;
+
+        return $this->send($serviceurl, $params);
     }
 
     public function test_get_certificate_info($pdcidsource = '', $pdcid = 0, $uidsource = '', $uid = 0) {
@@ -107,6 +125,11 @@ class test_client {
 $client = new test_client();
 
 $ix = 1;
+
+echo "\n\nTest $ix ###########";
+$ix++;
+$client->test_get_certificates('id', 2); // Test one course.
+$client->test_get_certificates(); // Test all certificates.
 
 echo "\n\nTest $ix ###########";
 $ix++;
