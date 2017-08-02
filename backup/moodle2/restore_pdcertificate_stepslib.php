@@ -54,7 +54,6 @@ class restore_pdcertificate_activity_structure_step extends restore_activity_str
         $data->course = $this->get_courseid();
         $data->timecreated = $this->apply_date_offset($data->timecreated);
         $data->timemodified = $this->apply_date_offset($data->timemodified);
-        $data->printconfig = '';
         if (!isset($data->layout)) {
             $data->layout = '';
         }
