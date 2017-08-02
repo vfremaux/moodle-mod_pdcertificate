@@ -63,7 +63,6 @@ if ($action == 'generate') {
 
     if (!empty($userids)) {
 
-
         make_cache_directory('tcpdf');
 
         // load some usefull strings

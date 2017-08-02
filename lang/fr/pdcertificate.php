@@ -379,3 +379,8 @@ $string['croned_help'] = 'Si activé, cette attestation sera traitée par le cro
 
 $string['maxdocumentspercron_desc'] = 'Si supérieur à 0, le nombre maximum de certificats (documents PDF) qu\'une exécutnio de cron peut générer en un tour.
 Les documents restants seront générés pendant les crons suivants jusqu\'à épuisement du besoin.';
+
+$string['modulename_help'] = 'Le module PD (Profesional Development) Certificate permet de générer une grande variété de documents,
+certificats, attestations, lettres, convocations à partir de modèles HTML et images pouvant insérer de nombreuses informations relatives,
+à l\'utilisateur, au cours ou au site. Le certificat peut être utilisé pour inscrire un étudiznt sur un autre cours "suivant" ou changer
+le rôle dans le cours courant. Les certificats générés peuvent être récupérés dans une base documentaire par des web services.';

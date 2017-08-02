@@ -374,3 +374,7 @@ $string['croned_help'] = 'If enabled, the cron will scan this pdcertificate to g
 $string['maxdocumentspercron_desc'] = 'Max amount of PDF documents one single execution can generate con croned certificates.
 Consider setting this limit on big course audience to avoid a long running cron task. Further document generation will be delayed in time.';
 
+$string['modulename_help'] = 'The PD (Profesional Development) Certificate allows generating a wide variety of documents such as certificates,
+letters, assignments from HTML templates inserting a big choice of internal, user, course or site related information. The certifricate can
+be used to trigger the enrolment in a "following course" or change role assignation on the current course. Certificates can be retrived in an
+external document system by web services';

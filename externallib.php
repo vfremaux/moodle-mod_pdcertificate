@@ -254,6 +254,15 @@ class mod_pdcertificate_external extends external_api {
 
         // Search issue for user.
 
+        $coursecontext = context_course::instance($course->id);
+        $roles = get_user_roles($coursecontext, $user->id);
+        $userroles = array();
+        if ($roles) {
+            foreach ($roles as $role) {
+                $userroles[] = $role->shortname;
+            }
+        }
+
         $params = array('pdcertificateid' => $pdc->id, 'userid' => $user->id);
         if ($issue = $DB->get_record('pdcertificate_issues', $params)) {
             $issueout = new StdClass();
@@ -268,6 +277,7 @@ class mod_pdcertificate_external extends external_api {
             $issueout->user = fullname($user);
             $issueout->username = $user->username;
             $issueout->useridnumber = $user->idnumber;
+            $issueout->userroles = implode(',', $userroles);
             $issueout->issuecode = $issue->code;
             $issueout->timecreated = $issue->timecreated;
             $issueout->timedelivered = $issue->timedelivered;
@@ -306,11 +316,130 @@ class mod_pdcertificate_external extends external_api {
                 'user' => new external_value(PARAM_TEXT, 'Appliant readable identity'),
                 'username' => new external_value(PARAM_TEXT, 'Appliant username'),
                 'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDNumber'),
+                'userroles' => new external_value(PARAM_TEXT, 'Appliant Roles in course'),
                 'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code of the issue'),
                 'timecreated' => new external_value(PARAM_INT, 'Issue creation date (Linux timestamp)'),
                 'timedelivered' => new external_value(PARAM_INT, 'Time of delivery (Linux timestamp)'),
                 'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?'),
                 'authority' => new external_value(PARAM_TEXT, 'Authority person (readable name)')
+            )
+        );
+    }
+
+    // Get certificate info for a set of users ----------------------------------------------.
+
+    /**
+     * Returns description of method parameters
+     *
+     * @return external_function_parameters
+     */
+    public static function get_certificate_users_info_parameters() {
+        return new external_function_parameters(
+            array(
+                'pdcidsource'  => new external_value(PARAM_ALPHA, 'Source for pdcertificate identifier, can be \'id\', \'cmid\' or \'idnumber\''),
+                'pdcid'  => new external_value(PARAM_TEXT, 'PD Certificate or course module identifier'),
+                'uidsource'  => new external_value(PARAM_TEXT, 'Source of user identifier, can be in set \'id\', \'idnumber\', \'email\' or \'username\''),
+                'uids'  => new external_multiple_structure(
+                    new external_value(PARAM_TEXT, 'the user identifier value')
+                ),
+            )
+        );
+    }
+
+    /**
+     * Search courses following the specified criteria.
+     *
+     * @param string $pdcidsource
+     * @param string $pdcid
+     * @param string $uidsource
+     * @param string $uids
+     * @return an info object
+     * @throws moodle_exception
+     */
+    public static function get_certificate_users_info($pdcidsource, $pdcid, $uidsource, $uids) {
+        global $DB;
+
+        $parameters = array(
+            'pdcidsource'  => $pdcidsource,
+            'pdcid'  => $pdcid,
+            'uidsource'  => $uidsource,
+            'uids' => $uids
+        );
+
+        $params = self::validate_parameters(self::get_certificate_users_info_parameters(), $parameters);
+
+        $bulkresults = array();
+
+        foreach ($uids as $uid) {
+            try {
+                $bulkresults[] = self::get_certificate_info($pdcidsource, $pdcid, $uidsource, $uid);
+            } catch (moodle_exception $ex) {
+
+                list($pdc, $cm, $user) = self::get_objects($pdcidsource, $pdcid, $uidsource, $uid);
+
+                $course = $DB->get_record('course', array('id' => $pdc->course), 'id,idnumber,shortname');
+
+                $coursecontext = context_course::instance($course->id);
+                $roles = get_user_roles($coursecontext, $user->id);
+                $userroles = array();
+                if ($roles) {
+                    foreach ($roles as $role) {
+                        $userroles[] = $role->shortname;
+                    }
+                }
+
+                if ($ex->errorcode == 'notissued') {
+                    $issueout = new StdClass();
+                    $issueout->id = $issue->id;
+                    $issueout->courseid = $pdc->course;
+                    $issueout->courseidnumber = $course->idnumber;
+                    $issueout->courseshortname = $course->shortname;
+                    $issueout->certid = $pdc->id;
+                    $issueout->certname = $pdc->name;
+                    $issueout->certidnumber = $cm->idnumber;
+                    $issueout->userid = $user->id;
+                    $issueout->user = fullname($user);
+                    $issueout->username = $user->username;
+                    $issueout->useridnumber = $user->idnumber;
+                    $issueout->userroles = implode(',', $userroles);
+                    $bulkresults[] = $issueout;
+                } else {
+                    // Other error exception. Report it to output.
+                    throw $ex;
+                }
+            }
+        }
+
+        return $bulkresults;
+    }
+
+    /**
+     * Returns description of method result value
+     *
+     * @return external_description
+     */
+    public static function get_certificate_users_info_returns() {
+        return new external_multiple_structure(
+            new external_single_structure(
+                array(
+                    'id' => new external_value(PARAM_INT, 'Issue id'),
+                    'courseid' => new external_value(PARAM_INT, 'Course id'),
+                    'courseidnumber' => new external_value(PARAM_TEXT, 'Course idnumber'),
+                    'courseshortname' => new external_value(PARAM_TEXT, 'Course shortname'),
+                    'certid' => new external_value(PARAM_INT, 'PD Certificate id'),
+                    'certname' => new external_value(PARAM_TEXT, 'PDCertificate name'),
+                    'certidnumber' => new external_value(PARAM_TEXT, 'PDCertificate ID Number'),
+                    'userid' => new external_value(PARAM_INT, 'Primary user id'),
+                    'user' => new external_value(PARAM_TEXT, 'Appliant readable identity'),
+                    'username' => new external_value(PARAM_TEXT, 'Appliant username'),
+                    'useridnumber' => new external_value(PARAM_TEXT, 'Appliant IDNumber'),
+                    'userroles' => new external_value(PARAM_TEXT, 'Appliant Roles in course'),
+                    'issuecode' => new external_value(PARAM_TEXT, 'Numeric unique code of the issue', VALUE_OPTIONAL),
+                    'timecreated' => new external_value(PARAM_INT, 'Issue creation date (Linux timestamp)', VALUE_OPTIONAL),
+                    'timedelivered' => new external_value(PARAM_INT, 'Time of delivery (Linux timestamp)', VALUE_OPTIONAL),
+                    'locked' => new external_value(PARAM_BOOL, 'Is certificate locked?', VALUE_OPTIONAL),
+                    'authority' => new external_value(PARAM_TEXT, 'Authority person (readable name)', VALUE_OPTIONAL)
+                )
             )
         );
     }

@@ -51,6 +51,15 @@ $functions = array(
         'capabilities' => 'mod/pdcertificate:download'
     ),
 
+    'mod_pdcertificate_get_certificate_users_info' => array(
+        'classname' => 'mod_pdcertificate_external',
+        'methodname' => 'get_certificate_users_info',
+        'classpath' => 'mod/pdcertificate/externallib.php',
+        'description' => 'Get certificate metadata info for a set of users in a certificate',
+        'type' => 'read',
+        'capabilities' => 'mod/pdcertificate:download'
+    ),
+
     'mod_pdcertificate_get_certificate_infos' => array(
         'classname' => 'mod_pdcertificate_external',
         'methodname' => 'get_certificate_infos',
