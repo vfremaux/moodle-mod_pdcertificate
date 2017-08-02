@@ -63,6 +63,8 @@ $string['coursedependencies'] = 'Course dependancies';
 $string['coursegrade'] = 'Course Grade';
 $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
+$string['croned'] = 'Generate issues by cron';
+$string['cron_task'] = 'PD Certificate scheduled task';
 $string['customtext'] = 'Custom Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
@@ -124,6 +126,7 @@ $string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
 $string['margins'] = 'Margins (x,y)';
 $string['manualenrolnotavailableontarget'] = 'The Manual Enrol method seems to be disabled on the target course. Chain will fail.';
+$string['maxdocumentspercron'] = 'Max documents per cron';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
@@ -174,6 +177,7 @@ $string['printdate'] = 'Print Date';
 $string['printerfriendly'] = 'Printer-friendly page';
 $string['printfontfamily'] = 'Font family';
 $string['printfontsize'] = 'Font base size';
+$string['printdateformat'] = '';
 $string['printgrade'] = 'Print Grade';
 $string['printhours'] = 'Credit Hours';
 $string['printoptions'] = 'Print Options';
@@ -364,3 +368,13 @@ $string['defaultcertificatebody_tpl'] = '
 ';
 
 $string['defaultcertificatefooter_tpl'] = '<center>{info:site_fullname}</center>';
+
+$string['croned_help'] = 'If enabled, the cron will scan this pdcertificate to generate pending positive issues.';
+
+$string['maxdocumentspercron_desc'] = 'Max amount of PDF documents one single execution can generate con croned certificates.
+Consider setting this limit on big course audience to avoid a long running cron task. Further document generation will be delayed in time.';
+
+$string['modulename_help'] = 'The PD (Profesional Development) Certificate allows generating a wide variety of documents such as certificates,
+letters, assignments from HTML templates inserting a big choice of internal, user, course or site related information. The certifricate can
+be used to trigger the enrolment in a "following course" or change role assignation on the current course. Certificates can be retrived in an
+external document system by web services';

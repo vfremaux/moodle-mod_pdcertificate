@@ -24,6 +24,15 @@
 
 $functions = array(
 
+    'mod_pdcertificate_get_certificates' => array(
+        'classname' => 'mod_pdcertificate_external',
+        'methodname' => 'get_certificates',
+        'classpath' => 'mod/pdcertificate/externallib.php',
+        'description' => 'Get the list of certificates of a course',
+        'type' => 'read',
+        'capabilities' => 'mod/pdcertificate:download'
+    ),
+
     'mod_pdcertificate_get_certificate_file_url' => array(
         'classname' => 'mod_pdcertificate_external',
         'methodname' => 'get_certificate_file_url',
@@ -38,6 +47,15 @@ $functions = array(
         'methodname' => 'get_certificate_info',
         'classpath' => 'mod/pdcertificate/externallib.php',
         'description' => 'Get certificate metadata info for a certificate',
+        'type' => 'read',
+        'capabilities' => 'mod/pdcertificate:download'
+    ),
+
+    'mod_pdcertificate_get_certificate_users_info' => array(
+        'classname' => 'mod_pdcertificate_external',
+        'methodname' => 'get_certificate_users_info',
+        'classpath' => 'mod/pdcertificate/externallib.php',
+        'description' => 'Get certificate metadata info for a set of users in a certificate',
         'type' => 'read',
         'capabilities' => 'mod/pdcertificate:download'
     ),
