@@ -119,6 +119,7 @@ make_cache_directory('tcpdf');
 // Load the specific pdcertificate type.
 $user = $USER; // see for self
 require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
+pdcertificate_set_protection($pdcertificate, $pdf);
 
 if (empty($action)) {
     // Not distributing PDF.
@@ -146,9 +147,9 @@ if (empty($action)) {
 
     if ($pdcertificate->delivery == 0) {
         $str = get_string('openwindow', 'pdcertificate');
-    } elseif ($pdcertificate->delivery == 1) {
+    } else if ($pdcertificate->delivery == 1) {
         $str = get_string('opendownload', 'pdcertificate');
-    } elseif ($pdcertificate->delivery == 2) {
+    } else if ($pdcertificate->delivery == 2) {
         $str = get_string('openemail', 'pdcertificate');
     }
 
@@ -206,8 +207,8 @@ if (empty($action)) {
     pdcertificate_confirm_issue($user, $pdcertificate, $cm);
     if ($pdcertificate->savecert == 1) {
         // PDF contents are now in $file_contents as a string.
-       $file_contents = $pdf->Output('', 'S');
-       pdcertificate_save_pdf($file_contents, $certrecord->id, $filename, $context->id);
+        $file_contents = $pdf->Output('', 'S');
+        pdcertificate_save_pdf($file_contents, $certrecord->id, $filename, $context->id);
     }
     if ($pdcertificate->delivery == 0) {
         $pdf->Output($filename, 'I'); // Open in browser.
