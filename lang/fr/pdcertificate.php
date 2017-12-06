@@ -100,6 +100,7 @@ $string['emailteachers'] = 'Envoyer un mél aux formateurs';
 $string['entercode'] = 'Entrer le code de l\'attestation à vérifier :';
 $string['errorinvalidinstance'] = 'Erreur : cette instance d\'attestation n\'existe pas';
 $string['errornocapabilitytodelete'] = 'vous n\'avez pas les capacités pour détruire des attestations';
+$string['errorcertificatenotinstalled'] = 'Le module Certificat original semble ne pas être installé sur ce Moodle. La migration vers PDCertificate ne peut pas être effectuée.';
 $string['expiredon'] = 'Expiré le';
 $string['encryptionstrength'] = 'Niveau de cryptage';
 $string['encryptionstrength_desc'] = 'Lorsque le document généré est protégé, le niveau d\'encryptage. Plus la profondeur est élevée, plus la génération du document pourra consommer des ressources.';

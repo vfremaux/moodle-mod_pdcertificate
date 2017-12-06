@@ -91,6 +91,7 @@ $string['encryptionstrength_desc'] = 'Level of document encryption when the docu
 $string['entercode'] = 'Enter pdcertificate code to verify:';
 $string['errorinvalidinstance'] = 'Error : certificate instance does not exist';
 $string['errornocapabilitytodelete'] = 'You have no capability to delete certificates';
+$string['errorcertificatenotinstalled'] = 'The original certificate module seems not be installed on your moodle. You cannot migrate data from it if it is not installed.';
 $string['expiredon'] = 'Expired on';
 $string['followercourse'] = 'Follower course : {$a->rolename} in {$a->coursename}. This module is prerequisite : {$a->prerequisite}';
 $string['followers'] = 'Following course(s) in learning path';
