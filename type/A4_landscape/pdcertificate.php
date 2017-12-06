@@ -25,7 +25,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$pdf = new PDF('L', 'mm', 'A4', true, 'UTF-8', false);
+$pdf = new TCPDF('L', 'mm', 'A4', true, 'UTF-8', false);
 
 $pdf->SetTitle($pdcertificate->name);
 $pdf->setPrintHeader(false);

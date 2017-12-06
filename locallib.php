@@ -317,7 +317,12 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
         throw new moodle_exception('One of Certificate code or user id should be given');
     }
 
-    require_once($CFG->libdir.'/pdflib.php');
+    if (is_dir($CFG->dirroot.'/local/vflibs')) {
+        // Prefer VFLibs version if present.
+        require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
+    } else {
+        require_once($CFG->libdir.'/pdflib.php');
+    }
 
     $filesafe = clean_filename($pdcertificate->name.'.pdf');
 
@@ -340,6 +345,9 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
     require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
     $certname = rtrim(strip_tags(format_string($pdcertificate->name)), '.');
     $filename = clean_filename("$certname.pdf");
+
+    pdcertificate_set_protection($pdcertificate, $pdf);
+
     $file_contents = $pdf->Output('', 'S');
     if ($pdcertificate->savecert == 1) {
         pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
@@ -371,9 +379,42 @@ function pdcertificate_process_chain($user, $pdcertificate) {
     $errormessage = '';
 
     // Process self postcertification setup.
+    $course = $DB->get_record('course', array('id' => $pdcertificate->course));
 
     if ($pdcertificate->setcertification && $pdcertificate->setcertificationcontext) {
-        role_assign($pdcertificate->setcertification, $user->id, $pdcertificate->setcertificationcontext);
+
+        switch ($pdcertificate->setcertificationcontext) {
+            case CONTEXT_COURSE: {
+                $assigncontext = context_course::instance($course->id);
+                break;
+            }
+
+            case CONTEXT_COURSECAT: {
+                $assigncontext = context_coursecat::instance($course->category);
+                break;
+            }
+
+            case 1: {
+                $assigncontext = context_course::instance(SITEID);
+                break;
+            }
+
+            case CONTEXT_SYSTEM: {
+                $assigncontext = context_system::instance();
+                break;
+            }
+        }
+
+        // Get previous roles of the user.
+        $oldroleassignments = get_user_roles($assigncontext, $user->id, false);
+
+        role_assign($pdcertificate->setcertification, $user->id, $assigncontext->id);
+
+        if (!empty($pdcertificate->removeother)) {
+            foreach ($oldroleassignments as $ra) {
+                role_unassign($ra->roleid, $user->id, $assigncontext->id);
+            }
+        }
     }
 
     // Process chaining if any.
@@ -772,8 +813,8 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     global $DB, $USER;
 
     // If a certifier is defined.
-    if (!empty($certificate->certifierid)) {
-        $teacher = $DB->get_record('user', array('id' => 'certifierid'));
+    if (!empty($pdcertificate->certifierid)) {
+        $teacher = $DB->get_record('user', array('id' => $pdcertificate->certifierid));
     }
 
     if (empty($teacher)) {
@@ -1091,4 +1132,98 @@ function pdcertificate_generate_code() {
     }
 
     return $code;
+}
+
+/**
+ * to fix some windows issues with strftime.
+ */
+function pdcertificate_strftimefixed($format, $timestamp=null) {
+
+    if ($timestamp === null) $timestamp = time();
+
+    if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+        $format = preg_replace('#(?<!%)((?:%%)*)%e#', '\1%#d', $format);
+
+        $locale = setlocale(LC_TIME, 0);
+
+        switch(true) {
+            case (preg_match('#\.(874|1256)$#', $locale, $matches)):
+                return iconv('UTF-8', "$locale_charset", strftime($format, $timestamp));
+
+            case (preg_match('#\.1250$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'ISO-8859-2');
+
+            case (preg_match('#\.(1251|1252|1254)$#', $locale, $matches)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'Windows-'.$matches[1]);
+
+            case (preg_match('#\.(1255|1256)$#', $locale, $matches)):
+                return iconv('UTF-8', "Windows-{$matches[1]}", strftime($format, $timestamp));
+
+            case (preg_match('#\.1257$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'ISO-8859-13');
+
+            case (preg_match('#\.(932|936|950)$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'CP'.$matches[1]);
+
+            case (preg_match('#\.(949)$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'EUC-KR');
+
+          default:
+            trigger_error("Unknown charset for system locale ($locale)", E_USER_NOTICE);
+            return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'auto');
+        }
+    }
+
+    return strftime($format, $timestamp);
+}
+
+function pdcertificate_protections() {
+    return array('print', 'modify', 'copy', 'annotforms', 'fillforms', 'extract', 'assemble', 'printhigh');
+}
+
+function pdcertificate_set_protection(&$pdcertificate, &$pdf) {
+    global $CFG;
+
+    $config = get_config('pdcertificate');
+
+    $protections = unserialize($pdcertificate->protection);
+
+    if (empty($protections)) {
+        return;
+    }
+
+    $conversion = array('print' => 'print',
+                        'modify' => 'modify',
+                        'copy' => 'copy',
+                        'annotforms' => 'annot-forms',
+                        'fillforms' => 'fill-forms',
+                        'extract' => 'extract',
+                        'assemble' => 'assemble',
+                        'printhigh' => 'print-high');
+
+    // We need protections.
+    $permissions = array();
+    foreach ($protections as $prot => $active) {
+        if ($active) {
+            $permissions[] = $conversion[$prot];
+        }
+    }
+
+    if ($pdcertificate->pubkey) {
+        // Make a temp file with the public key content.
+        $tempkeyname = $CFG->tempdir.'/'.getObjFilename('pubkey');
+
+        if ($TMPKEY = fopen($tempkeyname, 'w')) {
+            fputs($TMPKEY, $pdcertificate->pubkey);
+            fclose($TMPKEY);
+        } else {
+            throw(new moodle_exception('Could not open temporary public key file'));
+        }
+
+        $pubkeyarr['c'] = $tempkeyname;
+        $pubkeyarr['p'] = $permissions;
+        $pdf->setProtection(null, null, null, null, $pubkeyarr);
+    } else {
+        $pdf->setProtection($permissions, $pdcertificate->userpass, $pdcertificate->fullpass, $config->encryptionstrength, null);
+    }
 }
