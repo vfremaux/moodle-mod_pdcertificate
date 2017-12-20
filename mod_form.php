@@ -181,7 +181,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $formgroup = array();
         $html = get_string('linkedcourse', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
-        $formgroup =& $mform->createElement('static', 'linkedcourselabel', 'Linked course', $html);
+        $formgroup[] =& $mform->createElement('static', 'linkedcourselabel', 'Linked course', $html);
         $html = get_string('mandatoryreq', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
         $formgroup[] =& $mform->createElement('static', 'linkedcoursemandatory', 'Mandatory', $html);
         $formgroup[] =& $mform->createElement('static', 'linkedcourserole', 'Role', get_string('rolereq', 'pdcertificate'));
@@ -391,7 +391,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         }
 
         // Expand protection options.
-        $protections = unserialize($defaults->protection);
+        $protections = unserialize(@$defaults->protection);
         if (!empty($protections)) {
             foreach ($protections as $pkey => $pvalue) {
                 $key = 'protection'.$pkey;

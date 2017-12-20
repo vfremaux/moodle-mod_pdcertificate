@@ -34,32 +34,36 @@ function pdcertificate_cron_task() {
 
     $doccount = 0;
 
-    foreach ($cronedpdcertificate as $cert) {
-        mtrace("\tProcessing PD Certificate $cert->id...\n");
-
-        if ($cert->savecert == 0 && $cert->delivery < 2) {
-            mtrace("This certificate (id={$cert->id}) in course {$cert->course} can only deliver interactively.");
-            mtrace(" Author may change delivery options. Skipping.\n");
-            continue;
-        }
-
-        $cm = get_coursemodule_from_instance('pdcertificate', $cert->id);
-        $context = context_module::instance($cm->id);
-
-        pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
-
-        if (!empty($certifiableusers)) {
-            foreach ($certifiableusers as $cu) {
-                pdcertificate_make_certificate($cert, $context, '', $cu->id);
-                $doccount++;
-
-                if (!empty($config->maxdocumentspercron) && $doccount > $config->maxdocumentspercron) {
-                    // If we reached the limit, let further crons finish generating.
-                    return;
+    if (!empty($cronedpdcertificates)) {
+        foreach ($cronedpdcertificates as $cert) {
+            mtrace("\tProcessing PD Certificate $cert->id...\n");
+    
+            if ($cert->savecert == 0 && $cert->delivery < 2) {
+                mtrace("This certificate (id={$cert->id}) in course {$cert->course} can only deliver interactively.");
+                mtrace(" Author may change delivery options. Skipping.\n");
+                continue;
+            }
+    
+            $cm = get_coursemodule_from_instance('pdcertificate', $cert->id);
+            $context = context_module::instance($cm->id);
+    
+            pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
+    
+            if (!empty($certifiableusers)) {
+                foreach ($certifiableusers as $cu) {
+                    pdcertificate_make_certificate($cert, $context, '', $cu->id);
+                    $doccount++;
+    
+                    if (!empty($config->maxdocumentspercron) && $doccount > $config->maxdocumentspercron) {
+                        // If we reached the limit, let further crons finish generating.
+                        mtrace('Max number of documents generated in this run. Resuming till next turn.');
+                        return;
+                    }
                 }
             }
         }
+        mtrace('PD Certificate finished...');
+    } else {
+        mtrace('No PD Certificate to process...');
     }
-
-    mtrace('PD Certificate finished...');
 }

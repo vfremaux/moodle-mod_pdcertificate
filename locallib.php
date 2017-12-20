@@ -352,7 +352,7 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
     if ($pdcertificate->savecert == 1) {
         pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
         if ($pdcertificate->delivery == 2) {
-            pdcertificate_email_students($user, $course, $pdcertificate, $certrecord);
+            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord);
         }
     }
 
@@ -408,13 +408,13 @@ function pdcertificate_process_chain($user, $pdcertificate) {
         // Get previous roles of the user.
         $oldroleassignments = get_user_roles($assigncontext, $user->id, false);
 
-        role_assign($pdcertificate->setcertification, $user->id, $assigncontext->id);
-
         if (!empty($pdcertificate->removeother)) {
             foreach ($oldroleassignments as $ra) {
                 role_unassign($ra->roleid, $user->id, $assigncontext->id);
             }
         }
+
+        role_assign($pdcertificate->setcertification, $user->id, $assigncontext->id);
     }
 
     // Process chaining if any.

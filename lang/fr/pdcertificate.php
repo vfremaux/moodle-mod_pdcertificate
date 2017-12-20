@@ -78,6 +78,7 @@ $string['coursetimedependency'] = 'Temps minimum requis dans le cours';
 $string['coursetimereq'] = 'Minutes minimum dans le cours';
 $string['credithours'] = 'Crédit d\'heures';
 $string['cron_task'] = 'Tâches de l\'attestation';
+$string['croned'] = 'Générer les certificats par les tâches programmées';
 $string['customtext'] = 'Texte personnalisé';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
