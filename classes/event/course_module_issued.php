@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains an event for when a feedback activity is viewed.
+ * This file contains an event for when a pdcertificate document is issued.
  *
- * @package    mod_feedback
- * @copyright  2013 Ankit Agarwal
+ * @package    mod_pdcertificate
+ * @copyright  2016 Valery Fremaux
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
@@ -26,7 +26,7 @@ namespace mod_pdcertificate\event;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Event for when a pdcertificate activity is viewed.
+ * Event for when a pdcertificate document is issued.
  *
  * @property-read array $other {
  *      Extra information about event.

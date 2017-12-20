@@ -26,8 +26,43 @@ defined('MOODLE_INTERNAL') || die;
 
 require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');
 
-$ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
-    get_string('migration', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migrate.php'), 'moodle/site:config'));
+if ($ADMIN->fulltree) {
 
-$settings->add(new admin_setting_configcheckbox('pdcertificate/defaultpropagategroups',
-    get_string('defaultpropagategroups', 'pdcertificate'), get_string('defaultpropagategroups_desc', 'pdcertificate'), ''));
+    $ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
+        get_string('migration', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migrate.php'), 'moodle/site:config'));
+
+    $key = 'pdcertificate/defaultpropagategroups';
+    $label = get_string('defaultpropagategroups', 'pdcertificate');
+    $desc = get_string('defaultpropagategroups_desc', 'pdcertificate');
+    $settings->add(new admin_setting_configcheckbox($key, $label, $desc, ''));
+
+    $key = 'pdcertificate/maxdocumentspercron';
+    $label = get_string('maxdocumentspercron', 'pdcertificate');
+    $desc = get_string('maxdocumentspercron_desc', 'pdcertificate');
+    $default = 100;
+    $settings->add(new admin_setting_configtext($key, $label, $desc, $default));
+
+    $encoptions = array(0 => 'RC4 40 bit',
+                     1 => 'RC4 128 bit',
+                     2 => 'AES 128 bit',
+                     3 => 'AES 256 bit');
+    $key = 'pdcertificate/encryptionstrength';
+    $label = get_string('encryptionstrength', 'pdcertificate');
+    $desc = get_string('encryptionstrength_desc', 'pdcertificate');
+    $default = 1;
+    $settings->add(new admin_setting_configselect($key, $label, $desc, $default, $encoptions));
+
+    $key = 'pdcertificate/defaultauthority';
+    $label = get_string('defaultauthority', 'pdcertificate');
+    $desc = get_string('defaultauthority_desc', 'pdcertificate');
+    $authorities = array();
+    $authorities[0] = get_string('noauthority', 'pdcertificate');
+    $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
+    $context = context_system::instance();
+    if ($authorities_candidates = get_users_by_capability($context, 'mod/pdcertificate:isauthority', $fields, 'lastname,firstname')) {
+        foreach ($authorities_candidates as $ac) {
+            $authorities[$ac->id] = fullname($ac);
+        }
+    }
+    $settings->add(new admin_setting_configselect($key, $label, $desc, 0, $authorities));
+}

@@ -95,7 +95,7 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2017020600, 'pdcertificate');
     }
 
-    if ($oldversion < 2017041200) {
+    if ($oldversion < 2017041201) {
 
         $table = new xmldb_table('pdcertificate');
 
@@ -115,7 +115,74 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         }
 
         // Certificate savepoint reached.
-        upgrade_mod_savepoint(true, 2017041200, 'pdcertificate');
+        upgrade_mod_savepoint(true, 2017041201, 'pdcertificate');
+    }
+
+    if ($oldversion < 2017051200) {
+
+        $table = new xmldb_table('pdcertificate');
+
+        $field = new xmldb_field('croned', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'completiondelivered');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017051200, 'pdcertificate');
+    }
+
+    if ($oldversion < 2017060600) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('timeexported', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timedelivered');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017060600, 'pdcertificate');
+    }
+
+    if ($oldversion < 2017081100) {
+
+        $table = new xmldb_table('pdcertificate');
+
+        $field = new xmldb_field('removeother', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'setcertificationcontext');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017081100, 'pdcertificate');
+    }
+
+    if ($oldversion < 2017082000) {
+
+        $table = new xmldb_table('pdcertificate');
+
+        $field = new xmldb_field('protection', XMLDB_TYPE_CHAR, 255, null, null, null, null, 'croned');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('userpass', XMLDB_TYPE_CHAR, 16, null, null, null, null, 'protection');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('fullpass', XMLDB_TYPE_CHAR, 16, null, null, null, null, 'userpass');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('pubkey', XMLDB_TYPE_TEXT, 'small', null, null, null, null, 'fullpass');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017082000, 'pdcertificate');
     }
 
     return true;

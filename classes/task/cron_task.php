@@ -15,40 +15,35 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This file contains an event for when a feedback activity is viewed.
+ * A scheduled task for forum cron.
+ *
+ * @todo MDL-44734 This job will be split up properly.
  *
  * @package    mod_pdcertificate
- * @copyright  2016 Valery Fremaux
+ * @copyright  2014 Dan Poltawski <dan@moodle.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-namespace mod_pdcertificate\event;
+namespace mod_pdcertificate\task;
 defined('MOODLE_INTERNAL') || die();
 
-/**
- * Event for when a pdcertificate activity is viewed.
- *
- * @property-read array $other {
- *      Extra information about event.
- *
- *      @type int anonymous if flashcard is anonymous.
- *      @type int cmid course module id.
- * }
- *
- * @package    mod_pdcertificate
- * @since      Moodle 2.7
- * @copyright  2016 Valery Fremaux
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- */
-class course_module_viewed_summary extends \core\event\course_module_viewed {
+class cron_task extends \core\task\scheduled_task {
 
     /**
-     * Init method.
+     * Get a descriptive name for this task (shown to admins).
+     *
+     * @return string
      */
-    protected function init() {
-        $this->data['crud'] = 'r';
-        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'pdcertificate';
+    public function get_name() {
+        return get_string('cron_task', 'pdcertificate');
+    }
+
+    /**
+     * Run learningtimecheck cron.
+     */
+    public function execute() {
+        global $CFG;
+
+        require_once($CFG->dirroot.'/mod/pdcertificate/cronlib.php');
+        pdcertificate_cron_task();
     }
 }
-

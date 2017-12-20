@@ -34,11 +34,11 @@ $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certifica
 $string['pdcertificate:view'] = 'View a certificate';
 $string['pdcertificate:download'] = 'Download certificate using API';
 
-$string['authority'] = 'Authority';
 $string['addcourselabel'] = 'Add course';
 $string['addcoursetitle'] = 'Add course title';
 $string['antecedantcourse'] = '{$a->coursename}. Mandatory requisite: {$a->prerequisite}';
 $string['areaintro'] = 'Certificate introduction';
+$string['authority'] = 'Authority';
 $string['awarded'] = 'Awarded';
 $string['awardedto'] = 'Awarded To';
 $string['back'] = 'Back';
@@ -63,19 +63,22 @@ $string['coursedependencies'] = 'Course dependancies';
 $string['coursegrade'] = 'Course Grade';
 $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
+$string['cron_task'] = 'PD Certificate scheduled task';
+$string['croned'] = 'Generate issues by cron';
 $string['customtext'] = 'Custom Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
 $string['datehelp'] = 'Date';
 $string['defaultpropagategroups'] = 'Propagate groups when chaining (default)';
 $string['defaultpropagategroups_desc'] = 'If checked, group information will be replicated in the chained course';
+$string['defaultauthority'] = 'Certification authority (default)';
 $string['definitive'] = 'Valid (definitive)';
 $string['deletissuedpdcertificates'] = 'Delete issued pdcertificates';
-$string['delivery'] = 'Delivery';
 $string['deliveredon'] = 'Delivered on';
+$string['delivery'] = 'Delivery';
+$string['description'] = 'Description';
 $string['designoptions'] = 'Design Options';
 $string['destroyselection'] = 'Destroy selection ';
-$string['description'] = 'Description';
 $string['download'] = 'Force download';
 $string['editpdcertificatelayout'] = 'Edit Layout';
 $string['emailothers'] = 'Email Others';
@@ -83,9 +86,12 @@ $string['emailothers_help'] = 'Enter the email addresses here, separated by a co
 $string['emailpdcertificate'] = 'Email (Must also choose save!)';
 $string['emailstudenttext'] = 'Attached is your pdcertificate for {$a->course}.';
 $string['emailteachers'] = 'Email Teachers';
+$string['encryptionstrength'] = 'Encryption strength';
+$string['encryptionstrength_desc'] = 'Level of document encryption when the document is protected. Increasing protection level will increase resource consumption when generating the certificate.';
 $string['entercode'] = 'Enter pdcertificate code to verify:';
 $string['errorinvalidinstance'] = 'Error : certificate instance does not exist';
 $string['errornocapabilitytodelete'] = 'You have no capability to delete certificates';
+$string['errorcertificatenotinstalled'] = 'The original certificate module seems not be installed on your moodle. You cannot migrate data from it if it is not installed.';
 $string['expiredon'] = 'Expired on';
 $string['followercourse'] = 'Follower course : {$a->rolename} in {$a->coursename}. This module is prerequisite : {$a->prerequisite}';
 $string['followers'] = 'Following course(s) in learning path';
@@ -93,9 +99,11 @@ $string['footertext'] = 'Custom Footer Text';
 $string['freemono'] = 'Monospace';
 $string['freesans'] = 'Sans serif';
 $string['freeserif'] = 'Serif';
+$string['fullaccesspassword'] = 'Full access password';
 $string['generate'] = 'Generate';
 $string['generateall'] = 'Generate all possible certificates ({$a})';
 $string['generateselection'] = 'Generate selection ';
+$string['getattempts'] = 'Get your Certificates';
 $string['getpdcertificate'] = 'Get your certificate';
 $string['gettestpdcertificate'] = 'Get a test certificate';
 $string['grade'] = 'Grade';
@@ -122,8 +130,9 @@ $string['lockoncoursecompletion'] = 'Locked by course completion';
 $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT be retrievable if the current course has not be completed.';
 $string['managedelivery'] = 'Manage certificates delivery';
 $string['mandatoryreq'] = 'Mandatory req';
-$string['margins'] = 'Margins (x,y)';
 $string['manualenrolnotavailableontarget'] = 'The Manual Enrol method seems to be disabled on the target course. Chain will fail.';
+$string['margins'] = 'Margins (x,y)';
+$string['maxdocumentspercron'] = 'Max documents per cron';
 $string['migrate'] = 'Migrate from Certificate to PD Certificate';
 $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
@@ -171,6 +180,7 @@ $string['prerequisites'] = 'Prerequisites';
 $string['previewpdcertificate'] = 'Preview the certificate';
 $string['printborders'] = 'Borders or background';
 $string['printdate'] = 'Print Date';
+$string['printdateformat'] = '';
 $string['printerfriendly'] = 'Printer-friendly page';
 $string['printfontfamily'] = 'Font family';
 $string['printfontsize'] = 'Font base size';
@@ -185,12 +195,24 @@ $string['printsignature'] = 'Signature Image';
 $string['printteacher'] = 'Print Teacher Name(s)';
 $string['printwmark'] = 'Watermark Image';
 $string['propagategroups'] = 'Propagate groups when chaining';
+$string['protection'] = 'Do not allow to print the document';
+$string['protectionannotforms'] = 'Do not allow to annotate the document and add form fields';
+$string['protectionassemble'] = 'Do not allow to assemle, insert, delete or rotate pages';
+$string['protectioncopy'] = 'Do not allow to copy content of the document';
+$string['protectionextract'] = 'Do not allow to extract text and graphics';
+$string['protectionfillforms'] = 'Do not allow to fill form fields';
+$string['protectionmodify'] = 'Do not allow to change the document';
+$string['protectionoptions'] = 'PDF Protection';
+$string['protectionprint'] = 'Do not allow to print the document';
+$string['protectionprinthigh'] = 'Do not allow to print in full resolution';
+$string['pubkey'] = 'Public key';
 $string['qrcodeoffset'] = 'QR Code offset (x,y)';
 $string['receivedcerts'] = 'Received certificates';
 $string['receiveddate'] = 'Date Received';
 $string['regenerate'] = 'Regenerate';
 $string['releaseselection'] = 'Release selection ';
 $string['removecert'] = 'Issued certificates removed';
+$string['removeother'] = 'Remove all other roles';
 $string['report'] = 'Report';
 $string['reportcert'] = 'Report Certificates';
 $string['requiredcoursecompletion'] = 'This certificate requires you have completed the course to be delivered.';
@@ -213,7 +235,6 @@ $string['specialgroupoptions'] = 'Special group related options';
 $string['state'] = 'Status';
 $string['statement'] = 'has completed the course';
 $string['summary'] = 'Course summary';
-$string['getattempts'] = 'Get your Certificates';
 $string['system'] = 'System level';
 $string['teacherview'] = 'Teacher tools';
 $string['textoptions'] = 'Text Options';
@@ -227,6 +248,7 @@ $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
 $string['userdateformat'] = 'User\'s Language Date Format';
+$string['userpassword'] = 'User password';
 $string['usersdelivered'] = 'Users delivered : {$a}';
 $string['usersgenerated'] = 'Users generated not yet delivered : {$a}';
 $string['userstocertify'] = 'Users yet to complete certification : {$a}';
@@ -294,7 +316,7 @@ $string['printwmark_help'] = 'A watermark file can be placed in the background o
 
 $string['reportcert_help'] = 'If you choose yes here, then this certificate\'s date received, code number, and the course name will be shown on the user certificate reports.  If you choose to print a grade on this certificate, then that grade will also be shown on the certificate report.';
 
-$string['setcertificationcontext_help'] = 'The context where the certified role will be given';
+$string['setcertificationcontext_help'] = 'The context level where the certified role will be given';
 
 $string['certifierid_help'] = 'Defining a certfifier account will print the certification authority identity if the certificate template allows it';
 
@@ -364,3 +386,21 @@ $string['defaultcertificatebody_tpl'] = '
 ';
 
 $string['defaultcertificatefooter_tpl'] = '<center>{info:site_fullname}</center>';
+
+$string['croned_help'] = 'If enabled, the cron will scan this pdcertificate to generate pending positive issues.';
+
+$string['maxdocumentspercron_desc'] = 'Max amount of PDF documents one single execution can generate con croned certificates.
+Consider setting this limit on big course audience to avoid a long running cron task. Further document generation will be delayed in time.';
+
+$string['modulename_help'] = 'The PD (Profesional Development) Certificate allows generating a wide variety of documents such as certificates,
+letters, assignments from HTML templates inserting a big choice of internal, user, course or site related information. The certifricate can
+be used to trigger the enrolment in a "following course" or change role assignation on the current course. Certificates can be retrived in an
+external document system by web services';
+
+$string['pubkey_help'] = 'A public key given as alternative of a ^password. This key will be associated with the configured permissions.';
+
+$string['userpassword_help'] = 'This password level is usually given to simple users to read the document and access to basic functions.';
+
+$string['fullaccesspassword_help'] = 'This pasword level is given to advanced and power users to access including editing the content.';
+
+$string['defaultauthority_desc'] = 'The default authority user that will be setup in any new instance';

@@ -198,33 +198,51 @@ function pdcertificate_get_possible_contexts() {
     return $contexts;
 }
 
-function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, &$total, &$certifiableusers) {
+/**
+ * Get the certification state for a set of users.
+ * @param object $pdcertificate PDCertificate instance
+ * @param object $cm the corresponding course module
+ * @param int $page the result paging page nbumber
+ * @param int $pagesize the paging page size
+ * @param int $group a group id to restrict the scope
+ * @param arrayref &$total the full set of users in the page
+ * @param arrayref &$certififiableusers the subset of users records that are certifiable
+ * @param bool $optimized if optimised, we will no fetch the name fields from users, only ids.
+ */
+function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, &$total, &$certifiableusers, $optimized = false) {
     global $DB;
 
     $context = context_module::instance($cm->id);
+
+    $fields = 'u.id';
+    if (!$optimized) {
+        $fields .= ','.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
+    }
 
     $state = new StdClass;
     $state->totalcertifiedcount = 0;
     $state->notyetusers = 0;
     if (!empty($group)) {
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, '', false);
         $state->totalcount = count($total);
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, $group, '', false);
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, $group, '', false);
     } else {
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', '', false);
         $state->totalcount = count($total);
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, '', '', false);
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, '', '', false);
     }
 
-    // This may be quite costfull on large courses. Not for MOOCS !!
+    // Delivered certificates keyed by userid. Get in in a single query.
+    $delivered = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $pdcertificate->id), 'id', 'userid,userid');
+    $deliveredids = array_keys($delivered);
+
+    // This may be costfull when a big brunch of users arrive to certification state.
     foreach ($total as $u) {
-        if ($DB->record_exists('pdcertificate_issues', array('userid' => $u->id, 'pdcertificateid' => $pdcertificate->id))) {
+        if (in_array($u->id, $deliveredids)) {
             $state->totalcertifiedcount++;
         } else {
             if ($errors = pdcertificate_check_conditions($pdcertificate, $cm, $u->id)) {
@@ -286,6 +304,62 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
 }
 
 /**
+ * Produces certificate document and delivers it
+ * @param objectref $pdcertificate
+ * @param string $ccode the certificate code
+ * @param string $userid either, the userid being certified
+ * @return the user record the certificate is belonging to.
+ */
+function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0) {
+    global $CFG, $DB;
+
+    if (empty($ccode) && empty($userid)) {
+        throw new moodle_exception('One of Certificate code or user id should be given');
+    }
+
+    if (is_dir($CFG->dirroot.'/local/vflibs')) {
+        // Prefer VFLibs version if present.
+        require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
+    } else {
+        require_once($CFG->libdir.'/pdflib.php');
+    }
+
+    $filesafe = clean_filename($pdcertificate->name.'.pdf');
+
+    $fs = get_file_storage();
+
+    if (!$userid) {
+        $certrecord = $DB->get_record('pdcertificate_issues', array('code' => $ccode));
+    } else {
+        $params = array('userid' => $userid, 'pdcertificateid' => $pdcertificate->id);
+        $certrecord = $DB->get_record('pdcertificate_issues', $params);
+    }
+    $course = $DB->get_record('course', array('id' => $pdcertificate->course));
+
+    $fs->delete_area_files($context->id, 'mod_pdcertificate', 'issue', $certrecord->id);
+
+    $user = $DB->get_record('user', array('id' => $certrecord->userid));
+
+    // This creates the $pdf instance.
+    // Load the specific pdcertificate type.
+    require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
+    $certname = rtrim(strip_tags(format_string($pdcertificate->name)), '.');
+    $filename = clean_filename("$certname.pdf");
+
+    pdcertificate_set_protection($pdcertificate, $pdf);
+
+    $file_contents = $pdf->Output('', 'S');
+    if ($pdcertificate->savecert == 1) {
+        pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
+        if ($pdcertificate->delivery == 2) {
+            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord);
+        }
+    }
+
+    return $user;
+}
+
+/**
  * When the user has received his sertificae, mark issues as being really delivered and
  * process to course chaining.
  */
@@ -305,9 +379,42 @@ function pdcertificate_process_chain($user, $pdcertificate) {
     $errormessage = '';
 
     // Process self postcertification setup.
+    $course = $DB->get_record('course', array('id' => $pdcertificate->course));
 
     if ($pdcertificate->setcertification && $pdcertificate->setcertificationcontext) {
-        role_assign($pdcertificate->setcertification, $user->id, $pdcertificate->setcertificationcontext);
+
+        switch ($pdcertificate->setcertificationcontext) {
+            case CONTEXT_COURSE: {
+                $assigncontext = context_course::instance($course->id);
+                break;
+            }
+
+            case CONTEXT_COURSECAT: {
+                $assigncontext = context_coursecat::instance($course->category);
+                break;
+            }
+
+            case 1: {
+                $assigncontext = context_course::instance(SITEID);
+                break;
+            }
+
+            case CONTEXT_SYSTEM: {
+                $assigncontext = context_system::instance();
+                break;
+            }
+        }
+
+        // Get previous roles of the user.
+        $oldroleassignments = get_user_roles($assigncontext, $user->id, false);
+
+        if (!empty($pdcertificate->removeother)) {
+            foreach ($oldroleassignments as $ra) {
+                role_unassign($ra->roleid, $user->id, $assigncontext->id);
+            }
+        }
+
+        role_assign($pdcertificate->setcertification, $user->id, $assigncontext->id);
     }
 
     // Process chaining if any.
@@ -706,8 +813,8 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     global $DB, $USER;
 
     // If a certifier is defined.
-    if (!empty($certificate->certifierid)) {
-        $teacher = $DB->get_record('user', array('id' => 'certifierid'));
+    if (!empty($pdcertificate->certifierid)) {
+        $teacher = $DB->get_record('user', array('id' => $pdcertificate->certifierid));
     }
 
     if (empty($teacher)) {
@@ -758,7 +865,7 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
     $attachname = $filename;
 
-    return email_to_user($USER, $from, $subject, $message, $messagehtml, $attachment, $attachname);
+    return email_to_user($USER, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
 }
 
 /**
@@ -862,7 +969,7 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
                         height="16"
                         width="16"
                         alt="'.$file->get_mimetype().'" />&nbsp;'.
-                  '<a href="'.$link.'" >'.s($filename).'</a>';
+                  '<a href="'.$link.'" >'.$filename.'</a>';
     }
     $output .= '<br />';
     $output = '<div class="files">'.$output.'</div>';
@@ -880,8 +987,14 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
  * @param stdClass $cm
  * @return stdClass the newly created pdcertificate issue
  */
-function pdcertificate_get_issue($course, $user, $pdcertificate, $cm) {
+function pdcertificate_get_issue($course, $userorid, $pdcertificate, $cm) {
     global $DB;
+
+    if (!is_object($userorid)) {
+        $user = $DB->get_record('user', array('id' => $userorid));
+    } else {
+        $user = $userorid;
+    }
 
     // Check if there is an issue already, should only ever be one.
     if ($certissue = $DB->get_record('pdcertificate_issues', array('userid' => $user->id, 'pdcertificateid' => $pdcertificate->id))) {
@@ -930,11 +1043,11 @@ function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
         $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
 
         if ($pdcertificate->gradefmt == 1) {
-            $grade = $strcoursegrade.':  '.$coursegrade->percentage;
+            $grade = $strcoursegrade.': '.$coursegrade->percentage;
         } else if ($pdcertificate->gradefmt == 2) {
-            $grade = $strcoursegrade.':  '.$coursegrade->points;
+            $grade = $strcoursegrade.': '.$coursegrade->points;
         } else if ($pdcertificate->gradefmt == 3) {
-            $grade = $strcoursegrade.':  '.$coursegrade->letter;
+            $grade = $strcoursegrade.': '.$coursegrade->letter;
         }
 
         return $grade;
@@ -1019,4 +1132,98 @@ function pdcertificate_generate_code() {
     }
 
     return $code;
+}
+
+/**
+ * to fix some windows issues with strftime.
+ */
+function pdcertificate_strftimefixed($format, $timestamp=null) {
+
+    if ($timestamp === null) $timestamp = time();
+
+    if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
+        $format = preg_replace('#(?<!%)((?:%%)*)%e#', '\1%#d', $format);
+
+        $locale = setlocale(LC_TIME, 0);
+
+        switch(true) {
+            case (preg_match('#\.(874|1256)$#', $locale, $matches)):
+                return iconv('UTF-8', "$locale_charset", strftime($format, $timestamp));
+
+            case (preg_match('#\.1250$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'ISO-8859-2');
+
+            case (preg_match('#\.(1251|1252|1254)$#', $locale, $matches)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'Windows-'.$matches[1]);
+
+            case (preg_match('#\.(1255|1256)$#', $locale, $matches)):
+                return iconv('UTF-8', "Windows-{$matches[1]}", strftime($format, $timestamp));
+
+            case (preg_match('#\.1257$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'ISO-8859-13');
+
+            case (preg_match('#\.(932|936|950)$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'CP'.$matches[1]);
+
+            case (preg_match('#\.(949)$#', $locale)):
+                return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'EUC-KR');
+
+          default:
+            trigger_error("Unknown charset for system locale ($locale)", E_USER_NOTICE);
+            return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'auto');
+        }
+    }
+
+    return strftime($format, $timestamp);
+}
+
+function pdcertificate_protections() {
+    return array('print', 'modify', 'copy', 'annotforms', 'fillforms', 'extract', 'assemble', 'printhigh');
+}
+
+function pdcertificate_set_protection(&$pdcertificate, &$pdf) {
+    global $CFG;
+
+    $config = get_config('pdcertificate');
+
+    $protections = unserialize($pdcertificate->protection);
+
+    if (empty($protections)) {
+        return;
+    }
+
+    $conversion = array('print' => 'print',
+                        'modify' => 'modify',
+                        'copy' => 'copy',
+                        'annotforms' => 'annot-forms',
+                        'fillforms' => 'fill-forms',
+                        'extract' => 'extract',
+                        'assemble' => 'assemble',
+                        'printhigh' => 'print-high');
+
+    // We need protections.
+    $permissions = array();
+    foreach ($protections as $prot => $active) {
+        if ($active) {
+            $permissions[] = $conversion[$prot];
+        }
+    }
+
+    if ($pdcertificate->pubkey) {
+        // Make a temp file with the public key content.
+        $tempkeyname = $CFG->tempdir.'/'.getObjFilename('pubkey');
+
+        if ($TMPKEY = fopen($tempkeyname, 'w')) {
+            fputs($TMPKEY, $pdcertificate->pubkey);
+            fclose($TMPKEY);
+        } else {
+            throw(new moodle_exception('Could not open temporary public key file'));
+        }
+
+        $pubkeyarr['c'] = $tempkeyname;
+        $pubkeyarr['p'] = $permissions;
+        $pdf->setProtection(null, null, null, null, $pubkeyarr);
+    } else {
+        $pdf->setProtection($permissions, $pdcertificate->userpass, $pdcertificate->fullpass, $config->encryptionstrength, null);
+    }
 }
