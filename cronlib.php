@@ -23,6 +23,7 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
 function pdcertificate_cron_task() {
     global $DB;
@@ -34,32 +35,43 @@ function pdcertificate_cron_task() {
 
     $doccount = 0;
 
-    foreach ($cronedpdcertificate as $cert) {
-        mtrace("\tProcessing PD Certificate $cert->id...\n");
+    if (!empty($cronedpdcertificates)) {
+        foreach ($cronedpdcertificates as $cert) {
+            mtrace("\tProcessing PD Certificate $cert->id...\n");
 
-        if ($cert->savecert == 0 && $cert->delivery < 2) {
-            mtrace("This certificate (id={$cert->id}) in course {$cert->course} can only deliver interactively.");
-            mtrace(" Author may change delivery options. Skipping.\n");
-            continue;
-        }
+            if ($cert->savecert == 0 && $cert->delivery < 2) {
+                mtrace("This certificate (id={$cert->id}) in course {$cert->course} can only deliver interactively.");
+                mtrace("Author may change delivery options. Skipping.\n");
+                continue;
+            }
 
-        $cm = get_coursemodule_from_instance('pdcertificate', $cert->id);
-        $context = context_module::instance($cm->id);
+            $cm = get_coursemodule_from_instance('pdcertificate', $cert->id);
+            $context = context_module::instance($cm->id);
 
-        pdcertificate_get_state($pdcertificate, $cm, 0, 0, 0, $total, $certifiableusers);
+            $states = pdcertificate_get_state($cert, $cm, 0, 0, 0, $total, $voidcertifiables);
 
-        if (!empty($certifiableusers)) {
-            foreach ($certifiableusers as $cu) {
-                pdcertificate_make_certificate($cert, $context, '', $cu->id);
-                $doccount++;
+            if (!empty($states-> certifiables)) {
+                // Process actually "to be certified" users.
+                foreach ($states-> certifiables as $cuid) {
+                    $cu = $DB->get_record('user', array('id' => $cuid));
+                    mtrace('Making certificate for '.$cu->id);
+                    pdcertificate_get_issue($course, $cu->id, $cert, $cm);
+                    pdcertificate_make_certificate($cert, $context, '', $cu->id);
+                    pdcertificate_confirm_issue($cu->id, $cert, $cm);
+                    $doccount++;
 
-                if (!empty($config->maxdocumentspercron) && $doccount > $config->maxdocumentspercron) {
-                    // If we reached the limit, let further crons finish generating.
-                    return;
+                    if (!empty($config->maxdocumentspercron) && $doccount > $config->maxdocumentspercron) {
+                        // If we reached the limit, let further crons finish generating.
+                        mtrace('Max number of documents generated in this run ('.$config->maxdocumentspercron.'). Resuming till next turn.');
+                        return;
+                    }
                 }
+            } else {
+                mtrace('No certifiable users found');
             }
         }
+        mtrace('PD Certificate finished...');
+    } else {
+        mtrace('No PD Certificate to process...');
     }
-
-    mtrace('PD Certificate finished...');
 }

@@ -17,16 +17,16 @@
 /**
  * This file contains an event for when a feedback activity is viewed.
  *
- * @package    mod_feedback
- * @copyright  2013 Ankit Agarwal
+ * @package    mod_pdcertificate
+ * @copyright  2016 Valery Fremaux
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-namespace mod_flashcard\event;
+namespace mod_pdcertificate\event;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * Event for when a flashcard activity is viewed.
+ * Event for when a pdcertificate activity is viewed.
  *
  * @property-read array $other {
  *      Extra information about event.
@@ -35,9 +35,9 @@ defined('MOODLE_INTERNAL') || die();
  *      @type int cmid course module id.
  * }
  *
- * @package    mod_flashcard
+ * @package    mod_pdcertificate
  * @since      Moodle 2.7
- * @copyright  2013 Ankit Agarwal
+ * @copyright  2016 Valery Fremaux
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class course_module_viewed_summary extends \core\event\course_module_viewed {
@@ -48,7 +48,7 @@ class course_module_viewed_summary extends \core\event\course_module_viewed {
     protected function init() {
         $this->data['crud'] = 'r';
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
-        $this->data['objecttable'] = 'flashcard';
+        $this->data['objecttable'] = 'pdcertificate';
     }
 }
 
