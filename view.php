@@ -111,14 +111,17 @@ if ($certrecord && !has_any_capability(array('mod/pdcertificate:manage', 'mod/pd
     die;
 }
 
-// Create a directory that is writeable so that TCPDF can create temp images.
-// In 2.2 onwards the function make_cache_directory was introduced, use that,
-// otherwise we will use make_upload_directory.
+/*
+ * Create a directory that is writeable so that TCPDF can create temp images.
+ * In 2.2 onwards the function make_cache_directory was introduced, use that,
+ * otherwise we will use make_upload_directory.
+ */
 make_cache_directory('tcpdf');
 
 // Load the specific pdcertificate type.
-$user = $USER; // see for self
+$user = $USER; // See for self.
 require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
+pdcertificate_set_protection($pdcertificate, $pdf);
 
 if (empty($action)) {
     // Not distributing PDF.
@@ -146,9 +149,9 @@ if (empty($action)) {
 
     if ($pdcertificate->delivery == 0) {
         $str = get_string('openwindow', 'pdcertificate');
-    } elseif ($pdcertificate->delivery == 1) {
+    } else if ($pdcertificate->delivery == 1) {
         $str = get_string('opendownload', 'pdcertificate');
-    } elseif ($pdcertificate->delivery == 2) {
+    } else if ($pdcertificate->delivery == 2) {
         $str = get_string('openemail', 'pdcertificate');
     }
 
@@ -176,9 +179,9 @@ if (empty($action)) {
             $numusers = count(get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id', '', '', '', $currentgroup, '', true));
             $linkname = get_string('managedelivery', 'pdcertificate', $numusers);
             $link = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
-            $button = new single_button($link, $linkname);
-            $button->add_action(new popup_action('click', $link, 'manage'.$cm->id, array('height' => 600, 'width' => 800)));
-            echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center', 'class' => 'inline-button'));
+            echo '<center>';
+            echo $OUTPUT->single_button($link, $linkname);
+            echo '</center>';
         }
     }
 
@@ -206,15 +209,15 @@ if (empty($action)) {
     pdcertificate_confirm_issue($user, $pdcertificate, $cm);
     if ($pdcertificate->savecert == 1) {
         // PDF contents are now in $file_contents as a string.
-       $file_contents = $pdf->Output('', 'S');
-       pdcertificate_save_pdf($file_contents, $certrecord->id, $filename, $context->id);
+        $file_contents = $pdf->Output('', 'S');
+        pdcertificate_save_pdf($file_contents, $certrecord->id, $filename, $context->id);
     }
     if ($pdcertificate->delivery == 0) {
         $pdf->Output($filename, 'I'); // Open in browser.
     } else if ($pdcertificate->delivery == 1) {
         $pdf->Output($filename, 'D'); // Force download when create.
     } else if ($pdcertificate->delivery == 2) {
-        pdcertificate_email_student($course, $pdcertificate, $certrecord, $context);
+        pdcertificate_email_student($USER, $course, $pdcertificate, $certrecord, $context);
         $pdf->Output($filename, 'I'); // Open in browser.
         $pdf->Output('', 'S'); // Send.
     }

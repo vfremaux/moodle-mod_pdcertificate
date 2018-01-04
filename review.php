@@ -25,7 +25,11 @@
 
 require('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
-require_once($CFG->libdir.'/pdflib.php');
+if (is_dir($CFG->dirroot.'/local/vflibs')) {
+    require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
+} else {
+    require_once($CFG->libdir.'/pdflib.php');
+}
 
 // Retrieve any variables that are passed.
 $id = required_param('id', PARAM_INT);    // Course Module ID

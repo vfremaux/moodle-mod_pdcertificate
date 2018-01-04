@@ -92,20 +92,7 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->lockoncoursecompletion = 0;
     }
 
-    // Compact print options.
-    $printconfig = new StdClass;
-    $printconfig->printhours = $pdcertificate->printhours;
-    $printconfig->printoutcome = $pdcertificate->printoutcome;
-    $printconfig->printqrcode = @$pdcertificate->printqrcode;
-    $printconfig->fontbasesize = $pdcertificate->fontbasesize;
-    $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
-    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
-    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
-    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
-    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
-    $printconfig->margingroup = $pdcertificate->margingroup;
-
-    $pdcertificate->printconfig = serialize($printconfig);
+    pdcertificate_compact($pdcertificate);
 
     $pdcertificate->id = $DB->insert_record('pdcertificate', $pdcertificate);
 
@@ -194,20 +181,7 @@ function pdcertificate_update_instance($pdcertificate) {
         }
     }
 
-    // Compact print options.
-    $printconfig = new StdClass;
-    $printconfig->printhours = $pdcertificate->printhours;
-    $printconfig->printoutcome = $pdcertificate->printoutcome;
-    $printconfig->printqrcode = 0 + @$pdcertificate->printqrcode;
-    $printconfig->fontbasesize = $pdcertificate->fontbasesize;
-    $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
-    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
-    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
-    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
-    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
-    $printconfig->margingroup = $pdcertificate->margingroup;
-
-    $pdcertificate->printconfig = serialize($printconfig);
+    pdcertificate_compact($pdcertificate);
 
     // Saves pdcertificate images.
     $context = context_module::instance($pdcertificate->coursemodule);
@@ -229,6 +203,32 @@ function pdcertificate_update_instance($pdcertificate) {
     }
 
     return $DB->update_record('pdcertificate', $pdcertificate);
+}
+
+function pdcertificate_compact(&$pdcertificate) {
+    // Compact print options.
+    $printconfig = new StdClass;
+    $printconfig->printhours = $pdcertificate->printhours;
+    $printconfig->printoutcome = $pdcertificate->printoutcome;
+    $printconfig->printqrcode = @$pdcertificate->printqrcode;
+    $printconfig->fontbasesize = $pdcertificate->fontbasesize;
+    $printconfig->fontbasefamily = $pdcertificate->fontbasefamily;
+    $printconfig->watermarkoffsetgroup = $pdcertificate->watermarkoffsetgroup;
+    $printconfig->signatureoffsetgroup = $pdcertificate->signatureoffsetgroup;
+    $printconfig->sealoffsetgroup = $pdcertificate->sealoffsetgroup;
+    $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
+    $printconfig->margingroup = $pdcertificate->margingroup;
+
+    $pdcertificate->printconfig = serialize($printconfig);
+
+    // Compact protection.
+    $protections = pdcertificate_protections();
+    $protection = array();
+    foreach ($protections as $pk) {
+        $key = 'protection'.$pk;
+        $protection[$pk] = @$pdcertificate->$key;
+    }
+    $pdcertificate->protection = serialize($protection);
 }
 
 /**

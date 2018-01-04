@@ -39,7 +39,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
     public function definition() {
         global $CFG, $DB, $COURSE;
 
-        $maxbytes = $COURSE->maxbytes;
+        $maxbytes = 409600; // 400k.
         $maxfiles = 1;
         $this->jpgoptions = array('subdirs' => 0, 'maxbytes' => $maxbytes, 'maxfiles' => $maxfiles, 'accepted_types' => '.jpg');
 
@@ -116,15 +116,20 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('certifierid', 'certifierid', 'pdcertificate');
 
         $roleoptions = array('' => get_string('none', 'pdcertificate'));
-        $roleoptions = array_merge($roleoptions, $this->assignableroles);
-        $mform->addElement('select', 'setcertification',get_string('setcertification', 'pdcertificate'), $roleoptions);
+        foreach ($this->assignableroles as $key => $rolename) {
+            $roleoptions[$key] = $rolename;
+        }
+        $group = array();
+        $group[] = $mform->createElement('select', 'setcertification',get_string('setcertification', 'pdcertificate'), $roleoptions);
+        $group[] = $mform->createElement('checkbox', 'removeother', '', get_string('removeother', 'pdcertificate'));
+        $mform->addGroup($group, 'setcertificationgrp', get_string('setcertification', 'pdcertificate'), array(' '), false);
         $mform->setDefault('setcertification', ''); // Choose the weaker role (further from admin role).
-        $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
+        $mform->addHelpButton('setcertificationgrp', 'setcertification', 'pdcertificate');
 
         $contextoptions = pdcertificate_get_possible_contexts();
         $mform->addElement('select', 'setcertificationcontext',get_string('setcertificationcontext', 'pdcertificate'), $contextoptions);
         $mform->setDefault('setcertificationcontext', max(array_keys($contextoptions))); // Choose the weaker context.
-        $mform->addHelpButton('setcertification', 'setcertification', 'pdcertificate');
+        $mform->addHelpButton('setcertificationcontext', 'setcertificationcontext', 'pdcertificate');
 
         $mform->addElement('checkbox', 'propagategroups', get_string('propagategroups', 'pdcertificate'));
         if (!empty($config->defaultpropagategroups)) {
@@ -175,13 +180,18 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $this->linkedcourses = pdcertificate_get_linked_courses($this->instance);
 
         $formgroup = array();
-        $formgroup[] =& $mform->createElement('static', 'linkedcourselabel', 'Linked course', get_string('linkedcourse', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
-        $formgroup[] =& $mform->createElement('static', 'linkedcoursemandatory', 'Mandatory', get_string('mandatoryreq', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;');
+        $html = get_string('linkedcourse', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        $formgroup[] =& $mform->createElement('static', 'linkedcourselabel', 'Linked course', $html);
+        $html = get_string('mandatoryreq', 'pdcertificate').'&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;';
+        $formgroup[] =& $mform->createElement('static', 'linkedcoursemandatory', 'Mandatory', $html);
         $formgroup[] =& $mform->createElement('static', 'linkedcourserole', 'Role', get_string('rolereq', 'pdcertificate'));
         $mform->addGroup($formgroup, 'courselabel', get_string('coursedependencies', 'pdcertificate'), array(' '), false);
         $mform->addHelpButton('courselabel', 'chaining', 'pdcertificate');
 
-        // The linked course portion goes here, but is forced in in the 'definition_after_data' function so that we can get any elements added in the form and not overwrite them with what's in the database.
+        /*
+         * The linked course portion goes here, but is forced in in the 'definition_after_data' function so
+         * that we can get any elements added in the form and not overwrite them with what's in the database.
+         */
 
         $mform->addElement('submit', 'addcourse', get_string('addcourselabel', 'pdcertificate'),
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
@@ -196,13 +206,15 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('datefmt', 0);
         $mform->addHelpButton('datefmt', 'datefmt', 'pdcertificate');
 
-        $gradeformatoptions = array( 1 => get_string('gradepercent', 'pdcertificate'), 2 => get_string('gradepoints', 'pdcertificate'),
-            3 => get_string('gradeletter', 'pdcertificate'));
+        $gradeformatoptions = array(1 => get_string('gradepercent', 'pdcertificate'),
+                                    2 => get_string('gradepoints', 'pdcertificate'),
+                                    3 => get_string('gradeletter', 'pdcertificate'));
         $mform->addElement('select', 'gradefmt', get_string('gradefmt', 'pdcertificate'), $gradeformatoptions);
         $mform->setDefault('gradefmt', 0);
         $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
 
-        $mform->addElement('text', 'printhours', get_string('printhours', 'pdcertificate'), array('size'=>'5', 'maxlength' => '255'));
+        $attrs = array('size'=>'5', 'maxlength' => '255');
+        $mform->addElement('text', 'printhours', get_string('printhours', 'pdcertificate'), $attrs);
         $mform->setType('printhours', PARAM_TEXT);
         $mform->addHelpButton('printhours', 'printhours', 'pdcertificate');
 
@@ -216,33 +228,31 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $mform->setType('printoutcome', PARAM_INT);
         }
 
-        $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16, 17 => 17, 18 => 18, 19 => 19, 20 => 20);
+        $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16,
+                             17 => 17, 18 => 18, 19 => 19, 20 => 20);
         $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
         $mform->setDefault('fontbasesize', 12);
 
-        /*
-        $familyoptions = array('freesans' => get_string('freesans', 'pdcertificate'),
-            'freeserif' => get_string('freeserif', 'pdcertificate'),
-            'freemono' => get_string('freemono', 'pdcertificate')
-        );
-        */
         $pdf = new PDF();
         $available = array_keys($pdf->get_font_families());
         $familyoptions = array_combine($available, $available);
         $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
         $mform->setDefault('fontbasesize', 12);
 
-        $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), array('cols'=>'80', 'rows'=>'4', 'wrap'=>'virtual'));
+        $attrs = array('cols' => '80', 'rows' => '4', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), $attrs);
         $mform->setType('headertext', PARAM_RAW);
         $mform->addHelpButton('headertext', 'headertext', 'pdcertificate');
         $mform->setDefault('headertext', get_string('defaultcertificateheader_tpl', 'pdcertificate'));
 
-        $mform->addElement('textarea', 'customtext', get_string('customtext', 'pdcertificate'), array('cols'=>'80', 'rows'=>'20', 'wrap'=>'virtual'));
+        $attrs = array('cols' => '80', 'rows' => '20', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'customtext', get_string('customtext', 'pdcertificate'), $attrs);
         $mform->setType('customtext', PARAM_RAW);
         $mform->addHelpButton('customtext', 'customtext', 'pdcertificate');
         $mform->setDefault('headertext', get_string('defaultcertificatebody_tpl', 'pdcertificate'));
 
-        $mform->addElement('textarea', 'footertext', get_string('footertext', 'pdcertificate'), array('cols'=>'80', 'rows'=>'4', 'wrap'=>'virtual'));
+        $attrs = array('cols' => '80', 'rows' => '4', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'footertext', get_string('footertext', 'pdcertificate'), $attrs);
         $mform->setType('footertext', PARAM_RAW);
         $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
         $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
@@ -283,8 +293,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $group = array();
         $label = get_string('printborders', 'pdcertificate');
-        $attrs = array('courseid' => $COURSE->id, 'accepted_types' => '.jpg');
-        $group[] = $mform->createElement('filepicker', 'printborders', $label, $attrs);
+        $group[] = $mform->createElement('filepicker', 'printborders', $label, $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintborders', '', get_string('clearprintborders', 'pdcertificate'));
         $mform->addGroup($group, 'printbordersgroup', get_string('printborders', 'pdcertificate'), '', array(''), false);
 
@@ -325,7 +334,32 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setType('sealoffsetgroup[sealoffsetx]', PARAM_INT);
         $mform->setType('sealoffsetgroup[sealoffsety]', PARAM_INT);
 
-//-------------------------------------------------------------------------------
+        // Protection options.
+
+        $mform->addElement('header', 'protectionoptions', get_string('protectionoptions', 'pdcertificate'));
+
+        $protections = pdcertificate_protections();
+        foreach($protections as $pkey) {
+            $mform->addElement('checkbox', 'protection'.$pkey, get_string('protection'.$pkey, 'pdcertificate'));
+            $mform->setAdvanced('protection'.$pkey);
+        }
+
+        $mform->addElement('text', 'userpass', get_string('userpassword', 'pdcertificate'));
+        $mform->setType('userpass', PARAM_TEXT);
+        $mform->setAdvanced('userpass');
+        $mform->addHelpButton('userpass', 'userpassword', 'pdcertificate');
+
+        $mform->addElement('text', 'fullpass', get_string('fullaccesspassword', 'pdcertificate'));
+        $mform->setType('fullpass', PARAM_TEXT);
+        $mform->setAdvanced('fullpass');
+        $mform->addHelpButton('fullpass', 'fullaccesspassword', 'pdcertificate');
+
+        $mform->addElement('textarea', 'pubkey', get_string('pubkey', 'pdcertificate'), array('cols'=>'80', 'rows'=>'20', 'wrap'=>'virtual'));
+        $mform->setType('pubkey', PARAM_RAW);
+        $mform->setAdvanced('pubkey');
+        $mform->addHelpButton('pubkey', 'pubkey', 'pdcertificate');
+
+        //-------------------------------------------------------------------------------
 
         $this->standard_coursemodule_elements();
 
@@ -347,13 +381,22 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $defaults->$key = $value;
         }
 
-        foreach($instancefiles as $if){
+        foreach ($instancefiles as $if) {
             $draftitemid = file_get_submitted_draft_itemid($if);
             $maxbytes = -1;
             $maxfiles = 1;
             file_prepare_draft_area($draftitemid, $this->context->id, 'mod_pdcertificate', $if, 0, $this->jpgoptions);
             $groupname = $if.'group';
             $defaults->$groupname = array($if => $draftitemid);
+        }
+
+        // Expand protection options.
+        $protections = unserialize(@$defaults->protection);
+        if (!empty($protections)) {
+            foreach ($protections as $pkey => $pvalue) {
+                $key = 'protection'.$pkey;
+                $defaults->$key = $value;
+            }
         }
 
         parent::set_data($defaults);
@@ -436,7 +479,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('courselinkmandatory['.$numlcourses.']', '');
         $formgroup[] =& $mform->createElement('select', 'courselinkrole['.$numlcourses.']', '', $this->assignableroles);
         $mform->setDefault('courselinkrole['.$numlcourses.']', max(array_keys($this->assignableroles))); // for security, do not preassign too high level role
-        $group =& $mform->createElement('group', 'courselab'.$numlcourses, ($numlcourses+1), $formgroup, array(' '), false);
+        $group =& $mform->createElement('group', 'courselab'.$numlcourses, ($numlcourses + 1), $formgroup, array(' '), false);
         $mform->insertElementBefore($group, 'addcourse');
     }
 

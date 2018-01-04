@@ -78,12 +78,14 @@ $string['coursetimedependency'] = 'Temps minimum requis dans le cours';
 $string['coursetimereq'] = 'Minutes minimum dans le cours';
 $string['credithours'] = 'Crédit d\'heures';
 $string['cron_task'] = 'Tâches de l\'attestation';
+$string['croned'] = 'Générer les certificats par les tâches programmées';
 $string['customtext'] = 'Texte personnalisé';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
 $string['datehelp'] = 'Date';
 $string['defaultpropagategroups'] = 'Propagation des groupes (défaut)';
 $string['defaultpropagategroups_desc'] = 'Si coché, les informations de groupe seront copiées dans le cours chainé lors du passage des utilisateurs.';
+$string['defaultauthority'] = 'Autorité de certification (défaut)';
 $string['definitive'] = 'Valide (définitif)';
 $string['deletissuedpdcertificates'] = 'Supprimer les attestations délivrées';
 $string['deliveredon'] = 'Retiré le';
@@ -99,7 +101,10 @@ $string['emailteachers'] = 'Envoyer un mél aux formateurs';
 $string['entercode'] = 'Entrer le code de l\'attestation à vérifier :';
 $string['errorinvalidinstance'] = 'Erreur : cette instance d\'attestation n\'existe pas';
 $string['errornocapabilitytodelete'] = 'vous n\'avez pas les capacités pour détruire des attestations';
+$string['errorcertificatenotinstalled'] = 'Le module Certificat original semble ne pas être installé sur ce Moodle. La migration vers PDCertificate ne peut pas être effectuée.';
 $string['expiredon'] = 'Expiré le';
+$string['encryptionstrength'] = 'Niveau de cryptage';
+$string['encryptionstrength_desc'] = 'Lorsque le document généré est protégé, le niveau d\'encryptage. Plus la profondeur est élevée, plus la génération du document pourra consommer des ressources.';
 $string['followercourse'] = 'Cours lié : {$a->rolename} dans {$a->coursename}. Ce cours est prérequis : {$a->prerequisite}';
 $string['followers'] = 'Module(s) suivant(s) du parcours ';
 $string['footertext'] = 'Texte personnalisé du pied de page';
@@ -200,6 +205,19 @@ $string['printteacher'] = 'Imprimer le nom du formateur';
 $string['printwmark'] = 'Filigrane';
 $string['printdateformat'] = '';
 $string['propagategroups'] = 'Propagation des groupes';
+$string['protection'] = 'Protection';
+$string['protectionoptions'] = 'Options de protection PDF';
+$string['pubkey'] = 'Clef publique';
+$string['userpassword'] = 'Mot de passe utilisateur';
+$string['fullaccesspassword'] = 'Mot de passe pour l\'accès complet';
+$string['protectionprint'] = 'Ne pas autoriser l\'impression';
+$string['protectionmodify'] = 'Ne pas autoriser la modification du contenu';
+$string['protectioncopy'] = 'Ne pas autoriser de copier le contenu';
+$string['protectionannotforms'] = 'Ne pas autoriser d\'annoter le document ou d\'ajouter des champs de formulaire';
+$string['protectionfillforms'] = 'Ne pas autoriser de remplir les champs de formulaires';
+$string['protectionextract'] = 'Ne pas autoriser l\'extraction de textes ou d\'images';
+$string['protectionassemble'] = 'Ne pas autoriser l\'assemblage, l\'insertion, la suppression ou la rotation de pages';
+$string['protectionprinthigh'] = 'Ne pas autoriser l\'impression en haute résolution';
 $string['qrcodeoffset'] = 'Position du QR code (x,y)';
 $string['receivedcerts'] = 'Attestations reçus';
 $string['receiveddate'] = 'Date de réception';
@@ -212,6 +230,7 @@ $string['requiredcoursecompletion'] = 'Vous devez avoir achevé l\'ensemble des 
 $string['requiredtimenotmet'] = 'Vous devez avoir passé au moins {$a->requiredtime} minutes dans ce cours avant de pouvoir retirer votre attestations.';
 $string['requiredtimenotvalid'] = 'Le temps passé doit être une grandeur supérieure à 0';
 $string['reviewpdcertificate'] = 'Revoir votre attestation';
+$string['removeother'] = 'Supprimer les anciens rôles';
 $string['rolereq'] = 'Role';
 $string['savecert'] = 'Sauvegarder l\'attestation';
 $string['seal'] = 'Sceau';
@@ -380,7 +399,13 @@ $string['croned_help'] = 'Si activé, cette attestation sera traitée par le cro
 $string['maxdocumentspercron_desc'] = 'Si supérieur à 0, le nombre maximum de certificats (documents PDF) qu\'une exécutnio de cron peut générer en un tour.
 Les documents restants seront générés pendant les crons suivants jusqu\'à épuisement du besoin.';
 
-$string['modulename_help'] = 'Le module PD (Profesional Development) Certificate permet de générer une grande variété de documents,
+$string['modulename_help'] = 'Le module PD (Professional Development) Certificate permet de générer une grande variété de documents,
 certificats, attestations, lettres, convocations à partir de modèles HTML et images pouvant insérer de nombreuses informations relatives,
 à l\'utilisateur, au cours ou au site. Le certificat peut être utilisé pour inscrire un étudiznt sur un autre cours "suivant" ou changer
 le rôle dans le cours courant. Les certificats générés peuvent être récupérés dans une base documentaire par des web services.';
+
+$string['pubkey_help'] = 'Une clef publique peut être fournie comme alternative au mot de passe. Cette clef encodera les protections qui sont configuré.';
+$string['userpassword_help'] = 'Ce niveau de mot de passe permet en général l\'accès au document en lecture et aux fonctions liées à la consultation.';
+$string['fullaccesspassword_help'] = 'Ce niveau de mot de passe donne accès à des fonctions plus avancées y compris l\'édition du document';
+
+$string['defaultauthority_desc'] = 'L\'utilisateur représentant l\'autorité de certification par défaut pour les nouvelles instances d\'attestation.';
