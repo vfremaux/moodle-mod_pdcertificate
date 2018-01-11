@@ -385,6 +385,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     // Eliminate remaining unresolved injection patterns.
     $text = preg_replace('/\{info:.*?\}/', '', $text);
+    $text = preg_replace('/\{user:.*?\}/', '', $text);
 
     return $text;
 }
