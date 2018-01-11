@@ -34,32 +34,9 @@ if ($action == 'regenerate') {
         echo $OUTPUT->notification('Missing cert code');
         return;
     }
-    
+
     require_sesskey();
-
-    require_once($CFG->libdir.'/pdflib.php');
-
-    $filesafe = clean_filename($pdcertificate->name.'.pdf');
-
-    $fs = get_file_storage();
-
-    $certrecord = $DB->get_record('pdcertificate_issues', array('code' => $ccode));
-    $fs->delete_area_files($context->id, 'mod_pdcertificate', 'issue', $certrecord->id);
-
-    $user = $DB->get_record('user', array('id' => $certrecord->userid));
-
-    // This creates the $pdf instance.
-    // Load the specific pdcertificate type.
-    require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
-    $certname = rtrim($pdcertificate->name, '.');
-    $filename = clean_filename("$certname.pdf");
-    $file_contents = $pdf->Output('', 'S');
-    if ($pdcertificate->savecert == 1) {
-        pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
-        if ($pdcertificate->delivery == 2) {
-            pdcertificate_email_students($user, $course, $pdcertificate, $certrecord);
-        }
-    }
+    $user = pdcertificate_make_certificate($pdcertificate, $context, $ccode);
     pdcertificate_process_chain($user, $pdcertificate);
 }
 
@@ -86,8 +63,6 @@ if ($action == 'generate') {
 
     if (!empty($userids)) {
 
-        require_once($CFG->libdir.'/pdflib.php');
-
         make_cache_directory('tcpdf');
 
         // load some usefull strings
@@ -97,26 +72,16 @@ if ($action == 'generate') {
         $strcoursegrade = get_string('coursegrade', 'pdcertificate');
         $strcredithours = get_string('credithours', 'pdcertificate');
 
-        $filesafe = clean_filename($pdcertificate->name.'.pdf');
         $totalcertifiedcount = 0;
 
         foreach ($userids as $uid) {
-            $user = $DB->get_record('user', array('id' => $uid));
-            $certrecord = pdcertificate_get_issue($course, $user, $pdcertificate, $cm);
             $totalcertifiedcount++;
 
+            // Ensure the cert record exists.
+            pdcertificate_get_issue($course, $uid, $pdcertificate, $cm);
             // This creates the $pdf instance.
             // Load the specific pdcertificate type.
-            require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
-            $certname = rtrim($pdcertificate->name, '.');
-            $filename = clean_filename("$certname.pdf");
-            $file_contents = $pdf->Output('', 'S');
-            if ($pdcertificate->savecert == 1) {
-                pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
-                if ($pdcertificate->delivery == 2) {
-                    pdcertificate_email_students($user, $course, $pdcertificate, $certrecord);
-                }
-            }
+            $user = pdcertificate_make_certificate($pdcertificate, $context, '', $uid);
             pdcertificate_process_chain($user, $pdcertificate);
         }
     }
