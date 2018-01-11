@@ -369,7 +369,7 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
     if ($pdcertificate->savecert == 1) {
         pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
         if ($pdcertificate->delivery == 2) {
-            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord);
+            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context);
         }
     }
 
@@ -869,8 +869,8 @@ function pdcertificate_email_student($user, $course, $pdcertificate, $certrecord
 
     $info = new stdClass;
     $info->username = fullname($user);
-    $info->pdcertificate = format_string($pdcertificate->name, true);
-    $info->course = format_string($course->fullname, true);
+    $info->pdcertificate = $pdcertificate->name;
+    $info->course = $course->fullname;
     $subject = $info->course . ': ' . $info->pdcertificate;
     $message = get_string('emailstudenttext', 'pdcertificate', $info) . "\n";
 
@@ -887,12 +887,15 @@ function pdcertificate_email_student($user, $course, $pdcertificate, $certrecord
     $component = 'mod_pdcertificate';
     $filearea = 'issue';
     $filepath = '/';
-    $files = $fs->get_area_files($context->id, $component, $filearea, $certrecord->id);
-    foreach ($files as $f) {
+    $attachment = '';
+    $attachname = '';
+    if ($files = $fs->get_area_files($context->id, $component, $filearea, $certrecord->id, 'filepath, filename', false)) {
+        $f = array_shift($files);
         $filepathname = $f->get_contenthash();
+        $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
+        $attachname = $filename;
+        debug_trace("PDCERTIFICATE CRON : Sending certificate document $attachment as $attachname to user ".$user->shortname);
     }
-    $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
-    $attachname = $filename;
 
     return email_to_user($user, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
 }
