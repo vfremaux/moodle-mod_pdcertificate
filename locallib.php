@@ -247,6 +247,9 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
         } else {
             if ($errors = pdcertificate_check_conditions($pdcertificate, $cm, $u->id)) {
                 $state->notyetusers++;
+            } else {
+                // The user has condition to be certificated.
+                $state->certifiables[] = $u->id;
             }
         }
     }
@@ -296,7 +299,20 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
                 $CACHE[$pdcertificate->id][$userid] = get_string('needsmorework', 'pdcertificate');
             }
         } catch (moodle_exception $e) {
-            return false;
+            rebuild_course_cache($course->id);
+            $modinfo = get_fast_modinfo($course);
+
+            try {
+                // Second chance after course rebuild.
+                $cminfo = $modinfo->get_cm($cm->id);
+                $condinfo = new \core_availability\info_module($cminfo);
+                if (!$condinfo->is_available($information, false, $userid)) {
+                    $CACHE[$pdcertificate->id][$userid] = get_string('needsmorework', 'pdcertificate');
+                }
+            } catch (moodle_exception $e) {
+                mtrace('Bad course module representing this certificate '.$cm->id);
+                return('Bad course module representing this certificate '.$cm->id);
+            }
         }
     }
 
@@ -306,6 +322,7 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
 /**
  * Produces certificate document and delivers it
  * @param objectref $pdcertificate
+ * @param object $context the course module context object.
  * @param string $ccode the certificate code
  * @param string $userid either, the userid being certified
  * @return the user record the certificate is belonging to.
@@ -352,7 +369,7 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
     if ($pdcertificate->savecert == 1) {
         pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
         if ($pdcertificate->delivery == 2) {
-            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord);
+            pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context);
         }
     }
 
@@ -363,18 +380,30 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
  * When the user has received his sertificae, mark issues as being really delivered and
  * process to course chaining.
  */
-function pdcertificate_confirm_issue($user, $pdcertificate, $cm) {
+function pdcertificate_confirm_issue($userorid, $pdcertificate, $cm) {
     global $DB;
+
+    if (is_object($userorid)) {
+        $userid = $userorid->id;
+    } else {
+        $userid = $userorid;
+    }
 
     // Mark as delivered.
 
-    $DB->set_field('pdcertificate_issues', 'delivered', 1, array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id));
-    $DB->set_field('pdcertificate_issues', 'timedelivered', time(), array('pdcertificateid' => $pdcertificate->id, 'userid' => $user->id));
-    pdcertificate_process_chain($user, $pdcertificate);
+    $DB->set_field('pdcertificate_issues', 'delivered', 1, array('pdcertificateid' => $pdcertificate->id, 'userid' => $userid));
+    $DB->set_field('pdcertificate_issues', 'timedelivered', time(), array('pdcertificateid' => $pdcertificate->id, 'userid' => $userid));
+    pdcertificate_process_chain($userid, $pdcertificate);
 }
 
-function pdcertificate_process_chain($user, $pdcertificate) {
+function pdcertificate_process_chain($userorid, $pdcertificate) {
     global $DB;
+
+    if (is_object($userorid)) {
+        $userid = $userorid->id;
+    } else {
+        $userid = $userorid;
+    }
 
     $errormessage = '';
 
@@ -406,15 +435,15 @@ function pdcertificate_process_chain($user, $pdcertificate) {
         }
 
         // Get previous roles of the user.
-        $oldroleassignments = get_user_roles($assigncontext, $user->id, false);
+        $oldroleassignments = get_user_roles($assigncontext, $userid, false);
 
         if (!empty($pdcertificate->removeother)) {
             foreach ($oldroleassignments as $ra) {
-                role_unassign($ra->roleid, $user->id, $assigncontext->id);
+                role_unassign($ra->roleid, $userid, $assigncontext->id);
             }
         }
 
-        role_assign($pdcertificate->setcertification, $user->id, $assigncontext->id);
+        role_assign($pdcertificate->setcertification, $userid, $assigncontext->id);
     }
 
     // Process chaining if any.
@@ -432,7 +461,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
             $mandatoryreqs = $DB->get_records_select('pdcertificate_linked_courses', $select, array($link->courseid, $pdcertificate->id));
 
             foreach ($mandatoryreqs as $m) {
-                $reqok = $DB->get_record('pdcertificate_issues', array('userid' => $user->id, 'pdcertificateid' => $m->pdcertificateid, 'delivered' => 1));
+                $reqok = $DB->get_record('pdcertificate_issues', array('userid' => $userid, 'pdcertificateid' => $m->pdcertificateid, 'delivered' => 1));
                 if (!$reqok) {
                     $chainok = false;
                     break;
@@ -446,7 +475,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
             $coursecontext = context_course::instance($link->courseid);
             if ($enrol = $DB->get_record('enrol', array('enrol' => 'manual', 'courseid' => $link->courseid, 'status' => ENROL_INSTANCE_ENABLED))) {
                 $enrolplugin = enrol_get_plugin('manual');
-                $enrolplugin->enrol_user($enrol, $user->id, $link->roletobegiven, time(), 0, ENROL_USER_ACTIVE);
+                $enrolplugin->enrol_user($enrol, $userid, $link->roletobegiven, time(), 0, ENROL_USER_ACTIVE);
             } else {
                 $errormessage = get_string('manualenrolnotavailableontarget', 'pdcertificate');
                 return $errormessage;
@@ -454,7 +483,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
 
             // If required, propagate groups and memberships.
             if (!empty($pdcertificate->propagategroups)) {
-                $fromgroups = groups_get_user_groups($pdcertificate->course, $user->id);
+                $fromgroups = groups_get_user_groups($pdcertificate->course, $userid);
                 foreach ($fromgroups as $gpgid => $groups) {
                     if ($gpgid) {
                         // We are in a goruping, check and create if necessary.
@@ -491,7 +520,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
                             }
                         }
                         // Finally add user to group.
-                        groups_add_member($togroup->id, $user->id);
+                        groups_add_member($togroup->id, $userid);
                     }
                 }
             }
@@ -510,7 +539,7 @@ function pdcertificate_process_chain($user, $pdcertificate) {
  * @param int $perpage total per page
  * @return stdClass the users
  */
-function pdcertificate_get_issues($pdcertificateid, $sort="ci.timecreated ASC", $groupmode, $cm, $page = 0, $perpage = 0) {
+function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC", $groupmode, $cm, $page = 0, $perpage = 0) {
     global $CFG, $DB;
 
     // Get all users that can manage this pdcertificate to exclude them from the report.
@@ -809,8 +838,8 @@ function pdcertificate_email_teachers_html($info) {
  * @param stdClass $certrecord
  * @param stdClass $context
  */
-function pdcertificate_email_student($course, $pdcertificate, $certrecord, $context) {
-    global $DB, $USER;
+function pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context) {
+    global $DB;
 
     // If a certifier is defined.
     if (!empty($pdcertificate->certifierid)) {
@@ -839,9 +868,9 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     }
 
     $info = new stdClass;
-    $info->username = fullname($USER);
-    $info->pdcertificate = format_string($pdcertificate->name, true);
-    $info->course = format_string($course->fullname, true);
+    $info->username = fullname($user);
+    $info->pdcertificate = $pdcertificate->name;
+    $info->course = $course->fullname;
     $subject = $info->course . ': ' . $info->pdcertificate;
     $message = get_string('emailstudenttext', 'pdcertificate', $info) . "\n";
 
@@ -858,14 +887,17 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     $component = 'mod_pdcertificate';
     $filearea = 'issue';
     $filepath = '/';
-    $files = $fs->get_area_files($context->id, $component, $filearea, $certrecord->id);
-    foreach ($files as $f) {
+    $attachment = '';
+    $attachname = '';
+    if ($files = $fs->get_area_files($context->id, $component, $filearea, $certrecord->id, 'filepath, filename', false)) {
+        $f = array_shift($files);
         $filepathname = $f->get_contenthash();
+        $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
+        $attachname = $filename;
+        debug_trace("PDCERTIFICATE CRON : Sending certificate document $attachment as $attachname to user ".$user->shortname);
     }
-    $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
-    $attachname = $filename;
 
-    return email_to_user($USER, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
+    return email_to_user($user, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
 }
 
 /**

@@ -45,5 +45,6 @@ class cron_task extends \core\task\scheduled_task {
 
         require_once($CFG->dirroot.'/mod/pdcertificate/cronlib.php');
         pdcertificate_cron_task();
+        return true;
     }
 }
