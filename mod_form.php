@@ -30,6 +30,7 @@ if (!defined('MOODLE_INTERNAL')) {
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
+require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
 
 class mod_pdcertificate_mod_form extends moodleform_mod {
 
@@ -75,7 +76,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setType('emailothers', PARAM_TEXT);
         $mform->addHelpButton('emailothers', 'emailothers', 'pdcertificate');
 
-        $deliveryoptions = array( 0 => get_string('openbrowser', 'pdcertificate'), 1 => get_string('download', 'pdcertificate'), 2 => get_string('emailpdcertificate', 'pdcertificate'));
+        $deliveryoptions = array(0 => get_string('openbrowser', 'pdcertificate'),
+                                 1 => get_string('download', 'pdcertificate'),
+                                 2 => get_string('emailpdcertificate', 'pdcertificate'));
         $mform->addElement('select', 'delivery', get_string('delivery', 'pdcertificate'), $deliveryoptions);
         $mform->setDefault('delivery', 0);
         $mform->addHelpButton('delivery', 'delivery', 'pdcertificate');
@@ -83,6 +86,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('select', 'savecert', get_string('savecert', 'pdcertificate'), $ynoptions);
         $mform->setDefault('savecert', 0);
         $mform->addHelpButton('savecert', 'savecert', 'pdcertificate');
+
+        $mform->addElement('select', 'croned', get_string('croned', 'pdcertificate'), $ynoptions);
+        $mform->setDefault('croned', 0);
+        $mform->addHelpButton('croned', 'croned', 'pdcertificate');
 
         $reportfile = "$CFG->dirroot/pdcertificates/index.php";
         if (file_exists($reportfile)) {
@@ -189,9 +196,8 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('datefmt', 0);
         $mform->addHelpButton('datefmt', 'datefmt', 'pdcertificate');
 
-        $gradeformatoptions = array(1 => get_string('gradepercent', 'pdcertificate'),
-                                    2 => get_string('gradepoints', 'pdcertificate'),
-                                    3 => get_string('gradeletter', 'pdcertificate'));
+        $gradeformatoptions = array( 1 => get_string('gradepercent', 'pdcertificate'), 2 => get_string('gradepoints', 'pdcertificate'),
+            3 => get_string('gradeletter', 'pdcertificate'));
         $mform->addElement('select', 'gradefmt', get_string('gradefmt', 'pdcertificate'), $gradeformatoptions);
         $mform->setDefault('gradefmt', 0);
         $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
@@ -214,10 +220,15 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
         $mform->setDefault('fontbasesize', 12);
 
+        /*
         $familyoptions = array('freesans' => get_string('freesans', 'pdcertificate'),
             'freeserif' => get_string('freeserif', 'pdcertificate'),
             'freemono' => get_string('freemono', 'pdcertificate')
         );
+        */
+        $pdf = new PDF();
+        $available = array_keys($pdf->get_font_families());
+        $familyoptions = array_combine($available, $available);
         $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
         $mform->setDefault('fontbasesize', 12);
 
@@ -444,7 +455,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
    }
 
     public function completion_rule_enabled($data) {
-        return true;
+        return(!empty($data['completiondelivered']));
     }
 
     public function data_preprocessing(&$default_values) {

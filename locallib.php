@@ -198,33 +198,51 @@ function pdcertificate_get_possible_contexts() {
     return $contexts;
 }
 
-function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, &$total, &$certifiableusers) {
+/**
+ * Get the certification state for a set of users.
+ * @param object $pdcertificate PDCertificate instance
+ * @param object $cm the corresponding course module
+ * @param int $page the result paging page nbumber
+ * @param int $pagesize the paging page size
+ * @param int $group a group id to restrict the scope
+ * @param arrayref &$total the full set of users in the page
+ * @param arrayref &$certififiableusers the subset of users records that are certifiable
+ * @param bool $optimized if optimised, we will no fetch the name fields from users, only ids.
+ */
+function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, &$total, &$certifiableusers, $optimized = false) {
     global $DB;
 
     $context = context_module::instance($cm->id);
+
+    $fields = 'u.id';
+    if (!$optimized) {
+        $fields .= ','.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
+    }
 
     $state = new StdClass;
     $state->totalcertifiedcount = 0;
     $state->notyetusers = 0;
     if (!empty($group)) {
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, '', false);
         $state->totalcount = count($total);
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, $group, '', false);
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, $group, '', false);
     } else {
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u');
         $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', '', false);
         $state->totalcount = count($total);
-        $fields = 'u.id,'.get_all_user_name_fields(true, 'u').',picture,imagealt,email';
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize, $pagesize, '', '', false);
+        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, '', '', false);
     }
 
-    // This may be quite costfull on large courses. Not for MOOCS !!
+    // Delivered certificates keyed by userid. Get in in a single query.
+    $delivered = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $pdcertificate->id), 'id', 'userid,userid');
+    $deliveredids = array_keys($delivered);
+
+    // This may be costfull when a big brunch of users arrive to certification state.
     foreach ($total as $u) {
-        if ($DB->record_exists('pdcertificate_issues', array('userid' => $u->id, 'pdcertificateid' => $pdcertificate->id))) {
+        if (in_array($u->id, $deliveredids)) {
             $state->totalcertifiedcount++;
         } else {
             if ($errors = pdcertificate_check_conditions($pdcertificate, $cm, $u->id)) {
@@ -283,6 +301,54 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
     }
 
     return $CACHE[$pdcertificate->id][$userid];
+}
+
+/**
+ * Produces certificate document and delivers it
+ * @param objectref $pdcertificate
+ * @param string $ccode the certificate code
+ * @param string $userid either, the userid being certified
+ * @return the user record the certificate is belonging to.
+ */
+function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0) {
+    global $CFG, $DB;
+
+    if (empty($ccode) && empty($userid)) {
+        throw new moodle_exception('One of Certificate code or user id should be given');
+    }
+
+    require_once($CFG->libdir.'/pdflib.php');
+
+    $filesafe = clean_filename($pdcertificate->name.'.pdf');
+
+    $fs = get_file_storage();
+
+    if (!$userid) {
+        $certrecord = $DB->get_record('pdcertificate_issues', array('code' => $ccode));
+    } else {
+        $params = array('userid' => $userid, 'pdcertificateid' => $pdcertificate->id);
+        $certrecord = $DB->get_record('pdcertificate_issues', $params);
+    }
+    $course = $DB->get_record('course', array('id' => $pdcertificate->course));
+
+    $fs->delete_area_files($context->id, 'mod_pdcertificate', 'issue', $certrecord->id);
+
+    $user = $DB->get_record('user', array('id' => $certrecord->userid));
+
+    // This creates the $pdf instance.
+    // Load the specific pdcertificate type.
+    require($CFG->dirroot.'/mod/pdcertificate/type/'.$pdcertificate->pdcertificatetype.'/pdcertificate.php');
+    $certname = rtrim(strip_tags(format_string($pdcertificate->name)), '.');
+    $filename = clean_filename("$certname.pdf");
+    $file_contents = $pdf->Output('', 'S');
+    if ($pdcertificate->savecert == 1) {
+        pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
+        if ($pdcertificate->delivery == 2) {
+            pdcertificate_email_students($user, $course, $pdcertificate, $certrecord);
+        }
+    }
+
+    return $user;
 }
 
 /**
@@ -758,7 +824,7 @@ function pdcertificate_email_student($course, $pdcertificate, $certrecord, $cont
     $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
     $attachname = $filename;
 
-    return email_to_user($USER, $from, $subject, $message, $messagehtml, $attachment, $attachname);
+    return email_to_user($USER, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
 }
 
 /**
@@ -862,7 +928,7 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
                         height="16"
                         width="16"
                         alt="'.$file->get_mimetype().'" />&nbsp;'.
-                  '<a href="'.$link.'" >'.s($filename).'</a>';
+                  '<a href="'.$link.'" >'.$filename.'</a>';
     }
     $output .= '<br />';
     $output = '<div class="files">'.$output.'</div>';
@@ -880,8 +946,14 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
  * @param stdClass $cm
  * @return stdClass the newly created pdcertificate issue
  */
-function pdcertificate_get_issue($course, $user, $pdcertificate, $cm) {
+function pdcertificate_get_issue($course, $userorid, $pdcertificate, $cm) {
     global $DB;
+
+    if (!is_object($userorid)) {
+        $user = $DB->get_record('user', array('id' => $userorid));
+    } else {
+        $user = $userorid;
+    }
 
     // Check if there is an issue already, should only ever be one.
     if ($certissue = $DB->get_record('pdcertificate_issues', array('userid' => $user->id, 'pdcertificateid' => $pdcertificate->id))) {

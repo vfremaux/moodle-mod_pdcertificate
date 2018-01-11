@@ -29,5 +29,13 @@ require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');
 $ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
     get_string('migration', 'pdcertificate'), new moodle_url('/mod/pdcertificate/migrate.php'), 'moodle/site:config'));
 
-$settings->add(new admin_setting_configcheckbox('pdcertificate/defaultpropagategroups',
-    get_string('defaultpropagategroups', 'pdcertificate'), get_string('defaultpropagategroups_desc', 'pdcertificate'), ''));
+$key = 'pdcertificate/defaultpropagategroups';
+$label = get_string('defaultpropagategroups', 'pdcertificate');
+$desc = get_string('defaultpropagategroups_desc', 'pdcertificate');
+$settings->add(new admin_setting_configcheckbox($key, $label, $desc, ''));
+
+$key = 'pdcertificate/maxdocumentspercron';
+$label = get_string('maxdocumentspercron', 'pdcertificate');
+$desc = get_string('maxdocumentspercron_desc', 'pdcertificate');
+$default = 100;
+$settings->add(new admin_setting_configtext($key, $label, $desc, $default));
