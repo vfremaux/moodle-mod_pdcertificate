@@ -25,11 +25,11 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2017041200; // The current module version (Date: YYYYMMDDXX).
+$plugin->version   = 2017070600; // The current module version (Date: YYYYMMDDXX).
 $plugin->requires  = 2015050500; // Requires this Moodle version.
 $plugin->component = 'mod_pdcertificate';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '2.9.0 (Build 2017041200)'; // User-friendly version number.
+$plugin->release   = '2.9.0 (Build 2017070600)'; // User-friendly version number.
 
 // Non Moodle attributes.
-$plugin->codeincrement = '2.9.0002';
+$plugin->codeincrement = '2.9.0005';
