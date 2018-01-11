@@ -26,7 +26,7 @@
 require('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/deprecatedlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
-require_once($CFG->libdir.'/pdflib.php');
+require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
 
 $id = required_param('id', PARAM_INT);    // Course Module ID.
 $action = optional_param('what', '', PARAM_ALPHA);

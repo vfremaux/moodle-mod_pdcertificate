@@ -118,6 +118,32 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2017041201, 'pdcertificate');
     }
 
+    if ($oldversion < 2017051200) {
+
+        $table = new xmldb_table('pdcertificate');
+
+        $field = new xmldb_field('croned', XMLDB_TYPE_INTEGER, 1, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'completiondelivered');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017051200, 'pdcertificate');
+    }
+
+    if ($oldversion < 2017060600) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('timeexported', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timedelivered');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2017060600, 'pdcertificate');
+    }
+
     return true;
 }
 
