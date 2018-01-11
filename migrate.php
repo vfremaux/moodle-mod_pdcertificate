@@ -27,7 +27,6 @@
  * library for porting all certificates data to pdcertificate
  */
 require('../../config.php');
-require_once($CFG->dirroot.'/mod/pdcertificate/migratelib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/migrate_form.php');
 
 $action = optional_param('what', '', PARAM_ALPHA);
@@ -35,6 +34,11 @@ $action = optional_param('what', '', PARAM_ALPHA);
 require_login();
 $context = context_system::instance();
 require_capability('moodle/site:config', $context);
+
+if (!file_exists($CFG->dirroot.'/mod/certificate/lib.php')) {
+    print_error('errorcertificatenotinstalled', 'pdcertificate');
+}
+require_once($CFG->dirroot.'/mod/pdcertificate/migratelib.php');
 
 // Initialize $PAGE.
 

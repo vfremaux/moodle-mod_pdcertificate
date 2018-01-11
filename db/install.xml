@@ -31,12 +31,17 @@
         <FIELD NAME="validitytime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="setcertification" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="setcertificationcontext" TYPE="int" LENGTH="11" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
+        <FIELD NAME="removeother" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="groupspecificcontent" TYPE="int" LENGTH="11" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="propagategroups" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="locked" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="lockoncoursecompletion" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" ENUM="false" />
         <FIELD NAME="completiondelivered" TYPE="int" LENGTH="2" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If this field is set to 1, then the activity will be marked as 'complete' once the user has got his certificate." />
         <FIELD NAME="croned" TYPE="int" LENGTH="1" NOTNULL="true" DEFAULT="0" SEQUENCE="false" COMMENT="If croned, examines who can be issued and issue them by cron" />
+        <FIELD NAME="protection" TYPE="char" LENGTH="255" NOTNULL="false" SEQUENCE="false" COMMENT="Protection markers as a serialized structure" />
+        <FIELD NAME="userpass" TYPE="char" LENGTH="16" NOTNULL="false" SEQUENCE="false" COMMENT="User passsword" />
+        <FIELD NAME="fullpass" TYPE="char" LENGTH="16" NOTNULL="false" SEQUENCE="false" COMMENT="Full access password" />
+        <FIELD NAME="pubkey" TYPE="text" LENGTH="small" NOTNULL="false" SEQUENCE="false" COMMENT="Public key" />
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for pdcertificate"/>

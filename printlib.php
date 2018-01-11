@@ -299,7 +299,8 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         '{info:course_category}' => $DB->get_field('course_categories', 'name', array('id' => $course->category)),
         '{info:course_idnumber}' => $course->idnumber,
         '{info:course_grade}' => pdcertificate_get_grade($pdcertificate, $course, $user->id),
-        '{info:certificate_date}' => strftime($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
+        '{info:certificate_name}' => format_string($pdcertificate->name),
+        '{info:certificate_date}' => pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
         '{info:certificate_outcome}' => pdcertificate_get_outcome($pdcertificate, $course),
         '{info:certificate_credit_hours}' => get_string('credithours', 'pdcertificate').': '.$printconfig->printhours,
         '{info:certificate_code}' => strtoupper($certrecord->code),
@@ -326,7 +327,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
             if ($userdatum->datatype == 'datetime') {
                 $dateformat = get_string('printdateformat', 'pdcertificate');
                 if (!empty($dateformat)) {
-                    $replacements['{user:'.$userdatum->shortname.'}'] = strftime($dateformat, $userdatum->data);
+                    $replacements['{user:'.$userdatum->shortname.'}'] = pdcertificate_strftimefixed($dateformat, $userdatum->data);
                 } else {
                     $replacements['{user:'.$userdatum->shortname.'}'] = userdate($userdatum->data);
                 }
@@ -345,7 +346,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         );
 
         $ccompletion = new completion_completion($params);
-        $replacements['{info:completion_date}'] = strftime($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+        $replacements['{info:completion_date}'] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
     }
 
     if ($pdcertificate->certifierid) {
@@ -353,15 +354,19 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     }
 
     if (file_exists($CFG->dirroot.'/blocks/use_stats/locallib.php')) {
-        require_once($CFG->dirroot.'/blocks/use_stats/locallib.php');
-        $now = time();
-        $logs = use_stats_extract_logs($course->startdate, $now, $user->id, $course->id);
-        $aggregate = use_stats_aggregate_logs($logs, 'module', 0, $course->startdate, $now);
 
-        if (array_key_exists('coursetotal', $aggregate)) {
-            $replacements['{info:course_total_time}'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);
-        } else {
-            $replacements['{info:course_total_time}'] = '';
+        // Do not process if the placeholder is not used.
+        if (preg_match('/{info:course_total_time}/', $text)) {
+            require_once($CFG->dirroot.'/blocks/use_stats/locallib.php');
+            $now = time();
+            $logs = use_stats_extract_logs($course->startdate, $now, $user->id, $course->id);
+            $aggregate = use_stats_aggregate_logs($logs, 'module', 0, $course->startdate, $now);
+
+            if (array_key_exists('coursetotal', $aggregate)) {
+                $replacements['{info:course_total_time}'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);
+            } else {
+                $replacements['{info:course_total_time}'] = '';
+            }
         }
     }
 
