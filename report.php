@@ -156,7 +156,11 @@ if ($action) {
     include $CFG->dirroot.'/mod/pdcertificate/report.controller.php';
 }
 
-$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm);
+$filterfirstname = optional_param('filterfirstname', '', PARAM_TEXT);
+$filterlastname = optional_param('filterlastname', '', PARAM_TEXT);
+$filters = array($filterfirstname, $filterlastname);
+
+$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
 
 if ($download == 'ods') {
     require_once($CFG->libdir.'/odslib.class.php');
@@ -300,7 +304,7 @@ if ($download == 'txt') {
     exit;
 }
 
-$usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm));
+$usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm, 0, 0, $filters));
 
 // Create the table for the users.
 $table = new html_table();
@@ -351,7 +355,7 @@ foreach ($certifiableusers as $user) {
             // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
-                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'"><img src="'.$OUTPUT->pix_url('t/delete').'"></a>';
+                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete').'</a>';
             }
         }
         if (@$user->reportgrade !== null) {
@@ -374,9 +378,13 @@ foreach ($certifiableusers as $user) {
     $table->data[] = array ($check, $name, $date, $grade, $code, $certstate);
 }
 
-if ($pagesize){
+if ($pagesize) {
     echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, new moodle_url($baseurl));
 }
+echo '<br />';
+
+echo $renderer->namefilter(new moodle_url($baseurl));
+
 echo '<br />';
 echo '<form name="controller" method="GET" action="'.$baseurl.'">';
 echo '<input type="hidden" name="id" value="'.$cm->id.'" />';

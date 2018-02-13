@@ -222,26 +222,32 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $state = new StdClass;
     $state->totalcertifiedcount = 0;
     $state->notyetusers = 0;
+
+    $filters = array();
+    $filters[0] = optional_param('filterfirstname', '', PARAM_TEXT);
+    $filters[1] = optional_param('filterlastname', '', PARAM_TEXT);
+
     if (!empty($group)) {
-        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, '', false);
+        $total = pdcertificate_get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', $group, $filters, false);
         $state->totalcount = count($total);
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
-                                                    $pagesize, $group, '', false);
+        $certifiableusers = pdcertificate_get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, $group, $filters, false);
     } else {
-        $total = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', '', false);
+        $total = pdcertificate_get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, '', '', '', '', $filters, false);
         $state->totalcount = count($total);
         $sort = 'lastname, firstname';
-        $certifiableusers = get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
-                                                    $pagesize, '', '', false);
+        $certifiableusers = pdcertificate_get_users_by_capability($context, 'mod/pdcertificate:apply', $fields, $sort, $page * $pagesize,
+                                                    $pagesize, '', $filters, false);
     }
 
     // Delivered certificates keyed by userid. Get in in a single query.
     $delivered = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $pdcertificate->id), 'id', 'userid,userid');
     $deliveredids = array_keys($delivered);
 
-    // This may be costfull when a big brunch of users arrive to certification state.
+    // This may be costfull when a big bunch of users arrive to certification state.
     foreach ($total as $u) {
+        // New : only check those.
         if (in_array($u->id, $deliveredids)) {
             $state->totalcertifiedcount++;
         } else {
@@ -539,7 +545,7 @@ function pdcertificate_process_chain($userorid, $pdcertificate) {
  * @param int $perpage total per page
  * @return stdClass the users
  */
-function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC", $groupmode, $cm, $page = 0, $perpage = 0) {
+function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC", $groupmode, $cm, $page = 0, $perpage = 0, $filters = array()) {
     global $CFG, $DB;
 
     // Get all users that can manage this pdcertificate to exclude them from the report.
@@ -550,6 +556,20 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
     if ($certmanagers = array_keys(get_users_by_capability($context, 'mod/pdcertificate:manage', 'u.id'))) {
         list($sql, $params) = $DB->get_in_or_equal($certmanagers, SQL_PARAMS_NAMED, 'cert');
         $conditionssql .= "AND NOT u.id $sql \n";
+        $conditionsparams += $params;
+    }
+
+    $filterfirstname = @$filters[0];
+    $filterlastname = @$filters[1];
+    if (!empty($filterfirstname)) {
+        $conditionssql .= "AND u.firstname LIKE :firstname \n";
+        $params = array('firstname' => $filterfirstname.'%');
+        $conditionsparams += $params;
+    }
+
+    if (!empty($filterlastname)) {
+        $conditionssql .= "AND u.lastname LIKE :lastname \n";
+        $params = array('lastname' => $filterlastname.'%');
         $conditionsparams += $params;
     }
 
@@ -627,6 +647,7 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
         ORDER BY
             {$sort}
     ";
+
     $users = $DB->get_records_sql($sql, $allparams, $page * $perpage, $perpage);
 
     return $users;
@@ -894,7 +915,7 @@ function pdcertificate_email_student($user, $course, $pdcertificate, $certrecord
         $filepathname = $f->get_contenthash();
         $attachment = 'filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
         $attachname = $filename;
-        debug_trace("PDCERTIFICATE CRON : Sending certificate document $attachment as $attachname to user ".$user->shortname);
+        debug_trace("PDCERTIFICATE CRON : Sending certificate document $attachment as $attachname to user ".$user->username);
     }
 
     return email_to_user($user, $teacher, $subject, $message, $messagehtml, $attachment, $attachname);
@@ -996,7 +1017,7 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
         $filepath = '/'.$contextid.'/mod_pdcertificate/issue/'.$certrecord->id.'/'.$filename;
         $link = file_encode_url($CFG->wwwroot.'/pluginfile.php', $filepath);
 
-        $pixurl = $OUTPUT->pix_url(file_mimetype_icon($file->get_mimetype()));
+        $pixurl = $OUTPUT->image_url(file_mimetype_icon($file->get_mimetype()));
         $output = '<img src="'.$pixurl.'"
                         height="16"
                         width="16"
@@ -1170,14 +1191,17 @@ function pdcertificate_generate_code() {
  * to fix some windows issues with strftime.
  */
 function pdcertificate_strftimefixed($format, $timestamp=null) {
+    global $CFG;
 
     if ($timestamp === null) $timestamp = time();
 
     if (strtoupper(substr(PHP_OS, 0, 3)) == 'WIN') {
         $format = preg_replace('#(?<!%)((?:%%)*)%e#', '\1%#d', $format);
 
-        $locale = setlocale(LC_TIME, 0);
+        // Be carefull windows only uses a 2 letters locale.
+        $locale = setlocale(LC_ALL, $CFG->lang);
 
+        /*
         switch(true) {
             case (preg_match('#\.(874|1256)$#', $locale, $matches)):
                 return iconv('UTF-8', "$locale_charset", strftime($format, $timestamp));
@@ -1204,6 +1228,9 @@ function pdcertificate_strftimefixed($format, $timestamp=null) {
             trigger_error("Unknown charset for system locale ($locale)", E_USER_NOTICE);
             return mb_convert_encoding(strftime($format, $timestamp), 'UTF-8', 'auto');
         }
+        */
+        // This has been seen on some Win2012 server environments where the fr locale comes out in latin or Windows encding.
+        return utf8_encode(strftime($format, $timestamp));
     }
 
     return strftime($format, $timestamp);
@@ -1258,4 +1285,291 @@ function pdcertificate_set_protection(&$pdcertificate, &$pdf) {
     } else {
         $pdf->setProtection($permissions, $pdcertificate->userpass, $pdcertificate->fullpass, $config->encryptionstrength, null);
     }
+}
+
+/**
+ * clones th original in lib/accesslib.php, replacing exlusions by namefilter capability.
+ *
+ * @param context $context
+ * @param string|array $capability - capability name(s)
+ * @param string $fields - fields to be pulled. The user table is aliased to 'u'. u.id MUST be included.
+ * @param string $sort - the sort order. Default is lastaccess time.
+ * @param mixed $limitfrom - number of records to skip (offset)
+ * @param mixed $limitnum - number of records to fetch
+ * @param string|array $groups - single group or array of groups - only return
+ *               users who are in one of these group(s).
+ * @param string|array $exceptions - list of users to exclude, comma separated or array
+ * @param bool $doanything_ignored not used any more, admin accounts are never returned
+ * @param bool $view_ignored - use get_enrolled_sql() instead
+ * @param bool $useviewallgroups if $groups is set the return users who
+ *               have capability both $capability and moodle/site:accessallgroups
+ *               in this context, as well as users who have $capability and who are
+ *               in $groups.
+ * @return array of user records
+ */
+function pdcertificate_get_users_by_capability(context $context, $capability, $fields = '', $sort = '', $limitfrom = '', $limitnum = '',
+                                 $groups = '', $filters = '', $doanything_ignored = null, $view_ignored = null, $useviewallgroups = false) {
+    global $CFG, $DB;
+
+    $defaultuserroleid      = isset($CFG->defaultuserroleid) ? $CFG->defaultuserroleid : 0;
+    $defaultfrontpageroleid = isset($CFG->defaultfrontpageroleid) ? $CFG->defaultfrontpageroleid : 0;
+
+    $ctxids = trim($context->path, '/');
+    $ctxids = str_replace('/', ',', $ctxids);
+
+    // Context is the frontpage
+    $iscoursepage = false; // coursepage other than fp
+    $isfrontpage = false;
+    if ($context->contextlevel == CONTEXT_COURSE) {
+        if ($context->instanceid == SITEID) {
+            $isfrontpage = true;
+        } else {
+            $iscoursepage = true;
+        }
+    }
+    $isfrontpage = ($isfrontpage || is_inside_frontpage($context));
+
+    $caps = (array)$capability;
+
+    // construct list of context paths bottom-->top
+    list($contextids, $paths) = get_context_info_list($context);
+
+    // we need to find out all roles that have these capabilities either in definition or in overrides
+    $defs = array();
+    list($incontexts, $params) = $DB->get_in_or_equal($contextids, SQL_PARAMS_NAMED, 'con');
+    list($incaps, $params2) = $DB->get_in_or_equal($caps, SQL_PARAMS_NAMED, 'cap');
+    $params = array_merge($params, $params2);
+    $sql = "SELECT rc.id, rc.roleid, rc.permission, rc.capability, ctx.path
+              FROM {role_capabilities} rc
+              JOIN {context} ctx on rc.contextid = ctx.id
+             WHERE rc.contextid $incontexts AND rc.capability $incaps";
+
+    $rcs = $DB->get_records_sql($sql, $params);
+    foreach ($rcs as $rc) {
+        $defs[$rc->capability][$rc->path][$rc->roleid] = $rc->permission;
+    }
+
+    // go through the permissions bottom-->top direction to evaluate the current permission,
+    // first one wins (prohibit is an exception that always wins)
+    $access = array();
+    foreach ($caps as $cap) {
+        foreach ($paths as $path) {
+            if (empty($defs[$cap][$path])) {
+                continue;
+            }
+            foreach($defs[$cap][$path] as $roleid => $perm) {
+                if ($perm == CAP_PROHIBIT) {
+                    $access[$cap][$roleid] = CAP_PROHIBIT;
+                    continue;
+                }
+                if (!isset($access[$cap][$roleid])) {
+                    $access[$cap][$roleid] = (int)$perm;
+                }
+            }
+        }
+    }
+
+    // make lists of roles that are needed and prohibited in this context
+    $needed = array(); // one of these is enough
+    $prohibited = array(); // must not have any of these
+    foreach ($caps as $cap) {
+        if (empty($access[$cap])) {
+            continue;
+        }
+        foreach ($access[$cap] as $roleid => $perm) {
+            if ($perm == CAP_PROHIBIT) {
+                unset($needed[$cap][$roleid]);
+                $prohibited[$cap][$roleid] = true;
+            } else if ($perm == CAP_ALLOW and empty($prohibited[$cap][$roleid])) {
+                $needed[$cap][$roleid] = true;
+            }
+        }
+        if (empty($needed[$cap]) or !empty($prohibited[$cap][$defaultuserroleid])) {
+            // easy, nobody has the permission
+            unset($needed[$cap]);
+            unset($prohibited[$cap]);
+        } else if ($isfrontpage and !empty($prohibited[$cap][$defaultfrontpageroleid])) {
+            // everybody is disqualified on the frontpage
+            unset($needed[$cap]);
+            unset($prohibited[$cap]);
+        }
+        if (empty($prohibited[$cap])) {
+            unset($prohibited[$cap]);
+        }
+    }
+
+    if (empty($needed)) {
+        // there can not be anybody if no roles match this request
+        return array();
+    }
+
+    if (empty($prohibited)) {
+        // we can compact the needed roles
+        $n = array();
+        foreach ($needed as $cap) {
+            foreach ($cap as $roleid=>$unused) {
+                $n[$roleid] = true;
+            }
+        }
+        $needed = array('any'=>$n);
+        unset($n);
+    }
+
+    // ***** Set up default fields ******
+    if (empty($fields)) {
+        if ($iscoursepage) {
+            $fields = 'u.*, ul.timeaccess AS lastaccess';
+        } else {
+            $fields = 'u.*';
+        }
+    } else {
+        if ($CFG->debugdeveloper && strpos($fields, 'u.*') === false && strpos($fields, 'u.id') === false) {
+            debugging('u.id must be included in the list of fields passed to get_users_by_capability().', DEBUG_DEVELOPER);
+        }
+    }
+
+    // Set up default sort
+    if (empty($sort)) { // default to course lastaccess or just lastaccess
+        if ($iscoursepage) {
+            $sort = 'ul.timeaccess';
+        } else {
+            $sort = 'u.lastaccess';
+        }
+    }
+
+    // Prepare query clauses
+    $wherecond = array();
+    $params    = array();
+    $joins     = array();
+
+    // User lastaccess JOIN
+    if ((strpos($sort, 'ul.timeaccess') === false) and (strpos($fields, 'ul.timeaccess') === false)) {
+         // user_lastaccess is not required MDL-13810
+    } else {
+        if ($iscoursepage) {
+            $joins[] = "LEFT OUTER JOIN {user_lastaccess} ul ON (ul.userid = u.id AND ul.courseid = {$context->instanceid})";
+        } else {
+            throw new coding_exception('Invalid sort in get_users_by_capability(), ul.timeaccess allowed only for course contexts.');
+        }
+    }
+
+    // We never return deleted users or guest account.
+    $wherecond[] = "u.deleted = 0 AND u.id <> :guestid";
+    $params['guestid'] = $CFG->siteguest;
+
+    // Groups
+    if ($groups) {
+        $groups = (array)$groups;
+        list($grouptest, $grpparams) = $DB->get_in_or_equal($groups, SQL_PARAMS_NAMED, 'grp');
+        $grouptest = "u.id IN (SELECT userid FROM {groups_members} gm WHERE gm.groupid $grouptest)";
+        $params = array_merge($params, $grpparams);
+
+        if ($useviewallgroups) {
+            $viewallgroupsusers = get_users_by_capability($context, 'moodle/site:accessallgroups', 'u.id, u.id', '', '', '', '', $exceptions);
+            if (!empty($viewallgroupsusers)) {
+                $wherecond[] =  "($grouptest OR u.id IN (" . implode(',', array_keys($viewallgroupsusers)) . '))';
+            } else {
+                $wherecond[] =  "($grouptest)";
+            }
+        } else {
+            $wherecond[] =  "($grouptest)";
+        }
+    }
+
+    // User filters
+    if (!empty($filters)) {
+
+        $filterfirstname = @$filters[0];
+        $filterlastname = @$filters[1];
+        if (!empty($filterfirstname)) {
+            $wherecond[] = "u.firstname LIKE :firstname \n";
+            $extparams = array('firstname' => $filterfirstname.'%');
+            $params = array_merge($params, $extparams);
+        }
+
+        if (!empty($filterlastname)) {
+            $wherecond[] = "u.lastname LIKE :lastname \n";
+            $extparams = array('lastname' => $filterlastname.'%');
+            $params = array_merge($params, $extparams);
+        }
+    }
+
+    // now add the needed and prohibited roles conditions as joins
+    if (!empty($needed['any'])) {
+        // simple case - there are no prohibits involved
+        if (!empty($needed['any'][$defaultuserroleid]) or ($isfrontpage and !empty($needed['any'][$defaultfrontpageroleid]))) {
+            // everybody
+        } else {
+            $joins[] = "JOIN (SELECT DISTINCT userid
+                                FROM {role_assignments}
+                               WHERE contextid IN ($ctxids)
+                                     AND roleid IN (".implode(',', array_keys($needed['any'])) .")
+                             ) ra ON ra.userid = u.id";
+        }
+    } else {
+        $unions = array();
+        $everybody = false;
+        foreach ($needed as $cap=>$unused) {
+            if (empty($prohibited[$cap])) {
+                if (!empty($needed[$cap][$defaultuserroleid]) or ($isfrontpage and !empty($needed[$cap][$defaultfrontpageroleid]))) {
+                    $everybody = true;
+                    break;
+                } else {
+                    $unions[] = "SELECT userid
+                                   FROM {role_assignments}
+                                  WHERE contextid IN ($ctxids)
+                                        AND roleid IN (".implode(',', array_keys($needed[$cap])) .")";
+                }
+            } else {
+                if (!empty($prohibited[$cap][$defaultuserroleid]) or ($isfrontpage and !empty($prohibited[$cap][$defaultfrontpageroleid]))) {
+                    // nobody can have this cap because it is prevented in default roles
+                    continue;
+
+                } else if (!empty($needed[$cap][$defaultuserroleid]) or ($isfrontpage and !empty($needed[$cap][$defaultfrontpageroleid]))) {
+                    // everybody except the prohibitted - hiding does not matter
+                    $unions[] = "SELECT id AS userid
+                                   FROM {user}
+                                  WHERE id NOT IN (SELECT userid
+                                                     FROM {role_assignments}
+                                                    WHERE contextid IN ($ctxids)
+                                                          AND roleid IN (".implode(',', array_keys($prohibited[$cap])) ."))";
+
+                } else {
+                    $unions[] = "SELECT userid
+                                   FROM {role_assignments}
+                                  WHERE contextid IN ($ctxids) AND roleid IN (".implode(',', array_keys($needed[$cap])) .")
+                                        AND userid NOT IN (
+                                            SELECT userid
+                                              FROM {role_assignments}
+                                             WHERE contextid IN ($ctxids)
+                                                    AND roleid IN (" . implode(',', array_keys($prohibited[$cap])) . ")
+                                                        )";
+                }
+            }
+        }
+        if (!$everybody) {
+            if ($unions) {
+                $joins[] = "JOIN (SELECT DISTINCT userid FROM ( ".implode(' UNION ', $unions)." ) us) ra ON ra.userid = u.id";
+            } else {
+                // only prohibits found - nobody can be matched
+                $wherecond[] = "1 = 2";
+            }
+        }
+    }
+
+    // Collect WHERE conditions and needed joins
+    $where = implode(' AND ', $wherecond);
+    if ($where !== '') {
+        $where = 'WHERE ' . $where;
+    }
+    $joins = implode("\n", $joins);
+
+    // Ok, let's get the users!
+    $sql = "SELECT $fields
+              FROM {user} u
+            $joins
+            $where
+          ORDER BY $sort";
+
+    return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
 }
