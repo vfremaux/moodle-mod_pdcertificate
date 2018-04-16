@@ -67,3 +67,10 @@
 .inline-button *{
     display:inline;
 }
+
+.namefilter-selected {
+    background-color: #eee;
+    padding: 3px;
+    display: inline-block;
+    border-radius:3px;
+}

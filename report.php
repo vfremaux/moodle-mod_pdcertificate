@@ -39,7 +39,8 @@ $perpage = optional_param('perpage', PDCERT_PER_PAGE, PARAM_INT);
 
 $context = context_module::instance($id);
 
-$url = new moodle_url('/mod/pdcertificate/report.php', array('id' => $id, 'page' => $page, 'perpage' => $perpage));
+$params = array('id' => $id, 'page' => $page, 'perpage' => $perpage);
+$url = new moodle_url('/mod/pdcertificate/report.php', $params);
 $baseurlunpaged = new moodle_url('/mod/pdcertificate/report.php', array('id' => $id));
 $baseurl = $baseurlunpaged.'&pagesize='.$pagesize;
 
@@ -156,7 +157,11 @@ if ($action) {
     include $CFG->dirroot.'/mod/pdcertificate/report.controller.php';
 }
 
-$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm);
+$filterfirstname = optional_param('filterfirstname', '', PARAM_TEXT);
+$filterlastname = optional_param('filterlastname', '', PARAM_TEXT);
+$filters = array($filterfirstname, $filterlastname);
+
+$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
 
 if ($download == 'ods') {
     require_once($CFG->libdir.'/odslib.class.php');
@@ -300,7 +305,7 @@ if ($download == 'txt') {
     exit;
 }
 
-$usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm));
+$usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm, 0, 0, $filters));
 
 // Create the table for the users.
 $table = new html_table();
@@ -320,7 +325,6 @@ echo $OUTPUT->header();
 
 groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/report.php', array('id' => $id)));
 
-echo '<br />';
 echo $OUTPUT->heading(get_string('summary', 'pdcertificate'));
 
 echo $OUTPUT->box_start();
@@ -374,35 +378,21 @@ foreach ($certifiableusers as $user) {
     $table->data[] = array ($check, $name, $date, $grade, $code, $certstate);
 }
 
-if ($pagesize){
-    echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, new moodle_url($baseurl));
+$firstnamefilter = optional_param('filterfirstname', false, PARAM_TEXT);
+$lastnamefilter = optional_param('filterlastname', false, PARAM_TEXT);
+$pagingurl = new moodle_url($baseurl, array('filterfirstname' => $firstnamefilter, 'filterlastname' => $lastnamefilter));
+
+if ($pagesize) {
+    echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, $pagingurl);
 }
 echo '<br />';
-echo '<form name="controller" method="GET" action="'.$baseurl.'">';
-echo '<input type="hidden" name="id" value="'.$cm->id.'" />';
-echo html_writer::table($table);
 
-$viewalladvicestr = get_string('viewalladvice', 'pdcertificate');
-if ($pagesize && ($pagesize < $state->totalcount)){
-    $viewalllink = '<a href="'.$baseurlunpaged.'&pagesize=0" title="'.$viewalladvicestr.'" >'.get_string('viewall', 'pdcertificate').'</a>';
-} else {
-    $viewalllink = '<a href="'.$baseurlunpaged.'" >'.get_string('viewless', 'pdcertificate').'</a>';
-}
+echo $renderer->namefilter(new moodle_url($baseurl));
 
-$makealllink = ($state->totalcount - $state->totalcertifiedcount > 0) ? '<a href="'.$baseurlunpaged.'&what=generateall" >'.get_string('generateall', 'pdcertificate', $state->totalcount - $state->totalcertifiedcount - $state->notyetusers).'</a> - ' : '' ;
-
-$selector = '';
-if ($selectionrequired) {
-    $selector = get_string('withsel', 'pdcertificate');
-    $cmdoptions = array('delete' => get_string('destroyselection', 'pdcertificate'), 'generate' => get_string('generateselection', 'pdcertificate'));
-    $selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => ''), array('onchange' => 'document.forms.controller.submit();'), '', true);
-}
-echo '<table width="95%"><tr><td align="left">'.$selector.'</td><td align="right">'.$makealllink.$viewalllink.'</td></tr></table>';
-
-echo '</form>';
+echo $renderer->report_form($table, $states, $baseurl, $pagesize);
 
 if ($pagesize){
-    echo $OUTPUT->paging_bar($state->totalcount, $page, $pagesize, new moodle_url($baseurl));
+    echo $OUTPUT->paging_bar($state->totalcount, $page, $pagesize, new moodle_url($pagingurl));
 }
 
 // Create table to store buttons.

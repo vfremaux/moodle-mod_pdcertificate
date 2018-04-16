@@ -43,6 +43,14 @@ define('PDCERT_PER_PAGE', 30);
 define('PDCERT_MAX_PER_PAGE', 200);
 
 /**
+ * This function is not implemented in this plugin, but is needed to mark
+ * the vf documentation custom volume availability.
+ */
+function mod_pdcertificate_supports_feature() {
+    assert(1);
+}
+
+/**
  * @uses FEATURE_GROUPS
  * @uses FEATURE_GROUPINGS
  * @uses FEATURE_GROUPMEMBERSONLY
