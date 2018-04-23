@@ -249,11 +249,11 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     if ($state->totalcount > 100) {
         // Reduce the state to the current page.
         $checkables = $certifiableusers;
-        $states->range = 'page';
+        $state->range = 'page';
         $state->totalcount = count($certifiableusers);
     } else {
-        $checkables = $totals;
-        $states->range = 'all';
+        $checkables = $total;
+        $state->range = 'all';
     }
 
     foreach ($checkables as $u) {

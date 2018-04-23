@@ -338,7 +338,7 @@ $table->head  = array ('', $strto, $strdate, $strgrade, $strcode, $strstate);
 $table->align = array ('CENTER', 'LEFT', 'LEFT', 'CENTER', 'CENTER', 'LEFT');
 $table->width = '95%';
 
-$selectionrequired = 0;
+$state->selectionrequired = 0;
 foreach ($certifiableusers as $user) {
     $errors = pdcertificate_check_conditions($pdcertificate, $cm, $user->id);
     $name = $OUTPUT->user_picture($user).' '.fullname($user);
@@ -367,7 +367,7 @@ foreach ($certifiableusers as $user) {
         $certstate = '';
     } else {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" name="userids[]" value="'.$user->id.'" />';
-        if (empty($errors)) $selectionrequired = 1 ;
+        if (empty($errors)) $state->selectionrequired = 1 ;
         $date = '';
         $grade = '';
         $code = '';
@@ -389,7 +389,7 @@ echo '<br />';
 
 echo $renderer->namefilter(new moodle_url($baseurl));
 
-echo $renderer->report_form($table, $states, $baseurl, $pagesize);
+echo $renderer->report_form($table, $cm, $state, $baseurl, $pagesize);
 
 if ($pagesize){
     echo $OUTPUT->paging_bar($state->totalcount, $page, $pagesize, new moodle_url($pagingurl));

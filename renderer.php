@@ -141,7 +141,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 
         $template->firstnamefiltered = optional_param('filterfirstname', false, PARAM_TEXT);
-        $tempalte->lastnamefiltered = optional_param('filterlastname', false, PARAM_TEXT);
+        $template->lastnamefiltered = optional_param('filterlastname', false, PARAM_TEXT);
 
         $template->firstnamestr = get_string('firstname');
         $template->lastnamestr = get_string('lastname');
@@ -151,7 +151,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $lettertpl = new StdClass;
             $lettertpl->letter = $letters[$i];
             if ($template->firstnamefiltered != $lettertpl->letter) {
-                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$letter.'&filterlastname='.$template->lastnamefiltered;
+                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$lettertpl->letter.'&filterlastname='.$template->lastnamefiltered;
             }
             $template->fnletters[] = $lettertpl;
         }
@@ -163,7 +163,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $lettertpl = new StdClass;
             $lettertpl->letter = $letters[$i];
             if ($template->lastnamefiltered != $lettertpl->letter) {
-                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$template->firstnamefiltered.'&filterlastname='.$letter;
+                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$template->firstnamefiltered.'&filterlastname='.$lettertpl->letter;
             }
             $template->lnletters[] = $lettertpl;
         }
@@ -192,7 +192,9 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
      * @param string $baseurl the base url of the report screen
      * @param int $pagesize the current page size.
      */
-    public function report_form(&$table, $states, $baseurl, $pagesize) {
+    public function report_form(&$table, $cm, $state, $baseurl, $pagesize) {
+
+        $baseurlunpaged = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
 
         $template = new StdClass;
 
@@ -216,7 +218,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         }
 
         $template->selector = '';
-        if ($selectionrequired) {
+        if ($state->selectionrequired) {
             $selector = get_string('withsel', 'pdcertificate');
             $cmdoptions = array('delete' => get_string('destroyselection', 'pdcertificate'),
                                 'generate' => get_string('generateselection', 'pdcertificate'));
