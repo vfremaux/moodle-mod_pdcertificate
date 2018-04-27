@@ -131,7 +131,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('setcertificationcontext', max(array_keys($contextoptions))); // Choose the weaker context.
         $mform->addHelpButton('setcertificationcontext', 'setcertificationcontext', 'pdcertificate');
 
-        $mform->addElement('checkbox', 'propagategroups', get_string('propagategroups', 'pdcertificate'));
+        $mform->addElement('advcheckbox', 'propagategroups', get_string('propagategroups', 'pdcertificate'));
         if (!empty($config->defaultpropagategroups)) {
             $mform->setDefault('propagategroups', 1);
         }
@@ -146,7 +146,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $this->restrictoptions[$i] = $i.'%';
         }
 
-        $mform->addElement('checkbox', 'locked', get_string('pdcertificatedefaultlock', 'pdcertificate'));
+        $mform->addElement('advcheckbox', 'locked', get_string('pdcertificatedefaultlock', 'pdcertificate'));
         $mform->addHelpButton('locked', 'pdcertificatelock', 'pdcertificate');
 
         $validityoptions = array(
@@ -169,7 +169,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $completioninfo = new completion_info($COURSE);
         if ($completioninfo->is_enabled(null)) {
-            $mform->addElement('checkbox', 'lockoncoursecompletion', get_string('lockoncoursecompletion', 'pdcertificate'));
+            $mform->addElement('advcheckbox', 'lockoncoursecompletion', get_string('lockoncoursecompletion', 'pdcertificate'));
             $mform->setDefault('lockoncoursecompletion', 0);
             $mform->addHelpButton('lockoncoursecompletion', 'lockoncoursecompletion', 'pdcertificate');
         }
@@ -339,8 +339,8 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addElement('header', 'protectionoptions', get_string('protectionoptions', 'pdcertificate'));
 
         $protections = pdcertificate_protections();
-        foreach($protections as $pkey) {
-            $mform->addElement('checkbox', 'protection'.$pkey, get_string('protection'.$pkey, 'pdcertificate'));
+        foreach ($protections as $pkey) {
+            $mform->addElement('advcheckbox', 'protection'.$pkey, get_string('protection'.$pkey, 'pdcertificate'));
             $mform->setAdvanced('protection'.$pkey);
         }
 
@@ -395,7 +395,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         if (!empty($protections)) {
             foreach ($protections as $pkey => $pvalue) {
                 $key = 'protection'.$pkey;
-                $defaults->$key = $value;
+                $defaults->$key = $pvalue;
             }
         }
 
