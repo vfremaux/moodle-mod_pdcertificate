@@ -133,4 +133,57 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
 
         echo html_writer::table($table);
     }
+
+    public function namefilter(&$thispageurl) {
+        $str = '';
+
+        $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        $firstnamefilter = optional_param('filterfirstname', false, PARAM_TEXT);
+
+        $str .= get_string('firstname').': ';
+        for ($i = 0; $i < strlen($letters); $i++) {
+            $letter = $letters[$i];
+            if ($firstnamefilter == $letter) {
+                $str .= '<div class="namefilter-selected">'.$letter.'</div>&nbsp';
+            } else {
+                $str .= '<a href="'.$thispageurl.'&filterfirstname='.$letter.'" >'.$letter.'</a>&nbsp';
+            }
+        }
+        if (!$firstnamefilter) {
+            $str .= '<div class="namefilter-selected">'.get_string('all').'</div>&nbsp';
+        } else {
+            $str .= '<a href="'.$thispageurl.'&filterfirstname=" >'.get_string('all').'</a>&nbsp';
+        }
+
+        $str .= '<br/>';
+
+        $lastnamefilter = optional_param('filterlastname', false, PARAM_TEXT);
+
+        $str .= get_string('lastname').': ';
+        for ($i = 0; $i < strlen($letters); $i++) {
+            $letter = $letters[$i];
+            if ($lastnamefilter == $letter) {
+                $str .= '<div class="namefilter-selected">'.$letter.'</div>&nbsp';
+            } else {
+                $str .= '<a href="'.$thispageurl.'&filterlastname='.$letter.'" >'.$letter.'</a>&nbsp';
+            }
+        }
+        if (!$lastnamefilter) {
+            $str .= '<div class="namefilter-selected">'.get_string('all').'</div>&nbsp';
+        } else {
+            $str .= '<a href="'.$thispageurl.'&filterlastname=" >'.get_string('all').'</a>&nbsp';
+        }
+
+        $params = array();
+        if ($firstnamefilter) {
+            $params['filterfirstname'] = $firstnamefilter;
+        }
+        if ($lastnamefilter) {
+            $params['filterlastname'] = $lastnamefilter;
+        }
+        $thispageurl->params();
+
+        return $str;
+    }
 }
