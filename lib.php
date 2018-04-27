@@ -112,7 +112,7 @@ function pdcertificate_add_instance($pdcertificate) {
                 $clm->courseid = $linkid;
                 $clm->mandatory = 0 + @$pdcertificate->courselinkmandatory[$key];
                 $clm->roletobegiven = $pdcertificate->courselinkrole[$key];
-                $retval = $DB->insert_record('pdcertificate_linked_courses', $clm) and $retval;
+                $DB->insert_record('pdcertificate_linked_courses', $clm);
             }
         }
     }
@@ -167,10 +167,10 @@ function pdcertificate_update_instance($pdcertificate) {
                     $clc->courseid = $linkid;
                     $clc->mandatory = 0 + @$pdcertificate->courselinkmandatory[$key];
                     $clc->roletobegiven = $pdcertificate->courselinkrole[$key];
-                    $retval = $DB->update_record('pdcertificate_linked_courses', $clc) && $retval;
+                    $DB->update_record('pdcertificate_linked_courses', $clc);
                 } else {
                     $params = array('id' => $pdcertificate->courselinkentry[$key]);
-                    $retval = $DB->delete_records('pdcertificate_linked_courses', $params) && $retval;
+                    $DB->delete_records('pdcertificate_linked_courses', $params);
                 }
             } else if ($linkid > 0) {
                 $clc = new StdClass;
@@ -180,7 +180,7 @@ function pdcertificate_update_instance($pdcertificate) {
                 $clc->roletobegiven = $pdcertificate->courselinkrole[$key];
                 $params = array('courseid' => $linkid, 'pdcertificateid' => $pdcertificate->id);
                 if (!$oldone = $DB->get_record('pdcertificate_linked_courses', $params)) {
-                    $retval = $DB->insert_record('pdcertificate_linked_courses', $clc) and $retval;
+                    $DB->insert_record('pdcertificate_linked_courses', $clc);
                 } else {
                     $clc->id = $oldone->id;
                     $DB->update_record('pdcertificate_linked_courses', $clc);
