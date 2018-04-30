@@ -355,7 +355,7 @@ foreach ($certifiableusers as $user) {
             // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
-                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'"><img src="'.$OUTPUT->pix_url('t/delete').'"></a>';
+                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete').'</a>';
             }
         }
         if (@$user->reportgrade !== null) {

@@ -1017,7 +1017,7 @@ function pdcertificate_print_user_files($pdcertificate, $userid, $contextid) {
         $filepath = '/'.$contextid.'/mod_pdcertificate/issue/'.$certrecord->id.'/'.$filename;
         $link = file_encode_url($CFG->wwwroot.'/pluginfile.php', $filepath);
 
-        $pixurl = $OUTPUT->pix_url(file_mimetype_icon($file->get_mimetype()));
+        $pixurl = $OUTPUT->image_url(file_mimetype_icon($file->get_mimetype()));
         $output = '<img src="'.$pixurl.'"
                         height="16"
                         width="16"
