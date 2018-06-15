@@ -24,16 +24,17 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Capabilities
-$string['pdcertificate:view'] = 'Voir l\'attestation';
-$string['pdcertificate:manage'] = 'Gérer l\'attestation';
-$string['pdcertificate:apply'] = 'Etre attesté';
-$string['pdcertificate:printteacher'] = 'Est mentionné sur l\'attestation comme formateur';
-$string['pdcertificate:isauthority'] = 'Est autorité de certification';
-$string['pdcertificate:getown'] = 'Retirer sa propre attestation';
-$string['pdcertificate:apply'] = 'Peut obtenir une attestation';
-$string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
+// Capabilities.
+$string['pdcertificate:addinstance'] = 'Ajouter une instance d\'attestation';
+$string['pdcertificate:apply'] = 'Obtenir une attestation';
+$string['pdcertificate:deletepdcertificates'] = 'Détruire des attestations';
 $string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
+$string['pdcertificate:getown'] = 'Retirer sa propre attestation';
+$string['pdcertificate:isauthority'] = 'Est autorité de certification';
+$string['pdcertificate:manage'] = 'Gérer l\'attestation';
+$string['pdcertificate:printteacher'] = 'Est mentionné sur l\'attestation comme formateur';
+$string['pdcertificate:regenerate'] = 'Régénérer les attestations';
+$string['pdcertificate:view'] = 'Voir l\'attestation';
 
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';

@@ -16,7 +16,7 @@
 
 /**
  * @package pdcertificate
- * @author Valery Fremaux (valery@edunao.com)
+ * @author Valery Fremaux (valery.fremaux@gmail.com)
  *
  * This script is an adapter to add a special view to the page format.
  * other alternate viexws can be provided as pageitem_<viewname>.php prefixed files implementing
@@ -72,7 +72,7 @@ function pdcertificate_set_instance(&$block) {
         if ($nextcourses) {
             $str .= '<div class="activity-pdcertificate-followers">';
             $str .= '<b>'.get_string('followers', 'pdcertificate').':</b><br/>';
-            foreach($nextcourses as $follower) {
+            foreach ($nextcourses as $follower) {
                 $c = new StdClass;
                 $c->coursename = $DB->get_field('course', 'fullname', array('id' => $follower->courseid));
                 $c->prerequisite = ($follower->mandatory) ? get_string('yes') : get_string('no');
@@ -95,7 +95,7 @@ function pdcertificate_set_instance(&$block) {
         if ($prevcourses) {
             $str .= '<div class="activity-pdcertificate-prerequisites">';
             $str .= '<b>'.get_string('prerequisites', 'pdcertificate').':</b><br/>';
-            foreach($prevcourses as $antecedant) {
+            foreach ($prevcourses as $antecedant) {
                 $antecedantcourseid = $DB->get_field('pdcertificate', 'course', array('id' => $antecedant->pdcertificateid));
                 $c = new StdClass;
                 $c->coursename = $DB->get_field('course', 'fullname', array('id' => $antecedantcourseid));
@@ -115,7 +115,6 @@ function pdcertificate_set_instance(&$block) {
             $str .= '</div>';
         }
         $str .= '</div>';
-    } else {
     }
 
     $block->content->text = $str;
