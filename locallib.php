@@ -646,7 +646,7 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
             ci.timecreated
         FROM
             {user} u
-        INNER JOIN  
+        INNER JOIN
             {pdcertificate_issues} ci
         ON
             u.id = ci.userid

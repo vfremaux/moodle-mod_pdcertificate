@@ -308,6 +308,7 @@ if ($download == 'txt') {
 $usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm, 0, 0, $filters));
 
 // Create the table for the users.
+/*
 $table = new html_table();
 $table->width = '100%';
 $table->tablealign = 'center';
@@ -320,11 +321,13 @@ foreach ($certs as $user) {
     $code = $user->code;
     $table->data[] = array ($name, $date, pdcertificate_get_grade($pdcertificate, $course, $user->id), $code);
 }
+*/
 
 echo $OUTPUT->header();
 
 groups_print_activity_menu($cm, new moodle_url('/mod/pdcertificate/report.php', array('id' => $id)));
 
+echo '<br />';
 echo $OUTPUT->heading(get_string('summary', 'pdcertificate'));
 
 echo $OUTPUT->box_start();
@@ -357,7 +360,7 @@ foreach ($certifiableusers as $user) {
             // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
-                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete').'</a>';
+                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete', get_string('delete'), 'core').'</a>';
             }
         }
         if (@$user->reportgrade !== null) {
