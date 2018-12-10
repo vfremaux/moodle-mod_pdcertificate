@@ -135,6 +135,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
     }
 
     public function namefilter(&$thispageurl) {
+<<<<<<< HEAD
         $str = '';
 
         $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
@@ -175,6 +176,45 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $str .= '<a href="'.$thispageurl.'&filterlastname=" >'.get_string('all').'</a>&nbsp';
         }
 
+=======
+
+        $template = new StdClass;
+
+        $letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+
+        $template->firstnamefiltered = optional_param('filterfirstname', false, PARAM_TEXT);
+        $template->lastnamefiltered = optional_param('filterlastname', false, PARAM_TEXT);
+
+        $template->firstnamestr = get_string('firstname');
+        $template->lastnamestr = get_string('lastname');
+        $template->allstr = get_string('all');
+
+        for ($i = 0; $i < strlen($letters); $i++) {
+            $lettertpl = new StdClass;
+            $lettertpl->letter = $letters[$i];
+            if ($template->firstnamefiltered != $lettertpl->letter) {
+                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$lettertpl->letter.'&filterlastname='.$template->lastnamefiltered;
+            }
+            $template->fnletters[] = $lettertpl;
+        }
+        if (!empty($template->firstnamefiltered)) {
+            $template->nofirstnamefilterurl = $thispageurl.'&filterfirstname=&filterlastname='.$lastnamefilter;
+        }
+
+        for ($i = 0; $i < strlen($letters); $i++) {
+            $lettertpl = new StdClass;
+            $lettertpl->letter = $letters[$i];
+            if ($template->lastnamefiltered != $lettertpl->letter) {
+                $lettertpl->letterurl = $thispageurl.'&filterfirstname='.$template->firstnamefiltered.'&filterlastname='.$lettertpl->letter;
+            }
+            $template->lnletters[] = $lettertpl;
+        }
+        if (!empty($template->lastnamefiltered)) {
+            $template->nolastnamefilterurl = $thispageurl.'&filterfirstname='.$template->firstnamefiltered.'&filterlastname=';
+        }
+
+        /*
+>>>>>>> MOODLE_35_STABLE
         $params = array();
         if ($firstnamefilter) {
             $params['filterfirstname'] = $firstnamefilter;
@@ -183,7 +223,57 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $params['filterlastname'] = $lastnamefilter;
         }
         $thispageurl->params();
+<<<<<<< HEAD
 
         return $str;
+=======
+        */
+
+        return $this->output->render_from_template('mod_pdcertificate/namefilter', $template);
+    }
+
+    /**
+     * Prints the assessor interface.
+     * @param objectref &$table the table of users in current display page
+     * @param object $states the global states about certification
+     * @param string $baseurl the base url of the report screen
+     * @param int $pagesize the current page size.
+     */
+    public function report_form(&$table, $cm, $state, $baseurl, $pagesize) {
+
+        $baseurlunpaged = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
+
+        $template = new StdClass;
+
+        $template->baseurl = $baseurl;
+        $template->cmid = $cm->id;
+        $template->table = html_writer::table($table);
+
+        if ($pagesize && ($pagesize < $state->totalcount)){
+            $template->viewalladvicestr = get_string('viewalladvice', 'pdcertificate');
+            $template->viewallurl = $baseurlunpaged.'&pagesize=0';
+            $template->viewallstr = get_string('viewall', 'pdcertificate');
+        } else {
+            $template->viewallurl = $baseurlunpaged;
+            $template->viewallstr = get_string('viewless', 'pdcertificate');
+        }
+
+        if ($state->totalcount - $state->totalcertifiedcount > 0) {
+            $template->makeallurl = $baseurlunpaged.'&what=generateall';
+            $template->makeallstr = get_string('generateall', 'pdcertificate', $state->totalcount - $state->totalcertifiedcount - $state->notyetusers);
+            $template->canmakeall = true;
+        }
+
+        $template->selector = '';
+        if ($state->selectionrequired) {
+            $selector = get_string('withsel', 'pdcertificate');
+            $cmdoptions = array('delete' => get_string('destroyselection', 'pdcertificate'),
+                                'generate' => get_string('generateselection', 'pdcertificate'));
+            $attrs = array('onchange' => 'document.forms.controller.submit();');
+            $template->selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => ''), $attrs, '', true);
+        }
+
+        return $this->output->render_from_template('mod_pdcertificate/report_form', $template);
+>>>>>>> MOODLE_35_STABLE
     }
 }

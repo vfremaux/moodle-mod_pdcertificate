@@ -246,7 +246,21 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $deliveredids = array_keys($delivered);
 
     // This may be costfull when a big bunch of users arrive to certification state.
+<<<<<<< HEAD
     foreach ($total as $u) {
+=======
+    if ($state->totalcount > 100) {
+        // Reduce the state to the current page.
+        $checkables = $certifiableusers;
+        $state->range = 'page';
+        $state->totalcount = count($certifiableusers);
+    } else {
+        $checkables = $total;
+        $state->range = 'all';
+    }
+
+    foreach ($checkables as $u) {
+>>>>>>> MOODLE_35_STABLE
         // New : only check those.
         if (in_array($u->id, $deliveredids)) {
             $state->totalcertifiedcount++;
@@ -636,7 +650,11 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
             ci.timecreated
         FROM
             {user} u
+<<<<<<< HEAD
         INNER JOIN  
+=======
+        INNER JOIN
+>>>>>>> MOODLE_35_STABLE
             {pdcertificate_issues} ci
         ON
             u.id = ci.userid
