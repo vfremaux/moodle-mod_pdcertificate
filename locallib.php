@@ -246,9 +246,6 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $deliveredids = array_keys($delivered);
 
     // This may be costfull when a big bunch of users arrive to certification state.
-<<<<<<< HEAD
-    foreach ($total as $u) {
-=======
     if ($state->totalcount > 100) {
         // Reduce the state to the current page.
         $checkables = $certifiableusers;
@@ -260,7 +257,6 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     }
 
     foreach ($checkables as $u) {
->>>>>>> MOODLE_35_STABLE
         // New : only check those.
         if (in_array($u->id, $deliveredids)) {
             $state->totalcertifiedcount++;
@@ -347,8 +343,10 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
  * @param string $userid either, the userid being certified
  * @return the user record the certificate is belonging to.
  */
-function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0) {
+function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0, $iscron = false) {
     global $CFG, $DB;
+
+    $config = get_config('pdcertificate');
 
     if (empty($ccode) && empty($userid)) {
         throw new moodle_exception('One of Certificate code or user id should be given');
@@ -388,7 +386,7 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
     $file_contents = $pdf->Output('', 'S');
     if ($pdcertificate->savecert == 1) {
         pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
-        if ($pdcertificate->delivery == 2) {
+        if ($pdcertificate->delivery == 2 && (($iscron && !empty($config->cronsendsbymail)) || !$iscron)) {
             pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context);
         }
     }
@@ -397,7 +395,7 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
 }
 
 /**
- * When the user has received his sertificae, mark issues as being really delivered and
+ * When the user has received his certificate, mark issues as being really delivered and
  * process to course chaining.
  */
 function pdcertificate_confirm_issue($userorid, $pdcertificate, $cm) {
@@ -650,11 +648,7 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
             ci.timecreated
         FROM
             {user} u
-<<<<<<< HEAD
-        INNER JOIN  
-=======
         INNER JOIN
->>>>>>> MOODLE_35_STABLE
             {pdcertificate_issues} ci
         ON
             u.id = ci.userid

@@ -360,11 +360,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
             require_once($CFG->dirroot.'/blocks/use_stats/locallib.php');
             $now = time();
             $logs = use_stats_extract_logs($course->startdate, $now, $user->id, $course->id);
-<<<<<<< HEAD
-            $aggregate = use_stats_aggregate_logs($logs, 'module', 0, $course->startdate, $now);
-=======
             $aggregate = use_stats_aggregate_logs($logs, $course->startdate, $now);
->>>>>>> MOODLE_35_STABLE
 
             if (array_key_exists('coursetotal', $aggregate)) {
                 $replacements['{info:course_total_time}'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);

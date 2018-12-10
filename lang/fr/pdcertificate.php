@@ -33,16 +33,8 @@ $string['pdcertificate:getown'] = 'Retirer sa propre attestation';
 $string['pdcertificate:isauthority'] = 'Est autorité de certification';
 $string['pdcertificate:manage'] = 'Gérer l\'attestation';
 $string['pdcertificate:printteacher'] = 'Est mentionné sur l\'attestation comme formateur';
-<<<<<<< HEAD
-$string['pdcertificate:isauthority'] = 'Est autorité de certification';
-$string['pdcertificate:getown'] = 'Retirer sa propre attestation';
-$string['pdcertificate:apply'] = 'Peut obtenir une attestation';
-$string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
-$string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
-=======
 $string['pdcertificate:regenerate'] = 'Régénérer les attestations';
 $string['pdcertificate:view'] = 'Voir l\'attestation';
->>>>>>> MOODLE_35_STABLE
 
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';
@@ -89,6 +81,8 @@ $string['credithours'] = 'Crédit d\'heures';
 $string['cron_task'] = 'Tâches de l\'attestation';
 $string['croned'] = 'Générer les certificats par les tâches programmées';
 $string['customtext'] = 'Texte personnalisé';
+$string['cronsendsbymail'] = 'Le cron envoie les certificats par mail';
+$string['cronsendsbymail_desc'] = 'La génération différée par cron des certificats enverra le certificat par courriel si le mode de délivrance est "courriel" ET ce paramètre est activé.';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
 $string['datehelp'] = 'Date';

@@ -26,6 +26,9 @@
 namespace mod_pdcertificate\task;
 defined('MOODLE_INTERNAL') || die();
 
+require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
+require_once($CFG->dirroot.'/lib/completionlib.php');
+
 class cron_task extends \core\task\scheduled_task {
 
     /**

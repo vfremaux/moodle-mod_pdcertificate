@@ -34,7 +34,6 @@ $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:regenerate'] = 'Can regenerate certificates';
 $string['pdcertificate:view'] = 'View a certificate';
-$string['pdcertificate:download'] = 'Download certificate using API';
 
 $string['addcourselabel'] = 'Add course';
 $string['addcoursetitle'] = 'Add course title';
@@ -67,6 +66,8 @@ $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
 $string['cron_task'] = 'PD Certificate scheduled task';
 $string['croned'] = 'Generate issues by cron';
+$string['cronsendsbymail'] = 'Email certificates on cron';
+$string['cronsendsbymail_desc'] = 'Cron emails the certificate to user if mail delivery enabled AND this setting is active.';
 $string['customtext'] = 'Custom Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';

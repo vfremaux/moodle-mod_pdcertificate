@@ -351,26 +351,16 @@ foreach ($certifiableusers as $user) {
         $cert = $certs[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
         if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
-<<<<<<< HEAD
-            // TODO : Move this capability to a more local cap.
-            $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
-            $date .= ' <a href="'.$redrawurl.'">'.get_string('regenerate', 'pdcertificate').'</a>';
-=======
             if (has_capability('mod/pdcertificate:regenerate', $context)) {
                 // TODO : Move this capability to a more local cap.
                 $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
                 $date .= ' <a href="'.$redrawurl.'">'.get_string('regenerate', 'pdcertificate').'</a>';
             }
->>>>>>> MOODLE_35_STABLE
 
             // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
                 $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
-<<<<<<< HEAD
-                $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete').'</a>';
-=======
                 $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete', get_string('delete'), 'core').'</a>';
->>>>>>> MOODLE_35_STABLE
             }
         }
         if (@$user->reportgrade !== null) {
@@ -393,23 +383,9 @@ foreach ($certifiableusers as $user) {
     $table->data[] = array ($check, $name, $date, $grade, $code, $certstate);
 }
 
-<<<<<<< HEAD
-if ($pagesize) {
-    echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, new moodle_url($baseurl));
-}
-echo '<br />';
-
-echo $renderer->namefilter(new moodle_url($baseurl));
-
-echo '<br />';
-echo '<form name="controller" method="GET" action="'.$baseurl.'">';
-echo '<input type="hidden" name="id" value="'.$cm->id.'" />';
-echo html_writer::table($table);
-=======
 $firstnamefilter = optional_param('filterfirstname', false, PARAM_TEXT);
 $lastnamefilter = optional_param('filterlastname', false, PARAM_TEXT);
 $pagingurl = new moodle_url($baseurl, array('filterfirstname' => $firstnamefilter, 'filterlastname' => $lastnamefilter));
->>>>>>> MOODLE_35_STABLE
 
 if ($pagesize) {
     echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, $pagingurl);
