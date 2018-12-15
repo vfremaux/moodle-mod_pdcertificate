@@ -42,6 +42,11 @@ if ($ADMIN->fulltree) {
     $default = 100;
     $settings->add(new admin_setting_configtext($key, $label, $desc, $default));
 
+    $key = 'pdcertificate/cronsendsbymail';
+    $label = get_string('cronsendsbymail', 'pdcertificate');
+    $desc = get_string('cronsendsbymail_desc', 'pdcertificate');
+    $settings->add(new admin_setting_configcheckbox($key, $label, $desc, 1));
+
     $encoptions = array(0 => 'RC4 40 bit',
                      1 => 'RC4 128 bit',
                      2 => 'AES 128 bit',
