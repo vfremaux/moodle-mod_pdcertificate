@@ -44,7 +44,7 @@ list($options, $unrecognized) = cli_get_params(
     ),
     array(
         'h' => 'help',
-        'H' => 'host'
+        'H' => 'host',
     )
 );
 
@@ -55,10 +55,7 @@ if (!empty($options['help'])) {
 -h, --help              Print out this help
 --host                  the hostname
 
-Consider that, the server resources you will need to run the test plan will be higher as the test plan size is higher.
-
-Example from Moodle root directory:
-\$ sudo -u www-data /usr/bin/php admin/tool/generator/cli/maketestplan.php --shortname=\"testcourse_12\" --size=S --host=http://myvhost.mymoodle.org
+\$ sudo -u www-data /usr/bin/php mod/pdcertificates/cli/migrate_certificates.php --host=http://myvhost.mymoodle.org
 ";
     // Exit with error unless we're showing this because they asked for it.
     exit(empty($options['help']) ? 1 : 0);

@@ -83,7 +83,7 @@ function pdcertificate_directlink_to_follower_set_instance(&$block) {
             if (is_enrolled($followercontext, $USER)) {
                 $courselabel = '<img class="pdcertificate-follower-image" src="'.$OUTPUT->pix_url('greenlight', 'pdcertificate').'" /> '.$coursename;
                 $courseurl = new moodle_url('/course/view.php', array('id' => $follower->courseid));
-                $courselink = html_writer::link($courseurl, $courselabel, 
+                $courselink = html_writer::link($courseurl, $courselabel,
                     array('class' => 'pdcertificate-output', 'title' => get_string('youcango', 'pdcertificate')));
                 $courselinks .= $courselink.'<br/>';
             } else {
