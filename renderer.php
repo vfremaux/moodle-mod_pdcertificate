@@ -134,7 +134,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         echo html_writer::table($table);
     }
 
-    public function namefilter($thispageurl) {
+    public function namefilter(&$thispageurl) {
 
         $template = new StdClass;
 
