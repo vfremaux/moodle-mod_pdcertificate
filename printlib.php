@@ -346,7 +346,11 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
         );
 
         $ccompletion = new completion_completion($params);
-        $replacements['{info:completion_date}'] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+        if ($ccompletion->timecompleted) {
+            $replacements['{info:completion_date}'] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+        } else {
+            $replacements['{info:completion_date}'] = get_string('nc', 'pdcertificate');
+        }
     }
 
     if ($pdcertificate->certifierid) {
@@ -386,6 +390,23 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
     foreach ($replacements as $patt => $replacement) {
         $text = str_replace($patt, $replacement, $text);
+    }
+
+    // Track some couse module completions.
+    if (completion_info::is_enabled_for_site() && completion_info::is_enabled()) {
+        while (preg_match('/info\:module_completion_date_([0-9]+)/', $text, $matches)) {
+            $params = array('userid' => $user->id, 'coursemoduleid' => $matches[1], 'completionstate' => 1);
+            $completiondate = $DB->get_field('course_completion_module', 'timemodified', $params);
+            if ($completiondate) {
+                $text = str_replace($matches[0], pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $completiondate), $text);
+            } else {
+                $text = str_replace($matches[0], get_string('nc', 'pdcertificate'), $text);
+            }
+        }
+    } else {
+        while (preg_match('/info\:module_completion_date_([0-9]+)/', $text, $matches)) {
+            $text = str_replace($matches[0], get_string('disabled', 'pdcertificate'), $text);
+        }
     }
 
     // Eliminate remaining unresolved injection patterns.

@@ -45,6 +45,7 @@ list($options, $unrecognized) = cli_get_params(
         'instances' => false,
         'cminstances' => false,
         'dryrun' => false,
+        'output' => false,
         'verbose' => false,
     ),
     array(
@@ -54,6 +55,7 @@ list($options, $unrecognized) = cli_get_params(
         'I' => 'instances',
         'C' => 'cminstances',
         'd' => 'dryrun',
+        'O' => 'output',
         'v' => 'verbose',
     )
 );
@@ -67,10 +69,11 @@ echo "Options:
 \t-U,--users              Users to refresh
 \t-I,--instances          Instances of pdcertificates to process
 \t-C,--cminstances        Instances of pdcertificates course modules to process (alternative)
+\t-O,--output             Output dir. defaults to datataroot/temp.
 \t-d,--dryrun             Dry run, tells what will be done, but does nothing
 \t-v,--verbose            Verbose mode
 
-\$ sudo -u www-data /usr/bin/php mod/pdcertificates/cli/refresh_certificates.php --users=2,3,4 instances=10,11,12 --host=http://myvhost.mymoodle.org
+\$ sudo -u www-data /usr/bin/php mod/pdcertificates/cli/export_certificates.php --users=2,3,4 instances=10,11,12 --host=http://myvhost.mymoodle.org
 ";
     // Exit with error unless we're showing this because they asked for it.
     exit(empty($options['help']) ? 1 : 0);
@@ -142,16 +145,23 @@ if ($allinstances && $allcminstances) {
 
     // Get them by course module id
     if (!empty($cminstanceids)) {
-        $cminstances = $DB->get_records_list('course_modules', 'id', $instanceids);
+        $cminstances = $DB->get_records_list('course_modules', 'id', $cminstanceids);
         if ($cminstances) {
             foreach ($cminstances as $cm) {
-                $instances[$cm->instanceid] = $DB->get_record('pdcertificate', array('id' => $cm->instanceid));
+                $instances[$cm->instance] = $DB->get_record('pdcertificate', array('id' => $cm->instance));
             }
         }
     }
 }
 
+$fs = get_file_storage();
+
 if (!empty($instances)) {
+
+    $directory = uniqid('pdcert_'.strftime('%Y%m%d_%H%M', time()).'_');
+    $tempdir = make_temp_directory($directory);
+    echo "Storing file sin $tempdir\n";
+
     foreach ($instances as $iid => $instance) {
 
         if (!empty($options['verbose'])) {
@@ -166,16 +176,18 @@ if (!empty($instances)) {
         $context = context_module::instance($cm->id);
 
         // Get all issued certificates.
-        $certifieduserissues = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $iid), 'userid', 'id,userid');
+        $select = " pdcertificateid = ? AND timedelivered > 0 ";
+        $certifieduserissues = $DB->get_records_select('pdcertificate_issues', $select, array($iid), 'userid', 'id,userid');
 
         if (!empty($certifieduserissues)) {
             $total = count($certifieduserissues);
             $scale = round(100 * 0.4);
             $i = 0;
+
             foreach ($certifieduserissues as $issueid => $issue) {
                 if (!empty($options['verbose'])) {
                     $username = $DB->get_field('user', 'username', array('id' => $issue->userid));
-                    echo "\tProcessing issue $issueid for $username\n";
+                    echo "\tExporting issue $issueid for $username\n";
                 } else {
                     $done = round($i / $total * $scale);
                     echo str_repeat('*', $done).str_repeat('-', $scale - $done)." ($done %)\r";
@@ -184,15 +196,53 @@ if (!empty($instances)) {
 
                 if ($allusers || array_key_exists($userid, $userids)) {
                     if (empty($options['dryrun'])) {
-                        pdcertificate_make_certificate($instance, $context, '', $userid, true);
+                        echo "\tExporting {$userid} from cm {$cm->id} in course {$cm->course}\n";
+                        $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'issue', $issue->id, '', false);
+                        $issuepdffile = array_pop($files);
+
+                        if ($issuepdffile) {
+                            $idnumber = $DB->get_field('user', 'idnumber', array('id' => $userid));
+                            $courseshortname = $DB->get_field('course', 'shortname', array('id' => $cm->course));
+                            $issuename = 'cert_'.$idnumber.'_'.$courseshortname.'_'.$cm->id.'.pdf';
+                            $content = $issuepdffile->get_content();
+                            $fileoutput = $tempdir.'/'.$issuename;
+                            if ($OUT = fopen($fileoutput, 'wb')) {
+                                fputs($OUT, $content);
+                                fclose($OUT);
+                            }
+                        }
+
                         $i++;
                     } else {
                         echo "\tDry run. Not processing\n";
                     }
                 }
             }
-            echo "\n";
-            echo "$i entries processed\n";
+        }
+    }
+
+    echo "\n";
+    echo "$i entries processed\n";
+
+    // Make a final ZIP.
+    if (empty($options['dryrun'])) {
+        $zip = new ZipArchive();
+
+        if (!empty($options['output'])) {
+            $outputdir = $options['output'];
+        } else {
+            $outputdir = $tempdir;
+        }
+
+        $zipname = $outputdir.'/pdcertificate_export_'.strftime('%Y%m%d%H%M').'.zip';
+        $ret = $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+
+        if ($ret !== true) {
+            echo "failed opening archive file ".$zipname."\n";
+        } else {
+            $options = array('add_path' => 'issues/', 'remove_all_path' => true);
+            $zip->addPattern('/./', $tempdir, $options);
+            $zip->close();
         }
     }
 }
