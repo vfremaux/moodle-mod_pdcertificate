@@ -393,7 +393,7 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
     }
 
     // Track some couse module completions.
-    if (completion_info::is_enabled_for_site() && completion_info::is_enabled()) {
+    if (completion_info::is_enabled_for_site() && $completion->is_enabled()) {
         while (preg_match('/info\:module_completion_date_([0-9]+)/', $text, $matches)) {
             $params = array('userid' => $user->id, 'coursemoduleid' => $matches[1], 'completionstate' => 1);
             $completiondate = $DB->get_field('course_completion_module', 'timemodified', $params);
