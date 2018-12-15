@@ -25,14 +25,15 @@
 
 // Capabilities.
 $string['pdcertificate:addinstance'] = 'Add a PD Certificate instance';
-$string['pdcertificate:isauthority'] = 'Is certification authority';
-$string['pdcertificate:getown'] = 'Retrieve my own certificate';
 $string['pdcertificate:apply'] = 'Can apply to certification';
 $string['pdcertificate:deletepdcertificates'] = 'Can delete generated certificates';
+$string['pdcertificate:download'] = 'Download certificate using API';
+$string['pdcertificate:getown'] = 'Retrieve my own certificate';
+$string['pdcertificate:isauthority'] = 'Is certification authority';
 $string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
+$string['pdcertificate:regenerate'] = 'Can regenerate certificates';
 $string['pdcertificate:view'] = 'View a certificate';
-$string['pdcertificate:download'] = 'Download certificate using API';
 
 $string['addcourselabel'] = 'Add course';
 $string['addcoursetitle'] = 'Add course title';
@@ -65,6 +66,8 @@ $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
 $string['cron_task'] = 'PD Certificate scheduled task';
 $string['croned'] = 'Generate issues by cron';
+$string['cronsendsbymail'] = 'Email certificates on cron';
+$string['cronsendsbymail_desc'] = 'Cron emails the certificate to user if mail delivery enabled AND this setting is active.';
 $string['customtext'] = 'Custom Text';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
@@ -79,6 +82,7 @@ $string['delivery'] = 'Delivery';
 $string['description'] = 'Description';
 $string['designoptions'] = 'Design Options';
 $string['destroyselection'] = 'Destroy selection ';
+$string['disabled'] = 'Disabled';
 $string['download'] = 'Force download';
 $string['editpdcertificatelayout'] = 'Edit Layout';
 $string['emailothers'] = 'Email Others';
@@ -138,6 +142,7 @@ $string['migration'] = 'PD Certificate Migration Tool';
 $string['modulename'] = 'PD Certificate';
 $string['modulenameplural'] = 'PD Certificates';
 $string['mypdcertificates'] = 'My PD Certificates';
+$string['nc'] = 'Not completed';
 $string['needsmorework'] = 'This certificate needs more work';
 $string['noauthority'] = 'No authority';
 $string['nocertifiables'] = 'No one to certify';

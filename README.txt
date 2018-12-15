@@ -32,3 +32,12 @@ apply any future updates to the pdcertificate module. In the above method there 
 =============== X.X.0007
 
 Fixes event declaration (mod_flashbard reliquate).
+
+=============== X.X.0008 (2018061300)
+
+Isolate the capability to regenerate a certificate.
+
+=============== X.X.0009
+
+Adds module completion output on certificate template
+

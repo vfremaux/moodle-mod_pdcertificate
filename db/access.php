@@ -72,6 +72,15 @@ $capabilities = array(
         )
     ),
 
+    'mod/pdcertificate:regenerate' => array(
+        'captype' => 'read',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'editingteacher' => CAP_ALLOW,
+            'manager' => CAP_ALLOW
+        )
+    ),
+
     'mod/pdcertificate:printteacher' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

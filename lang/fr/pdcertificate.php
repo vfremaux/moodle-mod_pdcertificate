@@ -24,16 +24,17 @@
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-// Capabilities
-$string['pdcertificate:view'] = 'Voir l\'attestation';
-$string['pdcertificate:manage'] = 'Gérer l\'attestation';
-$string['pdcertificate:apply'] = 'Etre attesté';
-$string['pdcertificate:printteacher'] = 'Est mentionné sur l\'attestation comme formateur';
-$string['pdcertificate:isauthority'] = 'Est autorité de certification';
-$string['pdcertificate:getown'] = 'Retirer sa propre attestation';
-$string['pdcertificate:apply'] = 'Peut obtenir une attestation';
-$string['pdcertificate:deletepdcertificates'] = 'Peut détruire des attestations';
+// Capabilities.
+$string['pdcertificate:addinstance'] = 'Ajouter une instance d\'attestation';
+$string['pdcertificate:apply'] = 'Obtenir une attestation';
+$string['pdcertificate:deletepdcertificates'] = 'Détruire des attestations';
 $string['pdcertificate:download'] = 'Télécharger des attestations via l\'api';
+$string['pdcertificate:getown'] = 'Retirer sa propre attestation';
+$string['pdcertificate:isauthority'] = 'Est autorité de certification';
+$string['pdcertificate:manage'] = 'Gérer l\'attestation';
+$string['pdcertificate:printteacher'] = 'Est mentionné sur l\'attestation comme formateur';
+$string['pdcertificate:regenerate'] = 'Régénérer les attestations';
+$string['pdcertificate:view'] = 'Voir l\'attestation';
 
 $string['addcourselabel'] = 'Ajouter un cours';
 $string['addcoursetitle'] = 'Ajouter le titre du cours';
@@ -80,6 +81,8 @@ $string['credithours'] = 'Crédit d\'heures';
 $string['cron_task'] = 'Tâches de l\'attestation';
 $string['croned'] = 'Générer les certificats par les tâches programmées';
 $string['customtext'] = 'Texte personnalisé';
+$string['cronsendsbymail'] = 'Le cron envoie les certificats par mail';
+$string['cronsendsbymail_desc'] = 'La génération différée par cron des certificats enverra le certificat par courriel si le mode de délivrance est "courriel" ET ce paramètre est activé.';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
 $string['datehelp'] = 'Date';
@@ -93,6 +96,7 @@ $string['delivery'] = 'Délivrance';
 $string['designoptions'] = 'Mise en forme';
 $string['description'] = 'Description';
 $string['destroyselection'] = 'Détruire les attestations ';
+$string['disabled'] = 'Désactivé';
 $string['download'] = 'Forcer le téléchargement';
 $string['emailothers'] = 'Autres destinataires';
 $string['emailpdcertificate'] = 'Mél (doit être sauvegardé!)';
@@ -150,6 +154,7 @@ $string['mypdcertificates'] = 'Mes attestations';
 $string['margins'] = 'Marges (x,y)';
 $string['manualenrolnotavailableontarget'] = 'La méthode manuelle d\'inscription semble avoir été désactivée. Le chainage ne peut être réalisé.';
 $string['maxdocumentspercron'] = 'Nombre max de documents par cron';
+$string['nc'] = 'Non achevé';
 $string['needsmorework'] = 'Il y a encore des travaux requis pour activer cette attestation';
 $string['noauthority'] = 'Pas d\'autorité';
 $string['nocertifiables'] = 'Aucun utilisateur à attester';
