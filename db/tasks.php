@@ -34,5 +34,14 @@ $tasks = array(
         'day' => '*',
         'month' => '*',
         'dayofweek' => '*'
+    ),
+    array(
+        'classname' => 'mod_pdcertificate\task\refresh_task',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '1',
+        'day' => '6',
+        'month' => '*',
+        'dayofweek' => '*'
     )
 );

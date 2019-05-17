@@ -76,7 +76,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
 
         echo $OUTPUT->heading(get_string('getattempts', 'pdcertificate'));
 
-        $printconfig = unserialize(@$pdcertificate->printconfig);
+        $printconfig = json_decode(@$pdcertificate->printconfig);
 
         // Prepare table header
         $table = new html_table();
@@ -204,7 +204,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
 
         if ($pagesize && ($pagesize < $state->totalcount)){
             $template->viewalladvicestr = get_string('viewalladvice', 'pdcertificate');
-            $template->viewallurl = $baseurlunpaged.'&pagesize=0';
+            $template->viewallurl = $baseurlunpaged.'&perpage=0';
             $template->viewallstr = get_string('viewall', 'pdcertificate');
         } else {
             $template->viewallurl = $baseurlunpaged;
@@ -223,9 +223,50 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $cmdoptions = array('delete' => get_string('destroyselection', 'pdcertificate'),
                                 'generate' => get_string('generateselection', 'pdcertificate'));
             $attrs = array('onchange' => 'document.forms.controller.submit();');
-            $template->selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => ''), $attrs, '', true);
+            $template->selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => get_string('withselection', 'pdcertificate')), $attrs, '', true);
         }
 
         return $this->output->render_from_template('mod_pdcertificate/report_form', $template);
+    }
+
+    /**
+     * Renders a template by string with the given context.
+     *
+     * The provided data needs to be array/stdClass made up of only simple types.
+     * Simple types are array,stdClass,bool,int,float,string
+     *
+     * @since 2.9
+     * @param array|stdClass $context Context containing data for the template.
+     * @return string|boolean
+     */
+    public function render_from_string($templatestring, $context) {
+
+        $mustache = $this->get_mustache();
+        $loader = new Mustache_Loader_StringLoader();
+        $mustache->setLoader($loader);
+
+        try {
+            // Grab a copy of the existing helper to be restored later.
+            $uniqidhelper = $mustache->getHelper('uniqid');
+        } catch (Mustache_Exception_UnknownHelperException $e) {
+            // Helper doesn't exist.
+            $uniqidhelper = null;
+        }
+
+        // Provide 1 random value that will not change within a template
+        // but will be different from template to template. This is useful for
+        // e.g. aria attributes that only work with id attributes and must be
+        // unique in a page.
+        $mustache->addHelper('uniqid', new \core\output\mustache_uniqid_helper());
+
+        $renderedtemplate = $mustache->render($templatestring, $context);
+
+        // If we had an existing uniqid helper then we need to restore it to allow
+        // handle nested calls of render_from_template.
+        if ($uniqidhelper) {
+            $mustache->addHelper('uniqid', $uniqidhelper);
+        }
+
+        return $renderedtemplate;
     }
 }

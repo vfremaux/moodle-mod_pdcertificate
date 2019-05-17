@@ -24,8 +24,6 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
-require_once($CFG->dirroot.'/mod/pdcertificate/adminsetting.class.php');
-
 if ($ADMIN->fulltree) {
 
     $ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',

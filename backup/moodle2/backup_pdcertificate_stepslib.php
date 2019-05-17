@@ -41,7 +41,9 @@ class backup_pdcertificate_activity_structure_step extends backup_activity_struc
             'name', 'intro', 'introformat', 'emailteachers', 'emailothers',
             'savecert', 'reportcert', 'delivery', 'pdcertificatetype', 'requiredtime',
             'orientation', 'printconfig', 'datefmt', 'gradefmt', 'statement', 
-            'customtext','timecreated', 'timemodified', 'caption', 'certifierid', 'validitytime', 'layout', 'propagategroups'));
+            'customtext','timecreated', 'timemodified', 'caption', 'certifierid', 'validitytime',
+            'layout', 'propagategroups', 'locked', 'lockoncoursecompletion', 'completiondelivered', 'croned',
+            'protection', 'userpass', 'fullpass', 'pubkey', 'extradata'));
 
         $issues = new backup_nested_element('issues');
 

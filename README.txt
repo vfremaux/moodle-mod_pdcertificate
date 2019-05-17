@@ -41,3 +41,19 @@ Isolate the capability to regenerate a certificate.
 
 Adds module completion output on certificate template
 
+=============== 2019010700 X.X.0010 :
+
+Adds extradata injection from static per instance configuration
+
+=============== 2019012000 (X.X.0011) :
+
+Changes the templating method. Now relies on real mustache templates
+syntax.
+
+=============== 2019021300 (X.X.0012) :
+
+Reintroduce credit hours as pdcertificate attribute.
+
+=============== 2019030800 (X.X.0014) :
+
+Add the refresh task and factorise the refreshing code.
