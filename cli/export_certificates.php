@@ -28,6 +28,9 @@ define('CLI_SCRIPT', true);
 define('CACHE_DISABLE_ALL', true);
 $CLI_VMOODLE_PRECHECK = true; // Force first config to be minimal.
 
+$maxfilehandles = 255;
+$maxcertsbyzip = 5000;
+
 require(dirname(dirname(dirname(dirname(__FILE__)))).'/config.php');
 
 if (!isset($CFG->dirroot)) {
@@ -161,6 +164,8 @@ if (!empty($instances)) {
     $directory = uniqid('pdcert_'.strftime('%Y%m%d_%H%M', time()).'_');
     $tempdir = make_temp_directory($directory);
     echo "Storing file sin $tempdir\n";
+    $j = 0;
+    $failed = 0;
 
     foreach ($instances as $iid => $instance) {
 
@@ -190,7 +195,11 @@ if (!empty($instances)) {
                     echo "\tExporting issue $issueid for $username\n";
                 } else {
                     $done = round($i / $total * $scale);
-                    echo str_repeat('*', $done).str_repeat('-', $scale - $done)." ($done %)\r";
+                    if ($done > 0) {
+                        echo str_repeat('*', $done).str_repeat('-', $scale - $done)." ($done %)\r";
+                    } else {
+                        echo ''.str_repeat('-', $scale - $done)." ($done %)\r";
+                    }
                 }
                 $userid = $issue->userid;
 
@@ -203,16 +212,21 @@ if (!empty($instances)) {
                         if ($issuepdffile) {
                             $idnumber = $DB->get_field('user', 'idnumber', array('id' => $userid));
                             $courseshortname = $DB->get_field('course', 'shortname', array('id' => $cm->course));
-                            $issuename = 'cert_'.$idnumber.'_'.$courseshortname.'_'.$cm->id.'.pdf';
-                            $content = $issuepdffile->get_content();
-                            $fileoutput = $tempdir.'/'.$issuename;
-                            if ($OUT = fopen($fileoutput, 'wb')) {
-                                fputs($OUT, $content);
-                                fclose($OUT);
+                            $issuename = 'cert_'.$idnumber.'_'.$courseshortname.'.pdf';
+                            try {
+                                $content = $issuepdffile->get_content();
+                                $fileoutput = $tempdir.'/'.$issuename;
+                                if ($OUT = fopen($fileoutput, 'wb')) {
+                                    fputs($OUT, $content);
+                                    fclose($OUT);
+                                }
+                            } catch (Exception $e) {
+                                $failed++;
                             }
                         }
 
                         $i++;
+                        $j++;
                     } else {
                         echo "\tDry run. Not processing\n";
                     }
@@ -222,11 +236,13 @@ if (!empty($instances)) {
     }
 
     echo "\n";
-    echo "$i entries processed\n";
+    echo "$j entries processed\n";
+    if ($failed) {
+        echo "$failed entries failed\n";
+    }
 
     // Make a final ZIP.
     if (empty($options['dryrun'])) {
-        $zip = new ZipArchive();
 
         if (!empty($options['output'])) {
             $outputdir = $options['output'];
@@ -234,17 +250,73 @@ if (!empty($instances)) {
             $outputdir = $tempdir;
         }
 
-        $zipname = $outputdir.'/pdcertificate_export_'.strftime('%Y%m%d%H%M').'.zip';
-        $ret = $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+        $zipix = 1;
+        $time = strftime('%Y%m%d%H%M');
+        $zipname = $outputdir.'/pdcertificate_export_'.$time.'_'.$zipix.'.zip';
+        echo "Building archive ";
+        $zip = openZipFile($options, $zipname);
 
-        if ($ret !== true) {
-            echo "failed opening archive file ".$zipname."\n";
-        } else {
-            $options = array('add_path' => 'issues/', 'remove_all_path' => true);
-            $zip->addPattern('/./', $tempdir, $options);
-            $zip->close();
+        $options = array('add_path' => 'issues/', 'remove_all_path' => true);
+
+        if ($zip) {
+            $allfiles = glob($tempdir.'/*');
+            if (!empty($allfiles)) {
+                $k = 0;
+                $l = 0;
+                foreach ($allfiles as $f) {
+                    $zip->addFile($f, 'issues/'.basename($f));
+                    $k++;
+                    $l++;
+
+                    if ($l > $maxcertsbyzip) {
+                        closeZipFile($zip);
+                        $zipix++;
+                        $zipname = $outputdir.'/pdcertificate_export_'.$time.'_'.$zipix.'.zip';
+                        $zip = openZipFile($options, $zipname);
+                        $k = 0;
+                        $l = 0;
+                    }
+
+                    if ($k > $maxfilehandles) {
+                        echo '.';
+                        reopenZipFile($zip, $zipname);
+                        $k = 0;
+                    }
+                }
+            }
+            closeZipFile($zip);
+            echo "\n";
         }
+
+        $allfiles = glob($tempdir.'/*');
+        if (!empty($allfiles)) {
+            foreach ($allfiles as $f) {
+                unlink($f);
+            }
+        }
+        rmdir($tempdir);
     }
+}
+
+function openZipFile($options, $zipname) {
+    $zip = new ZipArchive();
+
+    $ret = $zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
+    if ($ret !== true) {
+        echo "failed opening archive file ".$zipname."\n";
+        return false;
+    }
+
+    return $zip;
+}
+
+function reopenZipFile(&$zip, $zipname) {
+    $zip->close();
+    $zip->open($zipname, ZipArchive::CREATE);
+}
+
+function closeZipFile(&$zip) {
+    $zip->close();
 }
 
 echo "Done.\n";

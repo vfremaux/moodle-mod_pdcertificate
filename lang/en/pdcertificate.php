@@ -35,6 +35,16 @@ $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certifica
 $string['pdcertificate:regenerate'] = 'Can regenerate certificates';
 $string['pdcertificate:view'] = 'View a certificate';
 
+$string['privacy:metadata:pdcertificate'] = 'Certificate instances';
+$string['privacy:metadata:pdcertificate:certifierid'] = 'People having their id in this field are designated authority for this certificate';
+$string['privacy:metadata:pdcertificate_issues'] = 'An issue of the certificate a user owns';
+$string['privacy:metadata:pdcertificate_issues:userid'] = 'The ID of the user owning the certification record';
+$string['privacy:metadata:pdcertificate_issues:timecreated'] = 'The date this record was created';
+$string['privacy:metadata:pdcertificate_issues:code'] = 'The unique code of the certificate for certificate check';
+$string['privacy:metadata:pdcertificate_issues:locked'] = 'If the certificate is locked for self retrieval by the owner';
+$string['privacy:metadata:pdcertificate_issues:timedelivered'] = 'The time the certificate document has been delivered to user';
+$string['privacy:metadata:pdcertificate_issues:timeexported'] = 'The time the document was exported to an external system';
+
 $string['addcourselabel'] = 'Add course';
 $string['addcoursetitle'] = 'Add course title';
 $string['antecedantcourse'] = '{$a->coursename}. Mandatory requisite: {$a->prerequisite}';
@@ -64,11 +74,13 @@ $string['coursedependencies'] = 'Course dependancies';
 $string['coursegrade'] = 'Course Grade';
 $string['coursename'] = 'Course';
 $string['credithours'] = 'Credit Hours';
-$string['cron_task'] = 'PD Certificate scheduled task';
+$string['cron_task'] = 'PD Certificate pdf generation task';
+$string['refresh_task'] = 'PD Certificate pdf refreshing task';
 $string['croned'] = 'Generate issues by cron';
 $string['cronsendsbymail'] = 'Email certificates on cron';
 $string['cronsendsbymail_desc'] = 'Cron emails the certificate to user if mail delivery enabled AND this setting is active.';
 $string['customtext'] = 'Custom Text';
+$string['data'] = 'Certificate data';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
 $string['datehelp'] = 'Date';
@@ -97,6 +109,7 @@ $string['errorinvalidinstance'] = 'Error : certificate instance does not exist';
 $string['errornocapabilitytodelete'] = 'You have no capability to delete certificates';
 $string['errorcertificatenotinstalled'] = 'The original certificate module seems not be installed on your moodle. You cannot migrate data from it if it is not installed.';
 $string['expiredon'] = 'Expired on';
+$string['extradata'] = 'Additional data';
 $string['followercourse'] = 'Follower course : {$a->rolename} in {$a->coursename}. This module is prerequisite : {$a->prerequisite}';
 $string['followers'] = 'Following course(s) in learning path';
 $string['footertext'] = 'Custom Footer Text';
@@ -198,6 +211,7 @@ $string['printqrcode'] = 'Print QR Code';
 $string['printseal'] = 'Seal or Logo Image';
 $string['printsignature'] = 'Signature Image';
 $string['printteacher'] = 'Print Teacher Name(s)';
+$string['printconfig'] = 'Rendering options';
 $string['printwmark'] = 'Watermark Image';
 $string['propagategroups'] = 'Propagate groups when chaining';
 $string['protection'] = 'Do not allow to print the document';
@@ -243,6 +257,9 @@ $string['summary'] = 'Course summary';
 $string['system'] = 'System level';
 $string['teacherview'] = 'Teacher tools';
 $string['textoptions'] = 'Text Options';
+$string['testpdf'] = 'Test your PDF template generation. This will use your own data (maybe not available or significant for some attributes).';
+$string['manageadvice'] = 'Manage issues and documents. Take care that it may take some time to process on very large audiences.';
+$string['numusers'] = 'Number of appliers';
 $string['thiscategory'] = 'This category';
 $string['thiscourse'] = 'This course';
 $string['title'] = 'CERTIFICATE of ACHIEVEMENT';
@@ -276,6 +293,9 @@ $string['yetcertifiable'] = 'Ready to issue';
 $string['yetcertified'] = 'Issued';
 $string['youcango'] = 'You can continue to this course';
 $string['youcantgo'] = 'You do not have enough achievements to continue in this course';
+$string['withselection'] = 'With the selection...';
+$string['selectall'] = 'Select all';
+$string['selectnone'] = 'Select none';
 
 $string['unlimited'] = "Unlimited";
 $string['oneday'] = "One day";
@@ -409,3 +429,7 @@ $string['userpassword_help'] = 'This password level is usually given to simple u
 $string['fullaccesspassword_help'] = 'This pasword level is given to advanced and power users to access including editing the content.';
 
 $string['defaultauthority_desc'] = 'The default authority user that will be setup in any new instance';
+
+$string['extradata_help'] = 'Additional data that can be called from the HTML template. Should be a json serialized array of variablenames
+to value mapping. F.e: a value of {\'data1\':\'value1\';\'data2\':\'value2\'} will expose two additional variables extra:data1 and extra:data2 to
+the html template';

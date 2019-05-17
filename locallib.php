@@ -250,7 +250,7 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
         // Reduce the state to the current page.
         $checkables = $certifiableusers;
         $state->range = 'page';
-        $state->totalcount = count($certifiableusers);
+        $state->totalcount = min($pagesize, count($total));
     } else {
         $checkables = $total;
         $state->range = 'all';
@@ -779,6 +779,7 @@ function pdcertificate_email_teachers($course, $pdcertificate, $certrecord, $cm)
             $info->course = format_string($course->fullname,true);
             $info->pdcertificate = format_string($pdcertificate->name,true);
             $info->url = $CFG->wwwroot.'/mod/pdcertificate/report.php?id='.$cm->id;
+            $info->email = $USER->email;
             $from = $USER;
             $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $pdcertificate->name;
             $posttext = pdcertificate_email_teachers_text($info);
@@ -824,6 +825,7 @@ function pdcertificate_email_others($course, $pdcertificate, $certrecord, $cm) {
                     $info->course = format_string($course->fullname, true);
                     $info->pdcertificate = format_string($pdcertificate->name, true);
                     $info->url = $CFG->wwwroot.'/mod/pdcertificate/report.php?id='.$cm->id;
+                    $info->email = $USER->email;
                     $from = $USER;
                     $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $pdcertificate->name;
                     $posttext = pdcertificate_email_teachers_text($info);
@@ -954,7 +956,7 @@ function pdcertificate_path_from_hash($contenthash) {
  * @param int $contextid context id
  * @return bool return true if successful, false otherwise
  */
-function pdcertificate_save_pdf($pdf, $certrecordid, $filename, $contextid) {
+function pdcertificate_save_pdf(&$pdf, $certrecordid, $filename, $contextid) {
     global $DB, $USER;
 
     if (empty($certrecordid)) {
@@ -1131,15 +1133,17 @@ function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
 function pdcertificate_get_outcome($pdcertificate, $course) {
     global $USER, $DB;
 
-    $printconfig = unserialize($pdcertificate->printconfig);
+    $printconfig = json_decode($pdcertificate->printconfig);
 
-    if ($grade_item = new grade_item(array('id' => $printconfig->printoutcome))) {
-        $outcomeinfo = new stdClass;
-        $outcomeinfo->name = $grade_item->get_name();
-        $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $USER->id));
-        $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
+    if (!empty($printconfig->printoutcome)) {
+        if ($grade_item = new grade_item(array('id' => $printconfig->printoutcome))) {
+            $outcomeinfo = new stdClass;
+            $outcomeinfo->name = $grade_item->get_name();
+            $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $USER->id));
+            $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
 
-        return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
+            return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
+        }
     }
 
     return '';
@@ -1257,7 +1261,7 @@ function pdcertificate_set_protection(&$pdcertificate, &$pdf) {
 
     $config = get_config('pdcertificate');
 
-    $protections = unserialize($pdcertificate->protection);
+    $protections = json_decode($pdcertificate->protection);
 
     if (empty($protections)) {
         return;
