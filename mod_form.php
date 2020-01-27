@@ -58,24 +58,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        $mform->addElement('text', 'caption', get_string('pdcertificatecaption', 'pdcertificate'), array('size' => 128, 'maxlength' => 255));
-        $mform->setType('caption', PARAM_CLEANHTML);
-
         $this->standard_intro_elements(get_string('description', 'pdcertificate'));
 
-        // Data options.
-        $mform->addElement('header', 'certdata', get_string('data', 'pdcertificate'));
-
-        $attrs = array('size'=>'5', 'maxlength' => '255');
-        $mform->addElement('text', 'credithours', get_string('printhours', 'pdcertificate'), $attrs);
-        $mform->setType('credithours', PARAM_TEXT);
-        $mform->addHelpButton('credithours', 'printhours', 'pdcertificate');
-
-        $mform->addElement('textarea', 'extradata', get_string('extradata', 'pdcertificate'), array('cols' => 80, 'rows' => 15));
-        $mform->setType('extradata', PARAM_TEXT);
-        $mform->addHelpButton('extradata', 'extradata', 'pdcertificate');
-
-        // Issue options
+// -------------------------------------------------------------------------------.
+        // Issue options.
         $mform->addElement('header', 'issueoptions', get_string('issueoptions', 'pdcertificate'));
 
         $ynoptions = array( 0 => get_string('no'), 1 => get_string('yes'));
@@ -150,6 +136,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('propagategroups', 'propagategroups', 'pdcertificate');
 
 //-------------------------------------------------------------------------------
+        // Lockin options.
         $mform->addElement('header', 'lockingoptions', get_string('lockingoptions', 'pdcertificate'));
 
         $this->restrictoptions = array();
@@ -186,7 +173,8 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $mform->addHelpButton('lockoncoursecompletion', 'lockoncoursecompletion', 'pdcertificate');
         }
 
-//-------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------.
+        // Course chaining.
         $mform->addElement('header', 'coursechaining', get_string('coursechaining', 'pdcertificate'));
 
         $this->linkedcourses = pdcertificate_get_linked_courses($this->instance);
@@ -209,21 +197,21 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
         $mform->registerNoSubmitButton('addcourse');
 
-        // Text Options.
-        $mform->addElement('header', 'textoptions', get_string('printoptions', 'pdcertificate'));
+// -------------------------------------------------------------------------------.
+        // Text and content Options.
+        $mform->addElement('header', 'certdata', get_string('certdata', 'pdcertificate'));
 
-        $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
-            4 => 'January 2000', 5 => get_string('userdateformat', 'pdcertificate'));
-        $mform->addElement('select', 'datefmt', get_string('datefmt', 'pdcertificate'), $dateformatoptions);
-        $mform->setDefault('datefmt', 0);
-        $mform->addHelpButton('datefmt', 'datefmt', 'pdcertificate');
+        $mform->addElement('text', 'caption', get_string('pdcertificatecaption', 'pdcertificate'), array('size' => 128, 'maxlength' => 255));
+        $mform->setType('caption', PARAM_CLEANHTML);
 
-        $gradeformatoptions = array(1 => get_string('gradepercent', 'pdcertificate'),
-                                    2 => get_string('gradepoints', 'pdcertificate'),
-                                    3 => get_string('gradeletter', 'pdcertificate'));
-        $mform->addElement('select', 'gradefmt', get_string('gradefmt', 'pdcertificate'), $gradeformatoptions);
-        $mform->setDefault('gradefmt', 0);
-        $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
+        $attrs = array('size'=>'5', 'maxlength' => '255');
+        $mform->addElement('text', 'credithours', get_string('printhours', 'pdcertificate'), $attrs);
+        $mform->setType('credithours', PARAM_TEXT);
+        $mform->addHelpButton('credithours', 'printhours', 'pdcertificate');
+
+        $mform->addElement('textarea', 'extradata', get_string('extradata', 'pdcertificate'), array('cols' => 80, 'rows' => 15));
+        $mform->setType('extradata', PARAM_TEXT);
+        $mform->addHelpButton('extradata', 'extradata', 'pdcertificate');
 
         $outcomeoptions = pdcertificate_get_outcomes();
         if ($outcomeoptions) {
@@ -235,16 +223,20 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $mform->setType('printoutcome', PARAM_INT);
         }
 
+        /**
         $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16,
                              17 => 17, 18 => 18, 19 => 19, 20 => 20);
         $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
-        $mform->setDefault('fontbasesize', 12);
+        $mform->setDefault('fontbasesize', 10);
+        **/
 
+        /*
         $pdf = new pdf();
         $available = array_keys($pdf->get_font_families());
         $familyoptions = array_combine($available, $available);
         $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
         $mform->setDefault('fontbasefamily', 'freesans');
+        */
 
         $attrs = array('cols' => '120', 'rows' => '4', 'wrap' => 'virtual');
         $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), $attrs);
@@ -277,8 +269,22 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             }
         }
 
-        // Design Options.
+// -------------------------------------------------------------------------------.
+        // Rendering and design options.
         $mform->addElement('header', 'designoptions', get_string('designoptions', 'pdcertificate'));
+
+        $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
+            4 => 'January 2000', 5 => get_string('userdateformat', 'pdcertificate'));
+        $mform->addElement('select', 'datefmt', get_string('datefmt', 'pdcertificate'), $dateformatoptions);
+        $mform->setDefault('datefmt', 0);
+        $mform->addHelpButton('datefmt', 'datefmt', 'pdcertificate');
+
+        $gradeformatoptions = array(1 => get_string('gradepercent', 'pdcertificate'),
+                                    2 => get_string('gradepoints', 'pdcertificate'),
+                                    3 => get_string('gradeletter', 'pdcertificate'));
+        $mform->addElement('select', 'gradefmt', get_string('gradefmt', 'pdcertificate'), $gradeformatoptions);
+        $mform->setDefault('gradefmt', 0);
+        $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
 
         $mform->addElement('select', 'pdcertificatetype', get_string('pdcertificatetype', 'pdcertificate'), pdcertificate_types());
         $mform->setDefault('pdcertificatetype', 'A4_lanscape');
@@ -308,9 +314,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $mform->addElement('textarea', 'printconfig', get_string('printconfig', 'pdcertificate'), array('cols' => 80, 'rows' => 10));
         $mform->setAdvanced('printconfig');
+        $mform->setDefault('printconfig', '{"fontbasefamily":"FreeSans","fontbasesize":"10"}');
 
+// -------------------------------------------------------------------------------.
         // Protection options.
-
         $mform->addElement('header', 'protectionoptions', get_string('protectionoptions', 'pdcertificate'));
 
         $protections = pdcertificate_protections();
@@ -334,7 +341,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setAdvanced('pubkey');
         $mform->addHelpButton('pubkey', 'pubkey', 'pdcertificate');
 
-        //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------.
 
         $this->standard_coursemodule_elements();
 

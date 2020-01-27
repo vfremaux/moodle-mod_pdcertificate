@@ -227,6 +227,34 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2019021300, 'pdcertificate');
     }
 
+    if ($oldversion < 2019091100) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        pdcertificate_initiate_modified_dates();
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019091100, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019091101) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('usermodified', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019091101, 'pdcertificate');
+    }
+
     return true;
 }
 
@@ -419,4 +447,17 @@ function pdcertificate_convert_template_syntax() {
         }
         echo '</pre>';
     }
+}
+
+function pdcertificate_initiate_modified_dates() {
+    global $DB;
+
+    $sql = '
+        UPDATE
+            {pdcertificate_issues}
+        SET
+            timemodified = timecreated
+    ';
+    $DB->execute($sql);
+    mtrace("Modified dates reported");
 }

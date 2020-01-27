@@ -80,8 +80,10 @@ class restore_pdcertificate_activity_structure_step extends restore_activity_str
     protected function after_execute() {
         // Add pdcertificate related files, no need to match by itemname (just internally handled context)
         $this->add_related_files('mod_pdcertificate', 'issue', 'pdcertificate_issue');
-        $this->add_related_files('mod_pdcertificate', 'printwmark', 'pdcertificate_issue');
-        $this->add_related_files('mod_pdcertificate', 'printseal', 'pdcertificate_issue');
-        $this->add_related_files('mod_pdcertificate', 'printsignature', 'pdcertificate_issue');
+        $this->add_related_files('mod_pdcertificate', 'intro', null);
+        $this->add_related_files('mod_pdcertificate', 'printborders', null);
+        $this->add_related_files('mod_pdcertificate', 'printwmark', null);
+        $this->add_related_files('mod_pdcertificate', 'printseal', null);
+        $this->add_related_files('mod_pdcertificate', 'printsignature', null);
     }
 }

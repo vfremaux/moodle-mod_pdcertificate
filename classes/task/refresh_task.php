@@ -54,7 +54,7 @@ class refresh_task extends \core\task\scheduled_task {
         $options['verbose'] = ($CFG->debug == DEBUG_DEVELOPER) ? true : false;
         $instances = $DB->get_records('pdcertificate', array('croned' => 1));
         if (!empty($instances)) {
-            pdcertificate_refresh_task($instances, array(), $options);
+            pdcertificate_refresh_task($instances, array(), $options, $report);
         }
         return true;
     }

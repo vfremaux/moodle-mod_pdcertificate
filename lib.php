@@ -102,7 +102,11 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->lockoncoursecompletion = 0;
     }
 
-    pdcertificate_compact($pdcertificate);
+    pdcertificate_compact($pdcertificate); // Compact protections.
+
+    if (empty($pdcertificate->printconfig)) {
+        $pdcertificate->printconfig = '{"fontbasefamily":"FreeSans","fontbasesize":"10"}';
+    }
 
     $pdcertificate->id = $DB->insert_record('pdcertificate', $pdcertificate);
 
