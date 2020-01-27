@@ -385,11 +385,24 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
 
     $file_contents = $pdf->Output('', 'S');
     if ($pdcertificate->savecert == 1) {
-        pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
+        $fileinfo = pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
         if ($pdcertificate->delivery == 2 && (($iscron && !empty($config->cronsendsbymail)) || !$iscron)) {
             pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context);
         }
+
+        // TODO : throw event so other plugins (auth_netypareo) can catch.
+        $eventparams = array(
+            'objectid' => $pdcertificate->id,
+            'context' => $context,
+            'userid' => $userid,
+            'other' => $fileinfo
+        );
+        $event = mod_pdcertificate\event\document_generated::create($eventparams);
+        $event->trigger();
     }
+
+    // Update timemodified.
+    $DB->set_field('pdcertificate_issues', 'timemodified', time(), array('id' => $certrecord->id));
 
     return $user;
 }
@@ -1000,7 +1013,7 @@ function pdcertificate_save_pdf(&$pdf, $certrecordid, $filename, $contextid) {
 
     $fs->create_file_from_string($fileinfo, $pdf);
 
-    return true;
+    return $fileinfo;
 }
 
 /**

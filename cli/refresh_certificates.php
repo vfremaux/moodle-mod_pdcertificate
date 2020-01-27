@@ -47,7 +47,10 @@ list($options, $unrecognized) = cli_get_params(
         'cminstances' => false,
         'dryrun' => false,
         'verbose' => false,
+        'updatedusersonly' => false,
+        'positiveoutputonly' => false,
         'sendfinalmail' => false,
+        'mailsto' => false,
     ),
     array(
         'h' => 'help',
@@ -58,7 +61,10 @@ list($options, $unrecognized) = cli_get_params(
         'C' => 'cminstances',
         'd' => 'dryrun',
         'v' => 'verbose',
+        'u' => 'updatedusersonly',
+        'p' => 'positiveoutputonly',
         'm' => 'sendfinalmail',
+        'M' => 'mailsto',
     )
 );
 
@@ -73,8 +79,11 @@ echo "Options:
 \t-I,--instances          Instances of pdcertificates to process
 \t-C,--cminstances        Instances of pdcertificates course modules to process (alternative)
 \t-d,--dryrun             Dry run, tells what will be done, but does nothing
+\t-u,--updatedusersonly   If set, filter out all users that have not been updated after the certificate date
 \t-v,--verbose            Verbose mode
+\t-p,--positiveoutputonly Ouputs only effective processed entries
 \t-m,--sendfinalmail      Send mail to admin when finished.
+\t-M,--mailsto            If not empty, sends mail to all recipients (comma separated list of moodle user IDs)
 
 \$ sudo -u www-data /usr/bin/php mod/pdcertificates/cli/refresh_certificates.php --users=2,3,4 instances=10,11,12 --host=http://myvhost.mymoodle.org
 ";
@@ -101,6 +110,8 @@ if (!$CLI_VMOODLE_PRECHECK) {
 }
 echo('Config check : playing for '.$CFG->wwwroot."\n");
 
+$report = '';
+
 if (!isset($CFG->libdir)) {
     $CFG->libdir = $CFG->dirroot.'/lib';
 }
@@ -113,6 +124,7 @@ if (!empty($options['instances'])) {
     $instanceids = explode(',', $options['instances']);
 } else {
     echo "Processing all instances\n";
+    $report .= "Processing all instances\n";
     $allinstances = true;
 }
 
@@ -121,15 +133,23 @@ if (!empty($options['cminstances'])) {
     $cminstanceids = explode(',', $options['cminstances']);
 } else {
     echo "Processing all cms\n";
+    $report .= "Processing all cms\n";
     $allcminstances = true;
 }
 
 $allusers = false;
+$userids = [];
 if (!empty($options['users'])) {
     $userids = explode(',', $options['users']);
 } else {
-    echo "Processing all users\n";
     $options['allusers'] = true;
+    if (empty($options['updatedusersonly'])) {
+        echo "Processing all users\n";
+        $report .= "Processing all users\n";
+    } else {
+        echo "Processing updated users\n";
+        $report .= "Processing updated users\n";
+    }
 }
 
 if (!empty($options['dryrun'])) {
@@ -160,13 +180,29 @@ if ($allinstances && $allcminstances) {
 
 if (!empty($instances)) {
     $options['nolimit'] = true;
-    pdcertificate_refresh_task($instances, $userids, $options);
+    pdcertificate_refresh_task($instances, $userids, $options, $report);
 }
+$message = "Refresh output: ".$report;
+$icount = count($instances);
+$subject = $SITE->shortname.": PD Certificate refresh CLI done for {$icount} instances.";
 
-if (!empty($options['sendfinalmail']) {
-    $admin = get_admin();
-    $mailcmd = 'mail -s "'.$SITE->shortname.': PD Certificate refresh CLI done."  '.$admin->email;
-    exec($mailcmd);
+if (!empty($options['sendfinalmail'])) {
+    if (empty($options['mailsto'])) {
+        $admin = get_admin();
+        // $mailcmd = 'mail -s "'.$SITE->shortname.': PD Certificate refresh CLI done for {$icount} instances."  '.$admin->email;
+        // exec($mailcmd);
+        email_to_user($admin, $admin, $subject, $message, $message);
+    } else {
+        $mailsto = explode(',', $options['mailsto']);
+        foreach ($mailsto as $mt) {
+            $user = $DB->get_record('user', ['id' => $mt]);
+            if ($user) {
+                email_to_user($user, $admin, $subject, $message, $message);
+                // $mailcmd = 'mail -s "'.$SITE->shortname.': PD Certificate refresh CLI terminated for {$icount} instances."  '.$mt;
+                // exec($mailcmd);
+            }
+        }
+    }
 }
 
 echo "Done.\n";

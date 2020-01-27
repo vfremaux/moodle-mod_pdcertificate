@@ -48,13 +48,15 @@ function pdcertificate_cron_task() {
     }
 }
 
-function pdcertificate_refresh_task($instances, $userids = array(), $options = array()) {
+function pdcertificate_refresh_task($instances, $userids = array(), $options = array(), &$report) {
     global $DB, $COURSE;
 
     $config = get_config('pdcertificate');
     if (!empty($options['nolimit'])) {
         $config->maxdocumentspercron = 0;
     }
+
+    $moduleid = $DB->get_field('modules', 'id', ['name' => 'pdcertificate']);
 
     if (!empty($instances)) {
         foreach ($instances as $iid => $instance) {
@@ -63,12 +65,15 @@ function pdcertificate_refresh_task($instances, $userids = array(), $options = a
             $COURSE = $DB->get_record('course', array('id' => $instance->course));
 
             if (!empty($options['verbose'])) {
-                echo "Processing instance $iid $instance->name\n";
+                $cmid = $DB->get_field('course_modules', 'id', ['instance' => $iid, 'module' => $moduleid]);
+                echo "Processing instance $iid [cm:{$cmid}] $instance->name\n";
+                $report .= "Processing instance $iid [cm:{$cmid}] $instance->name\n";
             }
 
             if (!empty($options['generateall'])) {
                 pdcertificate_process_certificate($instance, $config, $options);
                 echo "\n";
+                $report .= "\n";
                 continue;
             }
 
@@ -80,34 +85,71 @@ function pdcertificate_refresh_task($instances, $userids = array(), $options = a
             $context = context_module::instance($cm->id);
 
             // Get all issued certificates.
-            $certifieduserissues = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $iid), 'userid', 'id,userid');
+            $certifieduserissues = $DB->get_records('pdcertificate_issues', array('pdcertificateid' => $iid), 'userid', 'id,userid,timemodified,usermodified');
 
             if (!empty($certifieduserissues)) {
                 $total = count($certifieduserissues);
                 $scale = round(100 * 0.4);
                 $i = 0;
                 foreach ($certifieduserissues as $issueid => $issue) {
+                    $userid = $issue->userid;
+
                     if (!empty($options['verbose'])) {
                         $username = $DB->get_field('user', 'username', array('id' => $issue->userid));
-                        echo "\tProcessing issue $issueid for $username\n";
+                        $output = "\tExaminating issue $issueid for [{$issue->userid}]($username)... ";
+                        if (empty($options['positiveoutputonly'])) {
+                            echo $output;
+                            $report .= $output;
+                        }
                     } else {
                         $done = round($i / $total * $scale);
                         echo str_repeat('*', $done).str_repeat('-', $scale - $done)." ($done %)\r";
                     }
-                    $userid = $issue->userid;
 
-                    if (!empty($options['allusers']) || array_key_exists($userid, $userids)) {
-                        if (empty($options['dryrun'])) {
-                            // Regenerate certificate.
-                            pdcertificate_make_certificate($instance, $context, '', $userid, true);
-                            $i++;
-                        } else {
-                            echo "\tDry run. Not processing\n";
+                    if (empty($options['allusers']) && !array_key_exists($userid, $userids)) {
+                        if (!empty($options['verbose'])) {
+                            if (empty($options['positiveoutputonly'])) {
+                                echo "\tSkipping as not in userlist\n";
+                                $report .= "\tSkipping as not in userlist\n";
+                            }
                         }
+                        continue;
+                    }
+
+                    if (!empty($options['dryrun'])) {
+                        if (!empty($options['verbose'])) {
+                            echo "\tDry run. Not processing\n";
+                            $report .= "\tDry run. Not processing\n";
+                        }
+                        continue;
+                    }
+
+                    if (!empty($options['updatedusersonly'])) {
+                        $needsupdate = $issue->usermodified > $issue->timemodified;
+                    } else {
+                        $needsupdate = true;
+                    }
+
+                    if ($needsupdate) {
+                    // Regenerate certificate.
+                        if (!empty($options['positiveoutputonly'])) {
+                            // Not already outputed.
+                            echo $output;
+                            $report .= $output;
+                        }
+                        if (!empty($options['verbose'])) {
+                            echo "\tProcessing\n";
+                            $report .= "\tProcessing\n";
+                        }
+                        pdcertificate_make_certificate($instance, $context, '', $userid, true);
+                        $i++;
                     }
                 }
+
                 echo "\n";
                 echo "$i entries processed\n";
+                $report .= "\n";
+                $report .= "$i entries processed\n";
             }
         }
     }

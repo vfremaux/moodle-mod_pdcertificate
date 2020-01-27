@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot.'/user/profile/lib.php');
+
 /**
  * Sends text to output given the following params.
  *
@@ -200,7 +204,8 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
     $sql = "
         SELECT
             ue.timecreated,
-            ue.timestart
+            ue.timestart,
+            ue.timeend
         FROM
             {enrol} e,
             {user_enrolments} ue
@@ -217,14 +222,22 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
     $enroldates = $DB->get_records_sql($sql, array($user->id, $course->id));
     if ($enroldates) {
         $lastenroldate = 0;
+        $lastenrolenddate = 0;
         foreach ($enroldates as $edate) {
-            $date = max($edate->timecreated, $edate->timestart);
-            if ($lastenroldate < $date) {
-                $lastenroldate = $date;
+            if ($lastenroldate < $edate->timestart) {
+                $lastenroldate = $edate->timestart;
             }
+            if ($lastenrolenddate < $edate->timeend) {
+                $lastenrolenddate = $edate->timeend;
+            }
+        }
+
+        if (!$lastenrolenddate) {
+            $lastenrolenddate = '--';
         }
     } else {
         $lastenroldate = '--';
+        $lastenrolenddate = '--';
     }
 
     $replacements = array(
@@ -250,6 +263,8 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
         'user:department' => $user->department,
         'info:user_enrolment_date' => ($lastenroldate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenroldate),
         'user:enrolment_date' => ($lastenroldate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenroldate),
+        'info:user_enrolment_end_date' => ($lastenrolenddate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenrolenddate),
+        'user:enrolment_end_date' => ($lastenrolenddate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenrolenddate),
         'info:site_fullname' => format_string($SITE->fullname),
         'info:site_shortname' => $SITE->shortname,
         'info:site_city' => @$CFG->city,
