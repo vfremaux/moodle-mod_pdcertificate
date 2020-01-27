@@ -30,14 +30,16 @@ require_once($CFG->dirroot.'/grade/querylib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/printlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
-/** The border image folder */
+/*
+** The border image folder *
 define('PDCERT_IMAGE_BORDER', 'borders');
-/** The watermark image folder */
+** The watermark image folder *
 define('PDCERT_IMAGE_WATERMARK', 'watermarks');
-/** The signature image folder */
+** The signature image folder *
 define('PDCERT_IMAGE_SIGNATURE', 'signatures');
-/** The seal image folder */
+** The seal image folder *
 define('PDCERT_IMAGE_SEAL', 'seals');
+*/
 
 define('PDCERT_PER_PAGE', 30);
 define('PDCERT_MAX_PER_PAGE', 200);
@@ -100,7 +102,11 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->lockoncoursecompletion = 0;
     }
 
-    pdcertificate_compact($pdcertificate);
+    pdcertificate_compact($pdcertificate); // Compact protections.
+
+    if (empty($pdcertificate->printconfig)) {
+        $pdcertificate->printconfig = '{"fontbasefamily":"FreeSans","fontbasesize":"10"}';
+    }
 
     $pdcertificate->id = $DB->insert_record('pdcertificate', $pdcertificate);
 
@@ -214,7 +220,12 @@ function pdcertificate_update_instance($pdcertificate) {
 }
 
 function pdcertificate_compact(&$pdcertificate) {
+
     // Compact print options.
+    /**
+     * Obsolete. Printconfig comes directly from form now.
+     */
+    /*
     $printconfig = new StdClass;
     $printconfig->printhours = $pdcertificate->printhours;
     $printconfig->printoutcome = $pdcertificate->printoutcome;
@@ -227,7 +238,8 @@ function pdcertificate_compact(&$pdcertificate) {
     $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
     $printconfig->margingroup = $pdcertificate->margingroup;
 
-    $pdcertificate->printconfig = serialize($printconfig);
+    $pdcertificate->printconfig = json_encode($printconfig);
+    */
 
     // Compact protection.
     $protections = pdcertificate_protections();
@@ -236,7 +248,7 @@ function pdcertificate_compact(&$pdcertificate) {
         $key = 'protection'.$pk;
         $protection[$pk] = @$pdcertificate->$key;
     }
-    $pdcertificate->protection = serialize($protection);
+    $pdcertificate->protection = json_encode($protection);
 }
 
 /**

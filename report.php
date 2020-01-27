@@ -26,13 +26,16 @@
 require('../../config.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
+$PAGE->requires->js_call_amd('mod_pdcertificate/pdcertificate', 'init');
 
 $id = required_param('id', PARAM_INT); // Course module ID.
 $sort = optional_param('sort', '', PARAM_RAW);
 $download = optional_param('download', '', PARAM_ALPHA);
 $action = optional_param('what', '', PARAM_ALPHA);
 $ccode = optional_param('ccode', '', PARAM_TEXT);
-$pagesize = 20;
+$firstnamefilter = optional_param('firstnamefilter', '', PARAM_TEXT);
+$lastnamefilter = optional_param('lastnamefilter', '', PARAM_TEXT);
+$ccode = optional_param('ccode', '', PARAM_TEXT);
 
 $page = optional_param('page', 0, PARAM_INT);
 $perpage = optional_param('perpage', PDCERT_PER_PAGE, PARAM_INT);
@@ -41,15 +44,9 @@ $context = context_module::instance($id);
 
 $params = array('id' => $id, 'page' => $page, 'perpage' => $perpage);
 $url = new moodle_url('/mod/pdcertificate/report.php', $params);
-$baseurlunpaged = new moodle_url('/mod/pdcertificate/report.php', array('id' => $id));
-$baseurl = $baseurlunpaged.'&pagesize='.$pagesize;
 
 if ($download) {
     $url->param('download', $download);
-}
-
-if ($action) {
-    $url->param('what', $action);
 }
 
 $PAGE->set_url($url);
@@ -135,7 +132,7 @@ if (!$allgroupaccess) {
 
 $total = array();
 $certifiableusers = array();
-$state = pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, $total, $certifiableusers);
+$state = pdcertificate_get_state($pdcertificate, $cm, $page, $perpage, $group, $total, $certifiableusers);
 
 // Now process certifiable users.
 
@@ -145,7 +142,7 @@ if (!$certifiableusers) {
     $PAGE->set_heading($course->fullname);
     echo $OUTPUT->header();
     if ($groupmode) {
-        groups_print_activity_menu($cm, $baseurl);
+        groups_print_activity_menu($cm, $url);
     }
     echo $OUTPUT->notification(get_string('nocertifiables', 'pdcertificate'));
     echo $OUTPUT->footer();
@@ -336,21 +333,26 @@ echo $OUTPUT->box_end();
 
 echo $OUTPUT->heading(get_string('modulenameplural', 'pdcertificate'));
 
+$selallselnonecmd = '<a href="#" class="smalltext pdcertificate-select-all">'.get_string('selectall', 'pdcertificate').'</a> /';
+$selallselnonecmd .= '<a href="#" class="smalltext pdcertificate-select-none">'.get_string('selectnone', 'pdcertificate').'</a>';
+
 $table = new html_table();
-$table->head  = array ('', $strto, $strdate, $strgrade, $strcode, $strstate);
+$table->head  = array ($selallselnonecmd, $strto, $strdate, $strgrade, $strcode, $strstate);
 $table->align = array ('CENTER', 'LEFT', 'LEFT', 'CENTER', 'CENTER', 'LEFT');
 $table->width = '95%';
 
 $state->selectionrequired = 0;
 foreach ($certifiableusers as $user) {
     $errors = pdcertificate_check_conditions($pdcertificate, $cm, $user->id);
+    if (empty($errors)) $state->selectionrequired = 1;
     $name = $OUTPUT->user_picture($user).' '.fullname($user);
 
     if (!empty($certs) && array_key_exists($user->id, $certs)) {
-        $check = '';
+        $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
         $cert = $certs[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
         if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
+            if (empty($errors)) $state->selectionrequired = 1;
             if (has_capability('mod/pdcertificate:regenerate', $context)) {
                 // TODO : Move this capability to a more local cap.
                 $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
@@ -371,8 +373,7 @@ foreach ($certifiableusers as $user) {
         $code = $cert->code;
         $certstate = '';
     } else {
-        $check = (!empty($errors)) ? '' : '<input type="checkbox" name="userids[]" value="'.$user->id.'" />';
-        if (empty($errors)) $state->selectionrequired = 1;
+        $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
         $date = '';
         $grade = '';
         $code = '';
@@ -382,22 +383,23 @@ foreach ($certifiableusers as $user) {
     }
     $table->data[] = array ($check, $name, $date, $grade, $code, $certstate);
 }
+$pagingurl = new moodle_url($url, array('filterfirstname' => $firstnamefilter, 'filterlastname' => $lastnamefilter));
+$pagingurl->remove_params('action');
 
 $firstnamefilter = optional_param('filterfirstname', false, PARAM_TEXT);
 $lastnamefilter = optional_param('filterlastname', false, PARAM_TEXT);
-$pagingurl = new moodle_url($baseurl, array('filterfirstname' => $firstnamefilter, 'filterlastname' => $lastnamefilter));
 
-if ($pagesize) {
-    echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $pagesize, $pagingurl);
+if ($perpage) {
+    echo $OUTPUT->paging_bar(0 + $state->totalcount, $page, $perpage, $pagingurl);
 }
 echo '<br />';
 
-echo $renderer->namefilter(new moodle_url($baseurl));
+echo $renderer->namefilter($url);
 
-echo $renderer->report_form($table, $cm, $state, $baseurl, $pagesize);
+echo $renderer->report_form($table, $cm, $state, $url, $perpage);
 
-if ($pagesize){
-    echo $OUTPUT->paging_bar($state->totalcount, $page, $pagesize, new moodle_url($pagingurl));
+if ($perpage){
+    echo $OUTPUT->paging_bar($state->totalcount, $page, $perpage, new moodle_url($pagingurl));
 }
 
 // Create table to store buttons.

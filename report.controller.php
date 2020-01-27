@@ -112,10 +112,10 @@ if ($action == 'delete') {
     }
     $userids = required_param_array('userids', PARAM_INT); // gets an array of user ids to generate.
     if (!empty($userids)) {
-        $userlist = implode(",", $userids);
+        $userlist = implode("','", $userids);
 
         // Retrieve all rec ids.
-        if ($recstodelete = $DB->get_records('pdcertificate_issues', " userid IN ('$userlist') AND pdcertificateid = ? ", array($pdcertificate->id))) {
+        if ($recstodelete = $DB->get_records_select('pdcertificate_issues', " userid IN ('$userlist') AND pdcertificateid = ? ", array($pdcertificate->id))) {
             foreach ($recstodelete as $rec) {
                 $deleted[] = $rec->id;
             }

@@ -185,6 +185,76 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2017082000, 'pdcertificate');
     }
 
+    if ($oldversion < 2019010900) {
+
+        // Define field extradata to be added to pdcertificate.
+        $table = new xmldb_table('pdcertificate');
+        $field = new xmldb_field('extradata', XMLDB_TYPE_TEXT, 'small', null, null, null, null, 'pubkey');
+
+        // Conditionally launch add field extradata.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Pdcertificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019010900, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019012002) {
+        // Change template syntax
+        pdcertificate_convert_template_syntax();
+        upgrade_mod_savepoint(true, 2019012002, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019012003) {
+        // Change template syntax
+        pdcertificate_convert_printconfig_structure();
+        upgrade_mod_savepoint(true, 2019012003, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019021300) {
+
+        // Define field extradata to be added to pdcertificate.
+        $table = new xmldb_table('pdcertificate');
+        $field = new xmldb_field('credithours', XMLDB_TYPE_CHAR, '255', null, null, null, null, 'certifierid');
+
+        // Conditionally launch add field extradata.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Pdcertificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019021300, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019091100) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('timemodified', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        pdcertificate_initiate_modified_dates();
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019091100, 'pdcertificate');
+    }
+
+    if ($oldversion < 2019091101) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('usermodified', XMLDB_TYPE_INTEGER, 11, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'timecreated');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2019091101, 'pdcertificate');
+    }
+
     return true;
 }
 
@@ -277,4 +347,117 @@ function pdcertificate_convert_config($dbman) {
         }
     }
 
+}
+
+/**
+ * This conversion is needed to help converge the PDF print options
+ * for all components using /local/vflibs/vftcpdf implementation.
+ */
+function pdcertificate_convert_printconfig_structure() {
+    global $DB;
+
+    $instances = $DB->get_records('pdcertificate', array());
+
+    if ($instances) {
+        echo '<pre>';
+        foreach ($instances as $instance) {
+            mtrace("Upgrading instance $instance->id.");
+
+            $printconfig = unserialize($instance->printconfig);
+
+            if (empty($printconfig)) {
+                /*
+                 * We try unjson the config to check if it may be recognizable as a new format.
+                 * If not, try to get attributes from the old serialized format.
+                 */
+                $unjsoned = json_decode($printconfig);
+            }
+
+            $newconfig = new StdClass;
+            if (empty($unjsoned)) {
+                // Matches unconverted case.
+                $newconfig->printhours = $printconfig->printhours;
+                $newconfig->printoutcome = $printconfig->printoutcome;
+                $newconfig->printqrcode = $printconfig->printqrcode;
+                $newconfig->fontbasesize = $printconfig->fontbasesize;
+                $newconfig->fontbasefamily = $printconfig->fontbasefamily;
+                $newconfig->watermarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+                $newconfig->watermarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+                $newconfig->signaturex = $printconfig->signatureoffsetgroup['signatureoffsetx'];
+                $newconfig->signaturey = $printconfig->signatureoffsetgroup['signatureoffsety'];
+                $newconfig->sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
+                $newconfig->sealy = $printconfig->sealoffsetgroup['sealoffsety'];
+                $newconfig->qrcodex = $printconfig->qrcodeoffsetgroup['qrcodex'];
+                $newconfig->qrcodey = $printconfig->qrcodeoffsetgroup['qrcodey'];
+                $newconfig->basex = $printconfig->margingroup['marginx'];
+                $newconfig->basey = $printconfig->margingroup['marginy'];
+
+                $instance->printconfig = json_encode($newconfig);
+                $DB->update_record('pdcertificate', $instance);
+            }
+        }
+    }
+
+    mtrace("Transferring all instances files printwmark to vflibs standard docwatermark.");
+
+    $sql = "
+        UPDATE
+            {files}
+        SET
+            filearea = 'docwatermark'
+        WHERE
+            component = 'mod_pdcertificate' AND
+            filearea = 'printwmark'
+    ";
+    $DB->execute($sql);
+    mtrace("Transfered.");
+}
+
+function pdcertificate_convert_template_syntax() {
+    global $DB;
+
+    $instances = $DB->get_records('pdcertificate', array());
+
+    if ($instances) {
+        echo '<pre>';
+        foreach ($instances as $instance) {
+            mtrace("Converting instance $instance->id.");
+            $changes = false;
+            if (preg_match('/[^\{]\{[a-zA-Z0-9]+\:/s', $instance->headertext)) {
+                // We do have some old insertion keys.
+                $changes = true;
+                mtrace("\tConverting headertext.");
+                $instance->headertext = preg_replace('/\{[a-zA-Z0-9_]+?:[a-zA-Z0-9_]+?\}/', "{{\\0}}", $instance->headertext);
+            }
+            if (preg_match('/[^\{]\{[a-zA-Z0-9]+\:/', $instance->customtext)) {
+                // We do have some old insertion keys.
+                mtrace("\tConverting customtext.");
+                $changes = true;
+                $instance->customtext = preg_replace('/\{[a-zA-Z0-9_]+?:[a-zA-Z0-9_]+?\}/', "{{\\0}}", $instance->customtext);
+            }
+            if (preg_match('/[^\{]\{[a-zA-Z0-9]+\:/', $instance->footertext)) {
+                // We do have some old insertion keys.
+                mtrace("\tConverting footertext.");
+                $changes = true;
+                $instance->footertext = preg_replace('/\{[a-zA-Z0-9_]+:[a-zA-Z0-9_]+\}/', "{{\\0}}", $instance->footertext);
+            }
+            if ($changes) {
+                $DB->update_record('pdcertificate', $instance);
+            }
+        }
+        echo '</pre>';
+    }
+}
+
+function pdcertificate_initiate_modified_dates() {
+    global $DB;
+
+    $sql = '
+        UPDATE
+            {pdcertificate_issues}
+        SET
+            timemodified = timecreated
+    ';
+    $DB->execute($sql);
+    mtrace("Modified dates reported");
 }

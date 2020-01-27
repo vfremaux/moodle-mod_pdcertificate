@@ -134,7 +134,7 @@ class restore_pdcertificate_activity_task extends restore_activity_task {
         ";
         if ($pdcertificate = $DB->get_record_sql($sql, (array('cmid' => $this->get_moduleid())))) {
 
-            $printconfig = unserialize(@$pdcertificate->printconfig);
+            $printconfig = json_decode(@$pdcertificate->printconfig);
             if ($printconfig) {
                 // A flag to check if we need to update the database or not.
                 $update = false;
@@ -146,7 +146,7 @@ class restore_pdcertificate_activity_task extends restore_activity_task {
                         $printconfig->printdate = $newitem->newitemid;
                     }
                 }
-                if ($printconfig->printgrade > 2) {
+                if (@$printconfig->printgrade > 2) {
                     if ($newitem = restore_dbops::get_backup_ids_record($this->get_restoreid(), 'course_module',
                                                                         $printconfig->printgrade)) {
                         $update = true;

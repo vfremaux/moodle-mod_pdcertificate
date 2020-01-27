@@ -15,33 +15,22 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Definition of pdcertificate scheduled tasks.
+ * Global settings.
  *
- * @package   mod_pdcertificate
- * @category  task
- * @copyright 2014 Dan Poltawski <dan@moodle.com>
- * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @package    mod_pdcertificate
+ * @category   mod
+ * @author     Valery Fremaux <valery.fremaux@gmail.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
 defined('MOODLE_INTERNAL') || die();
 
-$tasks = array(
+$observers = array (
     array(
-        'classname' => 'mod_pdcertificate\task\cron_task',
-        'blocking' => 0,
-        'minute' => '0',
-        'hour' => '2',
-        'day' => '*',
-        'month' => '*',
-        'dayofweek' => '*'
+        'eventname'   => '\core\event\user_updated',
+        'callback'    => 'mod_pdcertificate_observer::on_user_updated',
+        'includefile' => '/mod/pdcertificate/observers.php',
+        'internal'    => true,
+        'priority'    => 9999,
     ),
-    array(
-        'classname' => 'mod_pdcertificate\task\refresh_task',
-        'blocking' => 0,
-        'minute' => '0',
-        'hour' => '1',
-        'day' => '6',
-        'month' => '*',
-        'dayofweek' => '*'
-    )
+
 );

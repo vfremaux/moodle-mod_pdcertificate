@@ -14,6 +14,10 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+defined('MOODLE_INTERNAL') || die();
+
+require_once($CFG->dirroot.'/user/profile/lib.php');
+
 /**
  * Sends text to output given the following params.
  *
@@ -58,7 +62,7 @@ function pdcertificate_print_textbox($pdf, $w, $x, $y, $align, $font = 'freeseri
  */
 function pdcertificate_draw_frame($pdf, $pdcertificate) {
 
-    $printconfig = unserialize(@$pdcertificate->printconfig);
+    $printconfig = json_decode(@$pdcertificate->printconfig);
 
     if (@$printconfig->bordercolor > 0) {
         if ($printconfig->bordercolor == 1) {
@@ -109,7 +113,7 @@ function pdcertificate_draw_frame($pdf, $pdcertificate) {
  */
 function pdcertificate_draw_frame_letter($pdf, $pdcertificate) {
 
-    $printconfig = unserialize($pdcertificate->printconfig);
+    $printconfig = json_decode($pdcertificate->printconfig);
 
     if (@$printconfig->bordercolor > 0) {
         if ($printconfig->bordercolor == 1) {
@@ -151,84 +155,6 @@ function pdcertificate_draw_frame_letter($pdf, $pdcertificate) {
     }
 }
 
-/**
- * Prints border images from the borders folder in PNG or JPG formats.
- *
- * @param stdClass $pdf;
- * @param stdClass $pdcertificate
- * @param int $x x position
- * @param int $y y position
- * @param int $w the width
- * @param int $h the height
- */
-function pdcertificate_print_image($pdf, $pdcertificate, $type, $x, $y, $w, $h) {
-    global $CFG;
-
-    $fs = get_file_storage();
-    $cm = get_coursemodule_from_instance('pdcertificate', $pdcertificate->id);
-    $context = context_module::instance($cm->id);
-
-    switch ($type) {
-        case PDCERT_IMAGE_BORDER:
-            $attr = 'borderstyle';
-            $defaultpath = "$CFG->dirroot/mod/pdcertificate/pix/$type/defaultborder.jpg";
-
-            $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printborders', 0, 'itemid, filepath, filename', false);
-            $f = array_pop($files);
-            if ($f) {
-                $filepathname = $f->get_contenthash();
-            } else {
-                return;
-            }
-            break;
-
-        case PDCERT_IMAGE_SEAL:
-            $attr = 'printseal';
-
-            $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printseal', 0, 'itemid, filepath, filename', false);
-            $f = array_pop($files);
-            if ($f) {
-                $filepathname = $f->get_contenthash();
-            } else {
-                return;
-            }
-            break;
-
-        case PDCERT_IMAGE_SIGNATURE:
-            $attr = 'printsignature';
-
-            $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printsignature', 0, 'itemid, filepath, filename', false);
-            $f = array_pop($files);
-            if ($f) {
-                $filepathname = $f->get_contenthash();
-            } else {
-                return;
-            }
-            break;
-
-        case PDCERT_IMAGE_WATERMARK:
-            $attr = 'printwmark';
-
-            $files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printwmark', 0, 'itemid, filepath, filename', false);
-            $f = array_pop($files);
-            if ($f) {
-                $filepathname = $f->get_contenthash();
-            } else {
-                return;
-            }
-            break;
-    }
-
-    $uploadpath = $CFG->dataroot.'/filedir/'.pdcertificate_path_from_hash($filepathname).'/'.$filepathname;
-
-    // Uploaded path will superseed.
-    if (file_exists($uploadpath)) {
-        $pdf->Image($uploadpath, $x, $y, $w, $h);
-    } else if (file_exists($defaultpath)) {
-        $pdf->Image($path, $x, $y, $w, $h);
-    }
-}
-
 function pdcertificate_print_qrcode($pdf, $code, $x, $y) {
     global $CFG;
 
@@ -246,10 +172,12 @@ function pdcertificate_print_qrcode($pdf, $code, $x, $y) {
     $pdf->write2DBarcode(''.$codeurl, 'QRCODE,H', $x, $y, 35, 35, $style, 'N');
 }
 
-function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, $user) {
-    global $SITE, $DB, $CFG, $COURSE;
+function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord, $course, $user) {
+    global $SITE, $DB, $CFG, $COURSE, $PAGE;
 
-    $printconfig = unserialize($pdcertificate->printconfig);
+    $printconfig = json_decode($pdcertificate->printconfig);
+    $renderer = $PAGE->get_renderer('mod_pdcertificate');
+    $template = new StdClass;
 
     $cm = get_coursemodule_from_instance('pdcertificate', $pdcertificate->id);
 
@@ -272,68 +200,109 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
                          '5' => get_string('userdateformat', 'pdcertificate')
     );
 
-    $replacements = array(
-        '{info:user_fullname}' => fullname($user),
-        '{user:fullname}' => fullname($user),
-        '{info:user_firstname}' => $user->firstname,
-        '{user:firstname}' => $user->firstname,
-        '{info:user_idnumber}' => $user->idnumber,
-        '{user:idnumber}' => $user->idnumber,
-        '{info:user_lastname}' => $user->firstname,
-        '{user:lastname}' => $user->firstname,
-        '{info:user_country}' => $user->country,
-        '{user:country}' => $user->country,
-        '{info:user_city}' => $user->city,
-        '{user:city}' => $user->city,
-        '{info:user_institution}' => $user->institution,
-        '{user:institution}' => $user->institution,
-        '{info:user_department}' => $user->department,
-        '{user:department}' => $user->department,
-        '{info:site_fullname}' => $SITE->fullname,
-        '{info:site_shortname}' => $SITE->shortname,
-        '{info:site_city}' => @$CFG->city,
-        '{info:site_country}' => $CFG->country,
-        '{info:course_shortname}' => $course->shortname,
-        '{info:course_fullname}' => $course->fullname,
-        '{info:course_summary}' => $course->summary,
-        '{info:course_category}' => $DB->get_field('course_categories', 'name', array('id' => $course->category)),
-        '{info:course_idnumber}' => $course->idnumber,
-        '{info:course_grade}' => pdcertificate_get_grade($pdcertificate, $course, $user->id),
-        '{info:certificate_name}' => format_string($pdcertificate->name),
-        '{info:certificate_date}' => pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
-        '{info:certificate_outcome}' => pdcertificate_get_outcome($pdcertificate, $course),
-        '{info:certificate_credit_hours}' => get_string('credithours', 'pdcertificate').': '.$printconfig->printhours,
-        '{info:certificate_code}' => strtoupper($certrecord->code),
-        '{info:group_specific}' => pdcertificate_get_groupspecific_content($pdcertificate)
-    );
-
-    // Get and prepare additional custom info for replacements.
+    // Get the most recent active enrolment.
     $sql = "
         SELECT
-            uif.shortname,
-            uif.datatype,
-            uid.data
+            ue.timecreated,
+            ue.timestart,
+            ue.timeend
         FROM
-            {user_info_field} uif,
-            {user_info_data} uid
+            {enrol} e,
+            {user_enrolments} ue
         WHERE
-            uif.id = uid.fieldid AND
-            uid.userid = ?
+            e.id = ue.enrolid AND
+            ue.status = 0 AND
+            e.status = 0 AND
+            ue.userid = ? AND
+            e.courseid = ?
+        ORDER BY
+            ue.timestart,
+            ue.timecreated
     ";
-    $userdata = $DB->get_records_sql($sql, array($user->id));
-
-    if (!empty($userdata)) {
-        foreach ($userdata as $userdatum) {
-            if ($userdatum->datatype == 'datetime') {
-                $dateformat = get_string('printdateformat', 'pdcertificate');
-                if (!empty($dateformat)) {
-                    $replacements['{user:'.$userdatum->shortname.'}'] = pdcertificate_strftimefixed($dateformat, $userdatum->data);
-                } else {
-                    $replacements['{user:'.$userdatum->shortname.'}'] = userdate($userdatum->data);
-                }
-            } else {
-                $replacements['{user:'.$userdatum->shortname.'}'] = $userdatum->data;
+    $enroldates = $DB->get_records_sql($sql, array($user->id, $course->id));
+    if ($enroldates) {
+        $lastenroldate = 0;
+        $lastenrolenddate = 0;
+        foreach ($enroldates as $edate) {
+            if ($lastenroldate < $edate->timestart) {
+                $lastenroldate = $edate->timestart;
             }
+            if ($lastenrolenddate < $edate->timeend) {
+                $lastenrolenddate = $edate->timeend;
+            }
+        }
+
+        if (!$lastenrolenddate) {
+            $lastenrolenddate = '--';
+        }
+    } else {
+        $lastenroldate = '--';
+        $lastenrolenddate = '--';
+    }
+
+    $replacements = array(
+        'info:user_fullname' => fullname($user),
+        'user:fullname' => fullname($user),
+        'info:user_firstname' => $user->firstname,
+        'user:firstname' => $user->firstname,
+        'info:user_lastname' => $user->lastname,
+        'user:lastname' => $user->lastname,
+        'info:user_alternatename' => $user->lastname,
+        'user:alternatename' => $user->lastname,
+        'info:user_email' => $user->email,
+        'user:email' => $user->email,
+        'info:user_idnumber' => $user->idnumber,
+        'user:idnumber' => $user->idnumber,
+        'info:user_country' => $user->country,
+        'user:country' => $user->country,
+        'info:user_city' => $user->city,
+        'user:city' => $user->city,
+        'info:user_institution' => $user->institution,
+        'user:institution' => $user->institution,
+        'info:user_department' => $user->department,
+        'user:department' => $user->department,
+        'info:user_enrolment_date' => ($lastenroldate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenroldate),
+        'user:enrolment_date' => ($lastenroldate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenroldate),
+        'info:user_enrolment_end_date' => ($lastenrolenddate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenrolenddate),
+        'user:enrolment_end_date' => ($lastenrolenddate == '--') ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $lastenrolenddate),
+        'info:site_fullname' => format_string($SITE->fullname),
+        'info:site_shortname' => $SITE->shortname,
+        'info:site_city' => @$CFG->city,
+        'info:site_country' => $CFG->country,
+        'info:course_shortname' => $course->shortname,
+        'info:course_fullname' => format_string($course->fullname),
+        'info:course_summary' => format_text($course->summary, $course->summaryformat),
+        'info:course_category' => $DB->get_field('course_categories', 'name', array('id' => $course->category)),
+        'info:course_idnumber' => $course->idnumber,
+        'info:course_grade' => pdcertificate_get_grade($pdcertificate, $course, $user->id),
+        'info:certificate_name' => format_string($pdcertificate->name),
+        'info:certificate_date' => (empty($certrecord->timecreated)) ? '--' : pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $certrecord->timecreated),
+        'info:certificate_outcome' => format_string(pdcertificate_get_outcome($pdcertificate, $course)),
+        'info:certificate_credit_hours_text' => get_string('credithours', 'pdcertificate').': '.$pdcertificate->credithours,
+        'info:certificate_credit_hours' => $pdcertificate->credithours,
+        'info:certificate_code' => strtoupper($certrecord->code),
+        'info:certificate_caption' => format_string($pdcertificate->caption),
+        'info:group_specific' => pdcertificate_get_groupspecific_content($pdcertificate)
+    );
+
+    // Get certificate instance extradata
+    if (!empty($pdcertificate->extradata)) {
+        $extradata = json_decode($pdcertificate->extradata);
+
+        if ($extradata) {
+            foreach ($extradata as $key => $datum) {
+                $replacements['extra:'.$key] = $datum;
+            }
+        }
+    }
+
+    // Get and prepare additional custom info for replacements.
+    $profilefields = profile_get_user_fields_with_data($user->id);
+    if (!empty($profilefields)) {
+        foreach ($profilefields as $field) {
+            $shortname = str_replace('profile_field_', '', $field->inputname);
+            $replacements['user:'.$shortname] = $field->display_data();
+            $replacements['info:user_'.$shortname] = $field->display_data();
         }
     }
 
@@ -347,71 +316,72 @@ function pdcertificate_insert_data($text, $pdcertificate, $certrecord, $course, 
 
         $ccompletion = new completion_completion($params);
         if ($ccompletion->timecompleted) {
-            $replacements['{info:completion_date}'] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+            if (empty($ccompletion->timecompleted)) {
+                $replacements['info:completion_date'] = '--';
+            } else {
+                $replacements['info:completion_date'] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $ccompletion->timecompleted);
+            }
         } else {
-            $replacements['{info:completion_date}'] = get_string('nc', 'pdcertificate');
+            $replacements['info:completion_date'] = get_string('nc', 'pdcertificate');
         }
     }
 
     if ($pdcertificate->certifierid) {
-        $replacements['{info:certifier_name}'] = fullname($certifier);
+        $replacements['info:certifier_name'] = fullname($certifier);
     }
 
     if (file_exists($CFG->dirroot.'/blocks/use_stats/locallib.php')) {
 
         // Do not process if the placeholder is not used.
-        if (preg_match('/{info:course_total_time}/', $text)) {
+        if (preg_match('/{{info:course_total_time}}/', $templatestring)) {
             require_once($CFG->dirroot.'/blocks/use_stats/locallib.php');
             $now = time();
             $logs = use_stats_extract_logs($course->startdate, $now, $user->id, $course->id);
             $aggregate = use_stats_aggregate_logs($logs, $course->startdate, $now);
 
             if (array_key_exists('coursetotal', $aggregate)) {
-                $replacements['{info:course_total_time}'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);
+                $replacements['info:course_total_time'] = block_use_stats_format_time(0 + @$aggregate['coursetotal'][$course->id]->elapsed);
             } else {
-                $replacements['{info:course_total_time}'] = '';
+                $replacements['info:course_total_time'] = '';
             }
         }
     }
 
     if (isset($teacherfullnames)) {
-        $replacements['{info:certificate_teachers}'] = implode(', ', $teacherfullnames);
+        $replacements['info:certificate_teachers'] = implode(', ', $teacherfullnames);
         // Keep it for compatibility.
-        $replacements['{info:pdcertificate_teachers}'] = implode(', ', $teacherfullnames);
+        $replacements['info:pdcertificate_teachers'] = implode(', ', $teacherfullnames);
     }
 
     if ($pdcertificate->certifierid) {
         if ($certifier = $DB->get_records('user', array('id' => $pdcertificate->certifierid))) {
-            $replacements['{info:certificate_certifier}'] = fullname($certifier);
+            $replacements['info:certificate_certifier'] = fullname($certifier);
             // Keep it for compatibility.
-            $replacements['{info:pdcertificate_certifier}'] = fullname($certifier);
+            $replacements['info:pdcertificate_certifier'] = fullname($certifier);
         }
     }
 
-    foreach ($replacements as $patt => $replacement) {
-        $text = str_replace($patt, $replacement, $text);
-    }
-
-    // Track some couse module completions.
+    // Track some course module completions.
     if (completion_info::is_enabled_for_site() && $completion->is_enabled()) {
-        while (preg_match('/info\:module_completion_date_([0-9]+)/', $text, $matches)) {
-            $params = array('userid' => $user->id, 'coursemoduleid' => $matches[1], 'completionstate' => 1);
-            $completiondate = $DB->get_field('course_completion_module', 'timemodified', $params);
-            if ($completiondate) {
-                $text = str_replace($matches[0], pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $completiondate), $text);
-            } else {
-                $text = str_replace($matches[0], get_string('nc', 'pdcertificate'), $text);
+        if (preg_match_all('/info\:module_completion_date_([0-9]+)/', $templatestring, $matches)) {
+            foreach ($matches[1] as $cmid) {
+                $completiontag = array_shift($matches[0]);
+                $params = array($user->id, $cmid);
+                $select = " userid = ? AND coursemoduleid = ? AND completionstate >= 1 ";
+                $completiondate = $DB->get_field_select('course_modules_completion', 'timemodified', $select, $params);
+                if ($completiondate) {
+                    $replacements[$completiontag] = pdcertificate_strftimefixed($DATEFORMATS[$pdcertificate->datefmt], $completiondate);
+                } else {
+                    $replacements[$completiontag] = get_string('nc', 'pdcertificate');
+                }
             }
         }
     } else {
-        while (preg_match('/info\:module_completion_date_([0-9]+)/', $text, $matches)) {
-            $text = str_replace($matches[0], get_string('disabled', 'pdcertificate'), $text);
+        if (preg_match_all('/info\:module_completion_date_([0-9]+)/', $templatestring, $matches)) {
+            foreach ($matches[0] as $completiontag)
+            $replacements[$completiontag] = get_string('disabled', 'pdcertificate');
         }
     }
 
-    // Eliminate remaining unresolved injection patterns.
-    $text = preg_replace('/\{info:.*?\}/', '', $text);
-    $text = preg_replace('/\{user:.*?\}/', '', $text);
-
-    return $text;
+    return $renderer->render_from_string($templatestring, $replacements);
 }

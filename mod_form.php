@@ -58,12 +58,10 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
         $mform->addRule('name', get_string('maximumchars', '', 255), 'maxlength', 255, 'client');
 
-        $mform->addElement('text', 'caption', get_string('pdcertificatecaption', 'pdcertificate'), array('size' => 128, 'maxlength' => 255));
-        $mform->setType('caption', PARAM_CLEANHTML);
-
         $this->standard_intro_elements(get_string('description', 'pdcertificate'));
 
-        // Issue options
+// -------------------------------------------------------------------------------.
+        // Issue options.
         $mform->addElement('header', 'issueoptions', get_string('issueoptions', 'pdcertificate'));
 
         $ynoptions = array( 0 => get_string('no'), 1 => get_string('yes'));
@@ -138,6 +136,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('propagategroups', 'propagategroups', 'pdcertificate');
 
 //-------------------------------------------------------------------------------
+        // Lockin options.
         $mform->addElement('header', 'lockingoptions', get_string('lockingoptions', 'pdcertificate'));
 
         $this->restrictoptions = array();
@@ -174,7 +173,8 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $mform->addHelpButton('lockoncoursecompletion', 'lockoncoursecompletion', 'pdcertificate');
         }
 
-//-------------------------------------------------------------------------------
+// -------------------------------------------------------------------------------.
+        // Course chaining.
         $mform->addElement('header', 'coursechaining', get_string('coursechaining', 'pdcertificate'));
 
         $this->linkedcourses = pdcertificate_get_linked_courses($this->instance);
@@ -197,8 +197,81 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
                            array('title' => get_string('addcoursetitle', 'pdcertificate')));
         $mform->registerNoSubmitButton('addcourse');
 
-        // Text Options.
-        $mform->addElement('header', 'textoptions', get_string('printoptions', 'pdcertificate'));
+// -------------------------------------------------------------------------------.
+        // Text and content Options.
+        $mform->addElement('header', 'certdata', get_string('certdata', 'pdcertificate'));
+
+        $mform->addElement('text', 'caption', get_string('pdcertificatecaption', 'pdcertificate'), array('size' => 128, 'maxlength' => 255));
+        $mform->setType('caption', PARAM_CLEANHTML);
+
+        $attrs = array('size'=>'5', 'maxlength' => '255');
+        $mform->addElement('text', 'credithours', get_string('printhours', 'pdcertificate'), $attrs);
+        $mform->setType('credithours', PARAM_TEXT);
+        $mform->addHelpButton('credithours', 'printhours', 'pdcertificate');
+
+        $mform->addElement('textarea', 'extradata', get_string('extradata', 'pdcertificate'), array('cols' => 80, 'rows' => 15));
+        $mform->setType('extradata', PARAM_TEXT);
+        $mform->addHelpButton('extradata', 'extradata', 'pdcertificate');
+
+        $outcomeoptions = pdcertificate_get_outcomes();
+        if ($outcomeoptions) {
+            $mform->addElement('select', 'printoutcome', get_string('printoutcome', 'pdcertificate'), $outcomeoptions);
+            $mform->setDefault('printoutcome', 0);
+            $mform->addHelpButton('printoutcome', 'printoutcome', 'pdcertificate');
+        } else {
+            $mform->addElement('hidden', 'printoutcome', 0);
+            $mform->setType('printoutcome', PARAM_INT);
+        }
+
+        /**
+        $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16,
+                             17 => 17, 18 => 18, 19 => 19, 20 => 20);
+        $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
+        $mform->setDefault('fontbasesize', 10);
+        **/
+
+        /*
+        $pdf = new pdf();
+        $available = array_keys($pdf->get_font_families());
+        $familyoptions = array_combine($available, $available);
+        $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
+        $mform->setDefault('fontbasefamily', 'freesans');
+        */
+
+        $attrs = array('cols' => '120', 'rows' => '4', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), $attrs);
+        $mform->setType('headertext', PARAM_RAW);
+        $mform->addHelpButton('headertext', 'headertext', 'pdcertificate');
+        $mform->setDefault('headertext', get_string('defaultcertificateheader_tpl', 'pdcertificate'));
+
+        $attrs = array('cols' => '120', 'rows' => '20', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'customtext', get_string('customtext', 'pdcertificate'), $attrs);
+        $mform->setType('customtext', PARAM_RAW);
+        $mform->addHelpButton('customtext', 'customtext', 'pdcertificate');
+        $mform->setDefault('headertext', get_string('defaultcertificatebody_tpl', 'pdcertificate'));
+
+        $attrs = array('cols' => '120', 'rows' => '4', 'wrap' => 'virtual');
+        $mform->addElement('textarea', 'footertext', get_string('footertext', 'pdcertificate'), $attrs);
+        $mform->setType('footertext', PARAM_RAW);
+        $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
+        $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
+
+        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
+        $mform->setDefault('printqrcode', true);
+
+        // This needs groupspecifichtml block installed for providing group addressed content.
+        if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
+            $hasoptions = pdcertificate_get_groupspecific_block_instances($groupspecificoptions);
+            if (!empty($groupspecificoptions)) {
+                $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'), $groupspecificoptions);
+                $mform->setDefault('groupspecificcontent', 0);
+                $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
+            }
+        }
+
+// -------------------------------------------------------------------------------.
+        // Rendering and design options.
+        $mform->addElement('header', 'designoptions', get_string('designoptions', 'pdcertificate'));
 
         $dateformatoptions = array( 1 => 'January 1, 2000', 2 => 'January 1st, 2000', 3 => '1 January 2000',
             4 => 'January 2000', 5 => get_string('userdateformat', 'pdcertificate'));
@@ -213,83 +286,9 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setDefault('gradefmt', 0);
         $mform->addHelpButton('gradefmt', 'gradefmt', 'pdcertificate');
 
-        $attrs = array('size'=>'5', 'maxlength' => '255');
-        $mform->addElement('text', 'printhours', get_string('printhours', 'pdcertificate'), $attrs);
-        $mform->setType('printhours', PARAM_TEXT);
-        $mform->addHelpButton('printhours', 'printhours', 'pdcertificate');
-
-        $outcomeoptions = pdcertificate_get_outcomes();
-        if ($outcomeoptions) {
-            $mform->addElement('select', 'printoutcome', get_string('printoutcome', 'pdcertificate'), $outcomeoptions);
-            $mform->setDefault('printoutcome', 0);
-            $mform->addHelpButton('printoutcome', 'printoutcome', 'pdcertificate');
-        } else {
-            $mform->addElement('hidden', 'printoutcome', 0);
-            $mform->setType('printoutcome', PARAM_INT);
-        }
-
-        $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16,
-                             17 => 17, 18 => 18, 19 => 19, 20 => 20);
-        $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
-        $mform->setDefault('fontbasesize', 12);
-
-        $pdf = new PDF();
-        $available = array_keys($pdf->get_font_families());
-        $familyoptions = array_combine($available, $available);
-        $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
-        $mform->setDefault('fontbasesize', 12);
-
-        $attrs = array('cols' => '80', 'rows' => '4', 'wrap' => 'virtual');
-        $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), $attrs);
-        $mform->setType('headertext', PARAM_RAW);
-        $mform->addHelpButton('headertext', 'headertext', 'pdcertificate');
-        $mform->setDefault('headertext', get_string('defaultcertificateheader_tpl', 'pdcertificate'));
-
-        $attrs = array('cols' => '80', 'rows' => '20', 'wrap' => 'virtual');
-        $mform->addElement('textarea', 'customtext', get_string('customtext', 'pdcertificate'), $attrs);
-        $mform->setType('customtext', PARAM_RAW);
-        $mform->addHelpButton('customtext', 'customtext', 'pdcertificate');
-        $mform->setDefault('headertext', get_string('defaultcertificatebody_tpl', 'pdcertificate'));
-
-        $attrs = array('cols' => '80', 'rows' => '4', 'wrap' => 'virtual');
-        $mform->addElement('textarea', 'footertext', get_string('footertext', 'pdcertificate'), $attrs);
-        $mform->setType('footertext', PARAM_RAW);
-        $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
-        $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
-
-        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
-        $mform->setDefault('printqrcode', true);
-
-        $group = array();
-        $group[] = $mform->createElement('text', 'qrcodex', '', array('size' => 4));
-        $group[] = $mform->createElement('text', 'qrcodey', '', array('size' => 4));
-        $mform->addGroup($group, 'qrcodeoffsetgroup', get_string('qrcodeoffset', 'pdcertificate'), '', array(''), false);
-        $mform->setType('qrcodeoffsetgroup[qrcodex]', PARAM_INT);
-        $mform->setType('qrcodeoffsetgroup[qrcodey]', PARAM_INT);
-
-        // This needs groupspecifichtml block installed for providing group addressed content.
-        if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
-            $hasoptions = pdcertificate_get_groupspecific_block_instances($groupspecificoptions);
-            if (!empty($groupspecificoptions)) {
-                $mform->addElement('select', 'groupspecificcontent', get_string('groupspecificcontent', 'pdcertificate'), $groupspecificoptions);
-                $mform->setDefault('groupspecificcontent', 0);
-                $mform->addHelpButton('groupspecificcontent', 'groupspecificcontent', 'pdcertificate');
-            }
-        }
-
-        // Design Options.
-        $mform->addElement('header', 'designoptions', get_string('designoptions', 'pdcertificate'));
-
         $mform->addElement('select', 'pdcertificatetype', get_string('pdcertificatetype', 'pdcertificate'), pdcertificate_types());
         $mform->setDefault('pdcertificatetype', 'A4_lanscape');
         $mform->addHelpButton('pdcertificatetype', 'pdcertificatetype', 'pdcertificate');
-
-        $group = array();
-        $group[] = $mform->createElement('text', 'marginx', '', array('size' => 4));
-        $group[] = $mform->createElement('text', 'marginy', '', array('size' => 4));
-        $mform->addGroup($group, 'margingroup', get_string('margins', 'pdcertificate'), '', array(''), false);
-        $mform->setType('margingroup[marginx]', PARAM_INT);
-        $mform->setType('margingroup[marginy]', PARAM_INT);
 
         $group = array();
         $label = get_string('printborders', 'pdcertificate');
@@ -304,38 +303,21 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addGroup($group, 'printwmarkgroup', get_string('printwmark', 'pdcertificate'), '', array(''), false);
 
         $group = array();
-        $group[] = $mform->createElement('text', 'watermarkoffsetx', '', array('size' => 4));
-        $group[] = $mform->createElement('text', 'watermarkoffsety', '', array('size' => 4));
-        $mform->addGroup($group, 'watermarkoffsetgroup', get_string('watermarkoffset', 'pdcertificate'), '', array(''), false);
-        $mform->setType('watermarkoffsetgroup[watermarkoffsetx]', PARAM_INT);
-        $mform->setType('watermarkoffsetgroup[watermarkoffsety]', PARAM_INT);
-
-        $group = array();
         $group[] = $mform->createElement('filepicker', 'printsignature', get_string('printsignature', 'pdcertificate'), $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintsignature', '', get_string('clearprintsignature', 'pdcertificate'));
         $mform->addGroup($group, 'printsignaturegroup', get_string('printsignature', 'pdcertificate'), '', array(''), false);
-
-        $group = array();
-        $group[] = $mform->createElement('text', 'signatureoffsetx', '', array('size' => 4));
-        $group[] = $mform->createElement('text', 'signatureoffsety', '', array('size' => 4));
-        $mform->addGroup($group, 'signatureoffsetgroup', get_string('signatureoffset', 'pdcertificate'), '', array(''), false);
-        $mform->setType('signatureoffsetgroup[signatureoffsetx]', PARAM_INT);
-        $mform->setType('signatureoffsetgroup[signatureoffsety]', PARAM_INT);
 
         $group = array();
         $group[] = $mform->createElement('filepicker', 'printseal', get_string('printseal', 'pdcertificate'), $this->jpgoptions);
         $group[] = $mform->createElement('checkbox', 'clearprintseal', '', get_string('clearprintseal', 'pdcertificate'));
         $mform->addGroup($group, 'printsealgroup', get_string('printseal', 'pdcertificate'), '', array(''), false);
 
-        $group = array();
-        $group[] = $mform->createElement('text', 'sealoffsetx', '', array('size' => 4));
-        $group[] = $mform->createElement('text', 'sealoffsety', '', array('size' => 4));
-        $mform->addGroup($group, 'sealoffsetgroup', get_string('sealoffset', 'pdcertificate'), '', array(''), false);
-        $mform->setType('sealoffsetgroup[sealoffsetx]', PARAM_INT);
-        $mform->setType('sealoffsetgroup[sealoffsety]', PARAM_INT);
+        $mform->addElement('textarea', 'printconfig', get_string('printconfig', 'pdcertificate'), array('cols' => 80, 'rows' => 10));
+        $mform->setAdvanced('printconfig');
+        $mform->setDefault('printconfig', '{"fontbasefamily":"FreeSans","fontbasesize":"10"}');
 
+// -------------------------------------------------------------------------------.
         // Protection options.
-
         $mform->addElement('header', 'protectionoptions', get_string('protectionoptions', 'pdcertificate'));
 
         $protections = pdcertificate_protections();
@@ -359,7 +341,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->setAdvanced('pubkey');
         $mform->addHelpButton('pubkey', 'pubkey', 'pdcertificate');
 
-        //-------------------------------------------------------------------------------
+//-------------------------------------------------------------------------------.
 
         $this->standard_coursemodule_elements();
 
@@ -376,22 +358,20 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
 
         // Extract print options and feed print defaults.
-        $printconfigarr = (array)unserialize(@$defaults->printconfig);
+        $printconfigarr = (array)json_decode(@$defaults->printconfig);
         foreach ($printconfigarr as $key => $value) {
             $defaults->$key = $value;
         }
 
         foreach ($instancefiles as $if) {
             $draftitemid = file_get_submitted_draft_itemid($if);
-            $maxbytes = -1;
-            $maxfiles = 1;
             file_prepare_draft_area($draftitemid, $this->context->id, 'mod_pdcertificate', $if, 0, $this->jpgoptions);
             $groupname = $if.'group';
             $defaults->$groupname = array($if => $draftitemid);
         }
 
         // Expand protection options.
-        $protections = unserialize(@$defaults->protection);
+        $protections = json_decode(@$defaults->protection);
         if (!empty($protections)) {
             foreach ($protections as $pkey => $pvalue) {
                 $key = 'protection'.$pkey;

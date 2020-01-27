@@ -78,23 +78,25 @@ $string['coursetime'] = 'Crédit horaire de formation requis';
 $string['coursetimedependency'] = 'Temps minimum requis dans le cours';
 $string['coursetimereq'] = 'Minutes minimum dans le cours';
 $string['credithours'] = 'Crédit d\'heures';
-$string['cron_task'] = 'Tâches de l\'attestation';
-$string['croned'] = 'Générer les certificats par les tâches programmées';
+$string['cron_task'] = 'Attestation Pro : Génération';
+$string['refresh_task'] = 'Attestation Pro : Raffraichissement';
+$string['croned'] = 'Générer les attestations par les tâches programmées';
+$string['cronsendsbymail'] = 'Le cron envoie les attestations par mail';
+$string['cronsendsbymail_desc'] = 'La génération différée par cron des attestations enverra l\'attestation par courriel si le mode de délivrance est "courriel" ET ce paramètre est activé.';
 $string['customtext'] = 'Texte personnalisé';
-$string['cronsendsbymail'] = 'Le cron envoie les certificats par mail';
-$string['cronsendsbymail_desc'] = 'La génération différée par cron des certificats enverra le certificat par courriel si le mode de délivrance est "courriel" ET ce paramètre est activé.';
+$string['certdata'] = 'Données et contenus de l\'attestation';
 $string['date'] = 'le';
 $string['datefmt'] = 'Format de date';
 $string['datehelp'] = 'Date';
+$string['defaultauthority'] = 'Autorité de certification (défaut)';
 $string['defaultpropagategroups'] = 'Propagation des groupes (défaut)';
 $string['defaultpropagategroups_desc'] = 'Si coché, les informations de groupe seront copiées dans le cours chainé lors du passage des utilisateurs.';
-$string['defaultauthority'] = 'Autorité de certification (défaut)';
 $string['definitive'] = 'Valide (définitif)';
 $string['deletissuedpdcertificates'] = 'Supprimer les attestations délivrées';
 $string['deliveredon'] = 'Retiré le';
 $string['delivery'] = 'Délivrance';
-$string['designoptions'] = 'Mise en forme';
 $string['description'] = 'Description';
+$string['designoptions'] = 'Mise en forme';
 $string['destroyselection'] = 'Détruire les attestations ';
 $string['disabled'] = 'Désactivé';
 $string['download'] = 'Forcer le téléchargement';
@@ -102,19 +104,22 @@ $string['emailothers'] = 'Autres destinataires';
 $string['emailpdcertificate'] = 'Mél (doit être sauvegardé!)';
 $string['emailstudenttext'] = 'Votre attestation pour le cours {$a->course} est jointe en pièce attachée.';
 $string['emailteachers'] = 'Envoyer un mél aux formateurs';
-$string['entercode'] = 'Entrer le code de l\'attestation à vérifier&nbsp;:';
-$string['errorinvalidinstance'] = 'Erreur : cette instance d\'attestation n\'existe pas';
-$string['errornocapabilitytodelete'] = 'vous n\'avez pas les capacités pour détruire des attestations';
-$string['errorcertificatenotinstalled'] = 'Le module Certificat original semble ne pas être installé sur ce Moodle. La migration vers PDCertificate ne peut pas être effectuée.';
-$string['expiredon'] = 'Expiré le';
 $string['encryptionstrength'] = 'Niveau de cryptage';
 $string['encryptionstrength_desc'] = 'Lorsque le document généré est protégé, le niveau d\'encryptage. Plus la profondeur est élevée, plus la génération du document pourra consommer des ressources.';
+$string['entercode'] = 'Entrer le code de l\'attestation à vérifier&nbsp;:';
+$string['errorcertificatenotinstalled'] = 'Le module Certificat original semble ne pas être installé sur ce Moodle. La migration vers PDCertificate ne peut pas être effectuée.';
+$string['errorinvalidinstance'] = 'Erreur : cette instance d\'attestation n\'existe pas';
+$string['errornocapabilitytodelete'] = 'vous n\'avez pas les capacités pour détruire des attestations';
+$string['eventdocumentgenerated'] = 'Certificat généré (document)';
+$string['expiredon'] = 'Expiré le';
+$string['extradata'] = 'Données supplémentaires';
 $string['followercourse'] = 'Cours lié : {$a->rolename} dans {$a->coursename}. Ce cours est prérequis&nbsp;: {$a->prerequisite}';
 $string['followers'] = 'Module(s) suivant(s) du parcours ';
 $string['footertext'] = 'Texte personnalisé du pied de page';
 $string['freemono'] = 'Monospace';
 $string['freesans'] = 'Sans sérif';
 $string['freeserif'] = 'Sérif';
+$string['fullaccesspassword'] = 'Mot de passe pour l\'accès complet';
 $string['generate'] = 'Générer';
 $string['generateall'] = 'Générer les {$a} attestations disponibles';
 $string['generateselection'] = 'Générer les attestations ';
@@ -146,14 +151,14 @@ $string['lockingoptions'] = 'Conditions d\'acquisition';
 $string['lockoncoursecompletion'] = 'Sensible à l\'achèvement de cours';
 $string['managedelivery'] = 'Gérer la délivrance';
 $string['mandatoryreq'] = 'Prérequis obligatoire';
+$string['manualenrolnotavailableontarget'] = 'La méthode manuelle d\'inscription semble avoir été désactivée. Le chainage ne peut être réalisé.';
+$string['margins'] = 'Marges (x,y)';
+$string['maxdocumentspercron'] = 'Nombre max de documents par cron';
 $string['migrate'] = 'Migrer les certificats';
 $string['migration'] = 'Assistant de migration des certificats';
 $string['modulename'] = 'Attestation Pro';
 $string['modulenameplural'] = 'Attestations';
 $string['mypdcertificates'] = 'Mes attestations';
-$string['margins'] = 'Marges (x,y)';
-$string['manualenrolnotavailableontarget'] = 'La méthode manuelle d\'inscription semble avoir été désactivée. Le chainage ne peut être réalisé.';
-$string['maxdocumentspercron'] = 'Nombre max de documents par cron';
 $string['nc'] = 'Non achevé';
 $string['needsmorework'] = 'Il y a encore des travaux requis pour activer cette attestation';
 $string['noauthority'] = 'Pas d\'autorité';
@@ -196,6 +201,7 @@ $string['portrait'] = 'Portrait';
 $string['prerequisites'] = 'Prérequis';
 $string['previewpdcertificate'] = 'Prévisualiser l\'attestation';
 $string['printborders'] = 'Fond ou bordures';
+$string['printdateformat'] = '';
 $string['printerfriendly'] = 'Version imprimable';
 $string['printfontfamily'] = 'Police';
 $string['printfontsize'] = 'Taille de police de base';
@@ -208,34 +214,31 @@ $string['printseal'] = 'Image sceau ou logo';
 $string['printsignature'] = 'Image de signature';
 $string['printteacher'] = 'Imprimer le nom du formateur';
 $string['printwmark'] = 'Filigrane';
-$string['printdateformat'] = '';
 $string['propagategroups'] = 'Propagation des groupes';
 $string['protection'] = 'Protection';
-$string['protectionoptions'] = 'Options de protection PDF';
-$string['pubkey'] = 'Clef publique';
-$string['userpassword'] = 'Mot de passe utilisateur';
-$string['fullaccesspassword'] = 'Mot de passe pour l\'accès complet';
-$string['protectionprint'] = 'Ne pas autoriser l\'impression';
-$string['protectionmodify'] = 'Ne pas autoriser la modification du contenu';
-$string['protectioncopy'] = 'Ne pas autoriser de copier le contenu';
 $string['protectionannotforms'] = 'Ne pas autoriser d\'annoter le document ou d\'ajouter des champs de formulaire';
-$string['protectionfillforms'] = 'Ne pas autoriser de remplir les champs de formulaires';
-$string['protectionextract'] = 'Ne pas autoriser l\'extraction de textes ou d\'images';
 $string['protectionassemble'] = 'Ne pas autoriser l\'assemblage, l\'insertion, la suppression ou la rotation de pages';
+$string['protectioncopy'] = 'Ne pas autoriser de copier le contenu';
+$string['protectionextract'] = 'Ne pas autoriser l\'extraction de textes ou d\'images';
+$string['protectionfillforms'] = 'Ne pas autoriser de remplir les champs de formulaires';
+$string['protectionmodify'] = 'Ne pas autoriser la modification du contenu';
+$string['protectionoptions'] = 'Options de protection PDF';
+$string['protectionprint'] = 'Ne pas autoriser l\'impression';
 $string['protectionprinthigh'] = 'Ne pas autoriser l\'impression en haute résolution';
+$string['pubkey'] = 'Clef publique';
 $string['qrcodeoffset'] = 'Position du QR code (x,y)';
 $string['receivedcerts'] = 'Attestations reçus';
 $string['receiveddate'] = 'Date de réception';
 $string['regenerate'] = 'Régénérer';
 $string['releaseselection'] = 'Valider les attestations ';
 $string['removecert'] = 'Les attestations ont été détruites';
+$string['removeother'] = 'Supprimer les anciens rôles';
 $string['report'] = 'Rapport';
 $string['reportcert'] = 'Rapports sur les attestations';
 $string['requiredcoursecompletion'] = 'Vous devez avoir achevé l\'ensemble des objectifs du cours pour pouvoir retirer votre certificat.';
 $string['requiredtimenotmet'] = 'Vous devez avoir passé au moins {$a->requiredtime} minutes dans ce cours avant de pouvoir retirer votre attestations.';
 $string['requiredtimenotvalid'] = 'Le temps passé doit être une grandeur supérieure à 0';
 $string['reviewpdcertificate'] = 'Revoir votre attestation';
-$string['removeother'] = 'Supprimer les anciens rôles';
 $string['rolereq'] = 'Role';
 $string['savecert'] = 'Sauvegarder l\'attestation';
 $string['seal'] = 'Sceau';
@@ -253,6 +256,9 @@ $string['summary'] = 'Résumé';
 $string['system'] = 'Niveau système';
 $string['teacherview'] = 'Outils de l\'enseignant';
 $string['textoptions'] = 'Options de texte';
+$string['testpdf'] = 'Testez la génération du PDF. Cela utiliser les données de votre propre compte (qui ne sont peut être pas toutes pertinentes). Veillez à maîtriser les tailles des images embarquées pour les fonds ou les inserts.';
+$string['manageadvice'] = 'Gérer les attestations et les délivrances. Notez que ces écrans peuvent prendre du temps pour des populations importantes.';
+$string['numusers'] = 'Number of appliers';
 $string['thiscategory'] = 'Cette catégorie';
 $string['thiscourse'] = 'Ce cours';
 $string['title'] = 'ATTESTATION DE PARTICIPATION';
@@ -267,6 +273,7 @@ $string['unsupportedfiletype'] = 'Le fichier doit être une image jpg ou png';
 $string['uploadimage'] = 'Télécharger une image';
 $string['uploadimagedesc'] = 'Ce bouton vous amène à un autre écran où vous pouvez téléverser une image.';
 $string['userdateformat'] = 'Format de date de l\'utilisateur';
+$string['userpassword'] = 'Mot de passe utilisateur';
 $string['usersdelivered'] = 'Attestations délivrées : {$a}';
 $string['usersgenerated'] = 'Attestations générées non retirées&nbsp;: {$a}';
 $string['userstocertify'] = 'Reste à attester : {$a}';
@@ -289,6 +296,9 @@ $string['yetcertifiable'] = 'Prêts à générer';
 $string['yetcertified'] = 'Générés';
 $string['youcango'] = 'Vous pouvez continuer votre parcours dans ce module';
 $string['youcantgo'] = 'Vous ne remplissez pas encore les conditions pour atteindre ce module';
+$string['withselection'] = 'Avec la sélection...';
+$string['selectall'] = 'Tout sélectionner';
+$string['selectnone'] = 'Tout déselectionner';
 
 $string['unlimited'] = "Illimité";
 $string['oneday'] = "Un jour";
@@ -366,15 +376,22 @@ pour le cours {$a->course}.
 
 Vous pouvez la visualiser ici :
 
-    {$a->url}';
+    {$a->url}
+
+Vous pouvez contacter l\'étudiant à son adresse :
+
+    {$a->email}
+';
 
 $string['emailteachermailhtml'] = '
 {$a->student} a reçu son attestation : \'<i>{$a->pdcertificate}</i>\'
 pour le cours {$a->course}.
 
-Vous pouvez la visualiser ici :
-
-    <a href="{$a->url}">Rapport d\'attestation</a>.';
+<p>Vous pouvez la visualiser ici :
+<p><a href="{$a->url}">Rapport d\'attestation</a>.</p>
+<p>Vous pouvez contacter l\'étudiant à son adresse :</p>
+<p><a href="mailto:{$a->email}">{$a->email}</a>.</p>
+';
 
 $string['gradefmt_help'] = 'Trois formats de score sont disponibles si vous voulez imprimer le score sur l\'attestation :
 
@@ -414,3 +431,7 @@ $string['userpassword_help'] = 'Ce niveau de mot de passe permet en général l\
 $string['fullaccesspassword_help'] = 'Ce niveau de mot de passe donne accès à des fonctions plus avancées y compris l\'édition du document';
 
 $string['defaultauthority_desc'] = 'L\'utilisateur représentant l\'autorité de certification par défaut pour les nouvelles instances d\'attestation.';
+
+$string['extradata_help'] = 'Des données additionnelles personnalisées peuvent être disponibles pour les modèles de contenu HTML. On utilisera une notation
+JSON sérialisée simple d\'association de clefs/valeurs. Ex: {\'data1\':\'value1\';\'data2\':\'value2\'} exposera deux variables extra:data1 et extra:data2 aux
+modèles HTML';
