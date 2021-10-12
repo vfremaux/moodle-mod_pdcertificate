@@ -1,2 +1,0 @@
-1. finish upgrader with printconfig DB format change
-2. Apply to old 2.7 instances

@@ -1,8 +1,0 @@
-Fix in reports.php to do:
-
-- Inconsistency in checkboxs and "delete selection".
-- Add name filter to locate quickly a single user
-
-Everywhere:
-- convert most outputs to renderers
-- check new storage model of pdcertificate layout assets
