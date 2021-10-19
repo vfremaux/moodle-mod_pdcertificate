@@ -43,8 +43,8 @@ define(['jquery', 'core/log', 'core/config'], function($, log, cfg) {
                 $('#id-timeoverride-' + data).css('background-color: #008000; color: white');
                 $.sleep(500);
                 $('#id-timeoverride-' + data).css('background-color: initial; color: initial');
-            }, 'html'):
-           
+            }, 'html');
+
             return false;
         }
     };

@@ -359,7 +359,7 @@ if (pdcertificate_supports_feature('issues/timeoverrideable')) {
 }
 $table->head  = $head;
 $table->align = array ('CENTER', 'LEFT', 'LEFT', 'CENTER', 'CENTER', 'LEFT');
-$table->width = '95%';
+$table->width = '100%';
 
 $state->selectionrequired = 0;
 foreach ($certifiableusers as $user) {
@@ -437,7 +437,7 @@ foreach ($certifiableusers as $user) {
     if (pdcertificate_supports_feature('issues/lockable')) {
         $row[] = $lockstate;
     }
-    if (pdcertificate_supports_feature('issues/timeoverridable')) {
+    if (pdcertificate_supports_feature('issues/timeoverrideable')) {
         $row[] = $timeoverride;
     }
     $table->data[] = $row;
