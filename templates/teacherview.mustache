@@ -1,0 +1,29 @@
+
+
+
+<!-- mod_pdcertificate/teacherview -->
+<div id="pdcertificate-teacher-view">
+    <div id="pdcertificate-test-pdf" class="row">
+        <div class="col-sm-3 span3">{{{testbutton}}}</div>
+        <div class="col-sm-9 span9">{{#str}}testpdf, mod_pdcertificate{{/str}}</div>
+    </div>
+
+    <div id="pdcertificate-test-pdf" class="row">
+        <div class="col-sm-3 span3">{{{managebutton}}}</div>
+        <div class="col-sm-9 span9">
+        {{#str}}manageadvice, mod_pdcertificate{{/str}}
+        {{#numusers}}
+        <div class="pdcertificate-data-panel">
+        {{#str}}numusers, mod_pdcertificate{{/str}}: {{numusers}}
+        </div>
+        {{/numusers}}
+        </div>
+    </div>
+</div>
+
+<center>
+<div class="pdcertificate-course-button">
+{{{backtocoursebutton}}}
+</div>
+</center>
+<!-- /mod_pdcertificate/teacherview -->

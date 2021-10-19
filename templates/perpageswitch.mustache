@@ -1,0 +1,24 @@
+<!-- mod_pdcertificate/perpageswitch -->
+<div id="per-page">
+    {{^ispage20}}
+    <a href="{{{reporturl}}}&page=0&perpage=20"><button class="btn">20</button></a>
+    {{/ispage20}}
+    {{#ispage20}}
+    <button class="btn" disabled="disabled">20</button>
+    {{/ispage20}}
+
+    {{^ispage50}}
+    <a href="{{{reporturl}}}&page=0&perpage=50"><button class="btn">50</button></a>
+    {{/ispage50}}
+    {{#ispage50}}
+    <button class="btn" disabled="disabled">50</button>
+    {{/ispage50}}
+
+    {{^ispage100}}
+    <a href="{{{reporturl}}}&page=0&perpage=100"><button class="btn">100</button></a>
+    {{/ispage100}}
+    {{#ispage100}}
+    <button class="btn" disabled="disabled">100</button>
+    {{/ispage100}}
+</div>
+<!-- /mod_pdcertificate/perpageswitch -->

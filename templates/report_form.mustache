@@ -1,0 +1,24 @@
+
+
+
+<!-- report_form -->
+<br />
+<form name="controller" method="GET" action="{{{baseurl}}}">
+    <input type="hidden" name="id" value="{{cmid}}" />
+
+    {{{table}}}
+
+    <table width="95%">
+        <tr>
+            <td align="left">{{{selector}}}</td>
+            <td align="right">
+                {{#canmakeall}}
+                <a href="{{{makeallurl}}}" >{{generateallstr}}</a>
+                {{/canmakeall}}
+                <!-- a href="{{{viewallurl}}}" title="{{{viewalladvicestr}}}" >{{viewallstr}}</a -->
+            </td>
+        </tr>
+    </table>
+
+</form>
+<!-- /report_form -->

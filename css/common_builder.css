@@ -1,0 +1,20 @@
+body {
+    background-color:#808080;
+    width:840px;
+    height:840px;
+    margin:auto;
+}
+
+#mod-pdcertificate-builder {
+    background-color:#ffffff;
+    margin:auto;
+    margin-top:16px;
+}
+
+.textbox {
+    border:1px dashed #e0e0e0;
+}
+
+.builder-controls * {
+    display:inline;
+}

@@ -1,0 +1,17 @@
+
+
+<!-- mod_pdcertificate/globalcounters -->
+<div class="pdcertificates-global-counters">
+
+    {{#ispagerange}}
+    {{{pagerangerestrictionnotification}}}
+    {{/ispagerange}}
+
+    <table width="100%" class="generaltable">
+        <tr valign="top"><td class="header c0"><b>{{#str}}totalcount, pdcertificate{{/str}}</b><td><td>{{totalcount}}</td></tr>
+        <tr valign="top"><td class="header c0"><b>{{#str}}yetcertified, pdcertificate{{/str}}</b><td><td>{{totalcertifiedcount}}</td></tr>
+        <tr valign="top"><td class="header c0"><b>{{#str}}notyetcertifiable, pdcertificate{{/str}}</b><td><td>{{notyetusers}}</td></tr>
+        <tr valign="top"><td class="header c0"><b>{{#str}}yetcertifiable, pdcertificate{{/str}}</b><td><td>{{yetusers}}</td></tr>
+    </table>
+</div>
+<!-- /mod_pdcertificate/globalcounters -->
