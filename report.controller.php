@@ -59,12 +59,12 @@ if ($action == 'generateall') {
 
 if ($action == 'lock') {
     require_sesskey();
-    $DB->update_field('pdcertificate_issue', 'locked', true, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+    $DB->set_field('pdcertificate_issues', 'locked', true, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
 }
 
 if ($action == 'unlock') {
     require_sesskey();
-    $DB->update_field('pdcertificate_issue', 'locked', false, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+    $DB->set_field('pdcertificate_issues', 'locked', false, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
 }
 
 if ($action == 'generate') {

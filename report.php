@@ -399,20 +399,20 @@ foreach ($certifiableusers as $user) {
         if (pdcertificate_supports_feature('issues/lockable')) {
             if (has_capability('mod/pdcertificate:unlockissues', $context)) {
                 if ($cert->locked) {
-                    $icon = $OUTPUT->pix_icon('/t/locked', get_string('locked', 'pdcertificate'), 'core');
+                    $icon = $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core');
                     $params = ['id' => $cm->id, 'what' => 'unlock', 'ccode' => $cert->code,
                             'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
                     $unlockurl = new moodle_url('/mod/pdcertificate/report.php', $params);
                     $lockstate = '<a href="'.$unlockurl.'">'.$icon.'</a>';
                 } else {
-                    $icon = $OUTPUT->pix_icon('/t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+                    $icon = $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
                     $params = ['id' => $cm->id, 'what' => 'lock', 'ccode' => $cert->code, 
                             'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
                     $lockurl = new moodle_url('/mod/pdcertificate/report.php', $params);
                     $lockstate = '<a href="'.$lockurl.'">'.$icon.'</a>';
                 }
             } else {
-                $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('/t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('/t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+                $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
             }
         }
         if (pdcertificate_supports_feature('issues/timeoverrideable')) {
@@ -427,7 +427,8 @@ foreach ($certifiableusers as $user) {
         $certifylink = '<a href="'.$generatelink.'">'.get_string('generate', 'pdcertificate').'</a>';
         $certstate = (empty($errors)) ? $certifylink : $errors;
         if (pdcertificate_supports_feature('issues/lockable')) {
-            $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('/t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('/t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+            $lockstate = '';
+            // $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
         }
         if (pdcertificate_supports_feature('issues/timeoverridable')) {
             $timeoverride = '<input type="text" class="pdcertificate-time-override" data-id="'.$cert->id.'" name="timeoverride-'.$cert->id.'" size="4" />';

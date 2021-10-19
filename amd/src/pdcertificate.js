@@ -35,6 +35,7 @@ define(['jquery', 'core/log', 'core/config'], function($, log, cfg) {
             // Todo : send Ajax service to regisqter the time override value.
             var url = cfg.wwwroot + '/mod/pdcertificate/ajax/service.php';
             url += '?iid=' + that.attr('data-iid');
+            url += '&what=overridetime';
             url += '&to=' + that.val();
             url += '&sesskey=' + cfg.sesskey;
 
