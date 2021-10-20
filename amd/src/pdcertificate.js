@@ -40,9 +40,10 @@ define(['jquery', 'core/log', 'core/config'], function($, log, cfg) {
             url += '&sesskey=' + cfg.sesskey;
 
             $.get(url, function(data) {
+            	log.debug("Returned " + data);
                 // just toggle quickly color to tell we are done.
                 $('#id-timeoverride-' + data).css('background-color: #008000; color: white');
-                $.sleep(500);
+                $.delay(500);
                 $('#id-timeoverride-' + data).css('background-color: initial; color: initial');
             }, 'html');
 

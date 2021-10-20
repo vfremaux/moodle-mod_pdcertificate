@@ -162,7 +162,7 @@ $filterfirstname = optional_param('filterfirstname', '', PARAM_TEXT);
 $filterlastname = optional_param('filterlastname', '', PARAM_TEXT);
 $filters = array($filterfirstname, $filterlastname);
 
-$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
+$certusers = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
 
 if ($download == 'ods') {
     require_once($CFG->libdir.'/odslib.class.php');
@@ -188,8 +188,8 @@ if ($download == 'ods') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             $myxls->write_string($row, 0, $user->lastname);
             $myxls->write_string($row, 1, $user->firstname);
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
@@ -237,8 +237,8 @@ if ($download == 'xls') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             $myxls->write_string($row, 0, $user->lastname);
             $myxls->write_string($row, 1, $user->firstname);
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
@@ -281,8 +281,8 @@ if ($download == 'txt') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             echo $user->lastname;
             echo "\t" . $user->firstname;
             $studentid = " ";
@@ -325,7 +325,7 @@ $table->tablealign = 'center';
 $table->head  = array($strto, $strdate, $strgrade, $strcode);
 $table->align = array('left', 'left', 'center', 'center');
 
-foreach ($certs as $user) {
+foreach ($certusers as $user) {
     $name = $OUTPUT->user_picture($user) . fullname($user);
     $date = userdate($user->timecreated) . pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
     $code = $user->code;
@@ -367,9 +367,9 @@ foreach ($certifiableusers as $user) {
     if (empty($errors)) $state->selectionrequired = 1;
     $name = $OUTPUT->user_picture($user).' '.fullname($user);
 
-    if (!empty($certs) && array_key_exists($user->id, $certs)) {
+    if (!empty($certusers) && array_key_exists($user->id, $certusers)) {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
-        $cert = $certs[$user->id];
+        $cert = $certusers[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
         if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
             if (empty($errors)) $state->selectionrequired = 1;
@@ -395,7 +395,7 @@ foreach ($certifiableusers as $user) {
             $grade = get_string('notapplicable','pdcertificate');
         }
         $code = $cert->code;
-        $certstate = '';
+        $certuserstate = '';
         if (pdcertificate_supports_feature('issues/lockable')) {
             if (has_capability('mod/pdcertificate:unlockissues', $context)) {
                 if ($cert->locked) {
@@ -416,7 +416,7 @@ foreach ($certifiableusers as $user) {
             }
         }
         if (pdcertificate_supports_feature('issues/timeoverrideable')) {
-            $timeoverride = '<input type="text" id="id-timeoverride-'.$cert->id.'" class="pdcertificate-time-override" data-iid="'.$cert->id.'" name="timeoverride-'.$cert->id.'" size="4" />';
+            $timeoverride = '<input type="text" id="id-timeoverride-'.$cert->issueid.'" class="pdcertificate-time-override" data-iid="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
         }
     } else {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
@@ -425,16 +425,16 @@ foreach ($certifiableusers as $user) {
         $code = '';
         $generatelink = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'generate', 'userids[]' => $user->id));
         $certifylink = '<a href="'.$generatelink.'">'.get_string('generate', 'pdcertificate').'</a>';
-        $certstate = (empty($errors)) ? $certifylink : $errors;
+        $certuserstate = (empty($errors)) ? $certifylink : $errors;
         if (pdcertificate_supports_feature('issues/lockable')) {
             $lockstate = '';
             // $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
         }
         if (pdcertificate_supports_feature('issues/timeoverridable')) {
-            $timeoverride = '<input type="text" class="pdcertificate-time-override" data-id="'.$cert->id.'" name="timeoverride-'.$cert->id.'" size="4" />';
+            $timeoverride = '<input type="text" class="pdcertificate-time-override" data-id="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
         }
     }
-    $row = array ($check, $name, $date, $grade, $code, $certstate);
+    $row = array ($check, $name, $date, $grade, $code, $certuserstate);
     if (pdcertificate_supports_feature('issues/lockable')) {
         $row[] = $lockstate;
     }
