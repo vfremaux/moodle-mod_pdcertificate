@@ -41,7 +41,7 @@ define('PDCERT_IMAGE_SIGNATURE', 'signatures');
 define('PDCERT_IMAGE_SEAL', 'seals');
 */
 
-define('PDCERT_PER_PAGE', 30);
+define('PDCERT_PER_PAGE', 20);
 define('PDCERT_MAX_PER_PAGE', 200);
 
 /**
