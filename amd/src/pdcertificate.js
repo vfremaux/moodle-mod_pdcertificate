@@ -10,6 +10,7 @@ define(['jquery', 'core/log', 'core/config'], function($, log, cfg) {
         init: function() {
             $('.pdcertificate-select-all').bind('click', this.select_all);
             $('.pdcertificate-select-none').bind('click', this.unselect_all);
+            $('.pdcertificate-sel').bind('click', this.toggle_one);
             $('.pdcertificate-time-override').bind('change', this.send_time_override);
 
             log.debug("AMD PDCertificate initialized 2021100800.001");
@@ -18,13 +19,26 @@ define(['jquery', 'core/log', 'core/config'], function($, log, cfg) {
         select_all: function(e) {
             e.stopPropagation();
             $('.pdcertificate-sel').attr('checked', true);
+            $('#id-pdcertificate-select-action').prop('disabled', null);
             return false;
         },
 
         unselect_all: function(e) {
             e.stopPropagation();
             $('.pdcertificate-sel').attr('checked', null);
+            $('#id-pdcertificate-select-action').prop('disabled', 'disabled');
             return false;
+        },
+
+        // enable the action list only if at least one is selected.
+        toggle_one: function(e) {
+            e.stopPropagation();
+            var that = $(this);
+            if (that.prop('checked')) {
+                $('#id-pdcertificate-select-action').prop('disabled', null);
+            } else {
+                $('#id-pdcertificate-select-action').prop('disabled', 'disabled');
+            }
         },
 
         send_time_override: function(e) {
