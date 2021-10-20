@@ -36,6 +36,7 @@ if ($action == 'overridetime') {
     $to = required_param('to', PARAM_NUMBER);
     $issueid = required_param('iid', PARAM_INT);
 
-    $DB->set_field('pdcertificate_issues', 'credithoursoverride', ['id' => $issueid]);
-    return $issueid;
+    $DB->set_field('pdcertificate_issues', 'credithoursoverride', $to, ['id' => $issueid]);
+    echo $issueid;
+    exit(0);
 }

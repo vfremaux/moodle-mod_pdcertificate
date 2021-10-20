@@ -265,9 +265,16 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             if (pdcertificate_supports_feature('issues/exportable') && $pdcertificate->savecert) {
                 $cmdoptions['export'] = get_string('exportselection', 'pdcertificate');
             }
+            if (pdcertificate_supports_feature('issues/lockable')) {
+                $cmdoptions['lockselection'] = get_string('lockselection', 'pdcertificate');
+                $cmdoptions['unlockselection'] = get_string('unlockselection', 'pdcertificate');
+            }
             $attrs = array('onchange' => 'document.forms.controller.submit();');
+            $attrs['disabled'] = 'disabled'; // Will enable on select.
+            $attrs['id'] = 'id-pdcertificate-select-action'; // Will enable on select.
             $template->selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => get_string('withselection', 'pdcertificate')), $attrs, '', true);
         }
+        $template->sesskey = sesskey();
 
         return $this->output->render_from_template('mod_pdcertificate/report_form', $template);
     }

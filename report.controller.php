@@ -59,12 +59,35 @@ if ($action == 'generateall') {
 
 if ($action == 'lock') {
     require_sesskey();
-    $DB->update_field('pdcertificate_issue', 'locked', true, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+    $DB->set_field('pdcertificate_issues', 'locked', true, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+}
+
+if ($action == 'unlockselection' || $action == 'lockselection') {
+
+    $lockstate = ($action == 'unlockselection') ? 'false' : 'true';
+
+    require_sesskey();
+    $userids = required_param_array('userids', PARAM_INT); // Gets an array of user ids to generate.
+    $params = [$pdcertificate->id];
+    list($insql, $inparams) = $DB->get_in_or_equal($userids);
+    foreach ($inparams as $inp) {
+        $params[] = $inp;
+    }
+    $sql = "
+        UPDATE
+            {pdcertificate_issues}
+        SET
+           locked = $lockstate
+        WHERE
+            pdcertificateid = ? AND
+            userid $insql
+    ";
+    $DB->execute($sql, $params);
 }
 
 if ($action == 'unlock') {
     require_sesskey();
-    $DB->update_field('pdcertificate_issue', 'locked', false, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+    $DB->set_field('pdcertificate_issues', 'locked', false, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
 }
 
 if ($action == 'generate') {
