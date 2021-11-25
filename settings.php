@@ -24,6 +24,8 @@
  */
 defined('MOODLE_INTERNAL') || die;
 
+require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
+
 if ($ADMIN->fulltree) {
 
     $ADMIN->add('root', new admin_externalpage('pdcertificatemigrate',
@@ -68,4 +70,14 @@ if ($ADMIN->fulltree) {
         }
     }
     $settings->add(new admin_setting_configselect($key, $label, $desc, 0, $authorities));
+
+    if (pdcertificate_supports_feature('emulate/community') == 'pro') {
+        include_once($CFG->dirroot.'/mod/pdcertificate/pro/prolib.php');
+        $promanager = mod_pdcertificate\pro_manager::instance();
+        $promanager->add_settings($ADMIN, $settings);
+    } else {
+        $label = get_string('plugindist', 'pdcertificate');
+        $desc = get_string('plugindist_desc', 'pdcertificate');
+        $settings->add(new admin_setting_heading('plugindisthdr', $label, $desc));
+    }
 }

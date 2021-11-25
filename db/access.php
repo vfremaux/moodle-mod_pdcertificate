@@ -107,6 +107,15 @@ $capabilities = array(
         )
     ),
 
+    'mod/pdcertificate:unlockissues' => array(
+        'captype' => 'write',
+        'contextlevel' => CONTEXT_MODULE,
+        'archetypes' => array(
+            'manager' => CAP_ALLOW,
+            'editingteacher' => CAP_ALLOW
+        )
+    ),
+
     'mod/pdcertificate:deletepdcertificates' => array(
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,

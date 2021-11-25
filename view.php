@@ -184,6 +184,10 @@ if (empty($action)) {
         $template->backtocoursebutton = $OUTPUT->single_button($link, $linkname);
 
         echo $OUTPUT->render_from_template('mod_pdcertificate/teacherview', $template);
+    } else {
+        $linkname = get_string('backtocourse', 'pdcertificate');
+        $link = new moodle_url('/course/view.php', array('id' => $course->id));
+        echo "<center>".$OUTPUT->single_button($link, $linkname)."</center>";
     }
 
     echo $OUTPUT->footer();

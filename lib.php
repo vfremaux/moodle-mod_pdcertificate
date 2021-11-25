@@ -48,8 +48,58 @@ define('PDCERT_MAX_PER_PAGE', 200);
  * This function is not implemented in this plugin, but is needed to mark
  * the vf documentation custom volume availability.
  */
-function mod_pdcertificate_supports_feature() {
-    assert(1);
+function pdcertificate_supports_feature($feature = null, $getsupported = null) {
+    global $CFG;
+    static $supports;
+
+    if (!during_initial_install()) {
+        $config = get_config('pdcertificate');
+    }
+
+    if (!isset($supports)) {
+        $supports = array(
+            'pro' => array(
+                'issues' => array('lockable', 'timeoverrideable', 'exportable')
+            ),
+            'community' => array(
+            ),
+        );
+    }
+
+    if (!empty($getsupported)) {
+        return $supports;
+    }
+
+    // Check existance of the 'pro' dir in plugin.
+    if (is_dir(__DIR__.'/pro')) {
+        if ($feature == 'emulate/community') {
+            return 'pro';
+        }
+        if (empty($config->emulatecommunity)) {
+            $versionkey = 'pro';
+        } else {
+            $versionkey = 'community';
+        }
+    } else {
+        $versionkey = 'community';
+    }
+
+    if (empty($feature)) {
+        // Just return version.
+        return $versionkey;
+    }
+
+    list($feat, $subfeat) = explode('/', $feature);
+
+    if (!array_key_exists($feat, $supports[$versionkey])) {
+        return false;
+    }
+
+    if (!in_array($subfeat, $supports[$versionkey][$feat])) {
+        return false;
+    }
+
+    return $versionkey;
 }
 
 /**
@@ -108,6 +158,13 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->printconfig = '{"fontbasefamily":"FreeSans","fontbasesize":"10"}';
     }
 
+    // special processing.
+    if (!empty($pdcertificate->printqrcode)) {
+        $printconfig = json_decode($pdcertificate->printconfig);
+        $printconfig->printqrcode = $pdcertificate->printqrcode;
+        $pdcertificate->printconfig = json_encode($printconfig);
+    }
+
     $pdcertificate->id = $DB->insert_record('pdcertificate', $pdcertificate);
 
     if (isset($pdcertificate->courselinkid) and is_array($pdcertificate->courselinkid)) {
@@ -146,7 +203,6 @@ function pdcertificate_add_instance($pdcertificate) {
  */
 function pdcertificate_update_instance($pdcertificate) {
     global $DB;
-
 
     $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
 
@@ -195,7 +251,13 @@ function pdcertificate_update_instance($pdcertificate) {
         }
     }
 
-    pdcertificate_compact($pdcertificate);
+    pdcertificate_compact($pdcertificate); // compact protections.
+
+    if (!empty($pdcertificate->printqrcode)) {
+        $printconfig = json_decode($pdcertificate->printconfig);
+        $printconfig->printqrcode = $pdcertificate->printqrcode;
+        $pdcertificate->printconfig = json_encode($printconfig);
+    }
 
     // Saves pdcertificate images.
     $context = context_module::instance($pdcertificate->coursemodule);

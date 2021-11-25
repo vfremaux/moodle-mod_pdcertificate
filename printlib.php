@@ -17,6 +17,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/user/profile/lib.php');
+require_once($CFG->dirroot.'/lib/completionlib.php');
+require_once($CFG->dirroot.'/lib/grouplib.php');
 
 /**
  * Sends text to output given the following params.
@@ -240,6 +242,26 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
         $lastenrolenddate = '--';
     }
 
+    // Group info.
+    $lastgroupname = '';
+    $allgroupnames = '';
+    $groups = groups_get_user_groups($course->id, $user->id);
+    if (!empty($groups[0])) {
+        $timecreated = 0;
+        foreach ($groups[0] as $gid) {
+            $g = $DB->get_record('groups', ['id' => $gid]);
+            $groupnames[] = $g->name;
+            if ($g->timecreated > $timecreated) {
+                $lastgroupname = $g->name;
+                $timecreated = $g->timecreated;
+            }
+        }
+
+        $allgroupnames = implode(', ', $groupnames);
+    }
+
+    $usercredithours = ($certrecord->credithoursoverride !== '') ? $certrecord->credithoursoverride : $pdcertificate->credithours;
+
     $replacements = array(
         'info:user_fullname' => fullname($user),
         'user:fullname' => fullname($user),
@@ -280,9 +302,13 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
         'info:certificate_outcome' => format_string(pdcertificate_get_outcome($pdcertificate, $course)),
         'info:certificate_credit_hours_text' => get_string('credithours', 'pdcertificate').': '.$pdcertificate->credithours,
         'info:certificate_credit_hours' => $pdcertificate->credithours,
+        'info:certificate_user_credit_hours_text' => get_string('usercredithours', 'pdcertificate').': '.$usercredithours,
+        'info:certificate_user_credit_hours' => $usercredithours,
         'info:certificate_code' => strtoupper($certrecord->code),
         'info:certificate_caption' => format_string($pdcertificate->caption),
-        'info:group_specific' => pdcertificate_get_groupspecific_content($pdcertificate)
+        'info:group_specific' => pdcertificate_get_groupspecific_content($pdcertificate),
+        'info:group_names' => $allgroupnames,
+        'info:last_group_name' => $lastgroupname
     );
 
     // Get certificate instance extradata
@@ -292,6 +318,10 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
         if ($extradata) {
             foreach ($extradata as $key => $datum) {
                 $replacements['extra:'.$key] = $datum;
+            }
+        } else {
+            if ($CFG->debug == DEBUG_DEVELOPER) {
+                debug_trace("Bad JSON format in extradata in ".$pdcertificate->id);
             }
         }
     }
@@ -378,8 +408,22 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
         }
     } else {
         if (preg_match_all('/info\:module_completion_date_([0-9]+)/', $templatestring, $matches)) {
-            foreach ($matches[0] as $completiontag)
-            $replacements[$completiontag] = get_string('disabled', 'pdcertificate');
+            foreach ($matches[0] as $completiontag) {
+                $replacements[$completiontag] = get_string('disabled', 'pdcertificate');
+            }
+        }
+    }
+
+    // Scores and grades
+    if (preg_match_all('/info\:module_grade_([0-9]+)/', $templatestring, $matches)) {
+        foreach ($matches[1] as $cmid) {
+            $completiontag = array_shift($matches[0]);
+            $grade = pdcertificate_get_grade($pdcertificate, $course, $user->id, $cmid);
+            if ($grade != false) {
+                $replacements[$completiontag] = $grade;
+            } else {
+                $replacements[$completiontag] = get_string('ungraded', 'pdcertificate');
+            }
         }
     }
 

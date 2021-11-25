@@ -32,26 +32,21 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
     function global_counters($globals) {
         global $OUTPUT;
 
-        $str = $OUTPUT->box_start();
+        $template = new StdClass;
 
-        $totalcountstr = get_string('totalcount', 'pdcertificate');
-        $yetcertifiedcountstr = get_string('yetcertified', 'pdcertificate');
-        $yetcertifiablecountstr = get_string('yetcertifiable', 'pdcertificate');
-        $notyetcertifiablecountstr = get_string('notyetcertifiable', 'pdcertificate');
+        if ($globals->range == 'page') {
+            $template->pagerangerestrictionnotification = $OUTPUT->notification(get_string('pagerangerestrictionnotification', 'pdcertificate'));
+        }
 
-        $str .= '<table width="100%" class="generaltable">';
-        $str .= '<tr valign="top"><td class="header c0"><b>'.$totalcountstr.'</b><td><td>'.$globals->totalcount.'</td></tr>';
-        $str .= '<tr valign="top"><td class="header c0"><b>'.$yetcertifiedcountstr.'</b><td><td>'.$globals->totalcertifiedcount.'</td></tr>';
-        $str .= '<tr valign="top"><td class="header c0"><b>'.$notyetcertifiablecountstr.'</b><td><td>'.$globals->notyetusers.'</td></tr>';
-        $str .= '<tr valign="top"><td class="header c0"><b>'.$yetcertifiablecountstr.'</b><td><td>'.($globals->totalcount - $globals->totalcertifiedcount - $globals->notyetusers).'</td></tr>';
-        $str .= '</table>';
+        $template->totalcount = $globals->totalcount;
+        $template->totalcertifiedcount = $globals->totalcertifiedcount;
+        $template->notyetusers = $globals->notyetusers;
+        $template->yetusers = ($globals->totalcount - $globals->totalcertifiedcount - $globals->notyetusers);
 
-        $str .= $OUTPUT->box_end();
-
-        return $str;
+        return $OUTPUT->render_from_template('mod_pdcertificate/globalcounters', $template);
     }
 
-    function export_buttons($cm) {
+    function export_buttons($cm, $pdcertificate) {
         global $OUTPUT;
 
         $tablebutton = new html_table();
@@ -59,7 +54,14 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         $btndownloadods = $OUTPUT->single_button(new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'download' => 'ods')), get_string('downloadods'));
         $btndownloadxls = $OUTPUT->single_button(new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'download' => 'xls')), get_string('downloadexcel'));
         $btndownloadtxt = $OUTPUT->single_button(new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'download' => 'txt')), get_string('downloadtext'));
-        $tablebutton->data[] = array($btndownloadods, $btndownloadxls, $btndownloadtxt);
+        if (pdcertificate_supports_feature('issues/exportable') && !empty($pdcertificate->savecert)) {
+            $btndownloadzip = $OUTPUT->single_button(new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'download' => 'zip')), get_string('downloadzip', 'pdcertificate'));
+        }
+        $row = array($btndownloadods, $btndownloadxls, $btndownloadtxt);
+        if (pdcertificate_supports_feature('issues/exportable') && !empty($pdcertificate->savecert)) {
+            $row[] = $btndownloadzip;
+        }
+        $tablebutton->data[] = $row;
         return html_writer::tag('div', html_writer::table($tablebutton), array('style' => 'margin:auto; width:50%'));
     }
 
@@ -186,13 +188,47 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
     }
 
     /**
+     * @param int $id cmid
+     */
+    public function pagesizeswitch($id) {
+        global $SESSION;
+
+        if (empty($SESSION->pdcertificateperpage)) {
+            $SESSION->pdcertificateperpage = 20;
+        }
+
+        $perpage = optional_param('perpage', $SESSION->pdcertificateperpage, PARAM_INT);
+        $SESSION->pdcertificateperpage = $perpage;
+
+        $template = new StdClass;
+        $template->reporturl = new moodle_url('/mod/pdcertificate/report.php', ['id' => $id]);
+        $template->perpage = $perpage;
+        switch($template->perpage) {
+            case 20: {
+                $template->ispage20 = true;
+                break;
+            }
+            case 50: {
+                $template->ispage50 = true;
+                break;
+            }
+            case 100: {
+                $template->ispage100 = true;
+                break;
+            }
+        }
+
+        return $this->output->render_from_template('mod_pdcertificate/perpageswitch', $template);
+    }
+ 
+    /**
      * Prints the assessor interface.
      * @param objectref &$table the table of users in current display page
      * @param object $states the global states about certification
      * @param string $baseurl the base url of the report screen
      * @param int $pagesize the current page size.
      */
-    public function report_form(&$table, $cm, $state, $baseurl, $pagesize) {
+    public function report_form(&$table, $cm, $pdcertificate, $state, $baseurl, $pagesize) {
 
         $baseurlunpaged = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
 
@@ -202,6 +238,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         $template->cmid = $cm->id;
         $template->table = html_writer::table($table);
 
+        /*
         if ($pagesize && ($pagesize < $state->totalcount)){
             $template->viewalladvicestr = get_string('viewalladvice', 'pdcertificate');
             $template->viewallurl = $baseurlunpaged.'&perpage=0';
@@ -210,6 +247,7 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
             $template->viewallurl = $baseurlunpaged;
             $template->viewallstr = get_string('viewless', 'pdcertificate');
         }
+        */
 
         if ($state->totalcount - $state->totalcertifiedcount > 0) {
             $template->makeallurl = $baseurlunpaged.'&what=generateall';
@@ -220,11 +258,23 @@ class mod_pdcertificate_renderer extends plugin_renderer_base {
         $template->selector = '';
         if ($state->selectionrequired) {
             $selector = get_string('withsel', 'pdcertificate');
-            $cmdoptions = array('delete' => get_string('destroyselection', 'pdcertificate'),
-                                'generate' => get_string('generateselection', 'pdcertificate'));
+            $cmdoptions = array(
+                'delete' => get_string('destroyselection', 'pdcertificate'),
+                'generate' => get_string('generateselection', 'pdcertificate'),
+            );
+            if (pdcertificate_supports_feature('issues/exportable') && $pdcertificate->savecert) {
+                $cmdoptions['export'] = get_string('exportselection', 'pdcertificate');
+            }
+            if (pdcertificate_supports_feature('issues/lockable')) {
+                $cmdoptions['lockselection'] = get_string('lockselection', 'pdcertificate');
+                $cmdoptions['unlockselection'] = get_string('unlockselection', 'pdcertificate');
+            }
             $attrs = array('onchange' => 'document.forms.controller.submit();');
+            $attrs['disabled'] = 'disabled'; // Will enable on select.
+            $attrs['id'] = 'id-pdcertificate-select-action'; // Will enable on select.
             $template->selector .= html_writer::select($cmdoptions, 'what', null, array('choosedots' => get_string('withselection', 'pdcertificate')), $attrs, '', true);
         }
+        $template->sesskey = sesskey();
 
         return $this->output->render_from_template('mod_pdcertificate/report_form', $template);
     }

@@ -136,41 +136,43 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('propagategroups', 'propagategroups', 'pdcertificate');
 
 //-------------------------------------------------------------------------------
-        // Lockin options.
-        $mform->addElement('header', 'lockingoptions', get_string('lockingoptions', 'pdcertificate'));
+        if (pdcertificate_supports_feature('issues/lockable')) {
+            // Lockin options.
+            $mform->addElement('header', 'lockingoptions', get_string('lockingoptions', 'pdcertificate'));
 
-        $this->restrictoptions = array();
-        $this->restrictoptions[0]  = get_string('no');
-        for ($i = 100; $i > 0; $i--) {
-            $this->restrictoptions[$i] = $i.'%';
-        }
+            $this->restrictoptions = array();
+            $this->restrictoptions[0]  = get_string('no');
+            for ($i = 100; $i > 0; $i--) {
+                $this->restrictoptions[$i] = $i.'%';
+            }
 
-        $mform->addElement('advcheckbox', 'locked', get_string('pdcertificatedefaultlock', 'pdcertificate'));
-        $mform->addHelpButton('locked', 'pdcertificatelock', 'pdcertificate');
+            $mform->addElement('advcheckbox', 'locked', get_string('pdcertificatedefaultlock', 'pdcertificate'));
+            $mform->addHelpButton('locked', 'pdcertificatelock', 'pdcertificate');
 
-        $validityoptions = array(
-            '0' => get_string('unlimited', 'pdcertificate'),
-            '1' => get_string('oneday', 'pdcertificate'),
-            '7' => get_string('oneweek', 'pdcertificate'),
-            '30' => get_string('onemonth', 'pdcertificate'),
-            '90' => get_string('threemonths', 'pdcertificate'),
-            '180' => get_string('sixmonths', 'pdcertificate'),
-            '365' => get_string('oneyear', 'pdcertificate'),
-            '730' => get_string('twoyears', 'pdcertificate'),
-            '1095' => get_string('threeyears', 'pdcertificate'),
-            '1895' => get_string('fiveyears', 'pdcertificate'),
-            '3650' => get_string('tenyears', 'pdcertificate'),
-        );
+            $validityoptions = array(
+                '0' => get_string('unlimited', 'pdcertificate'),
+                '1' => get_string('oneday', 'pdcertificate'),
+                '7' => get_string('oneweek', 'pdcertificate'),
+                '30' => get_string('onemonth', 'pdcertificate'),
+                '90' => get_string('threemonths', 'pdcertificate'),
+                '180' => get_string('sixmonths', 'pdcertificate'),
+                '365' => get_string('oneyear', 'pdcertificate'),
+                '730' => get_string('twoyears', 'pdcertificate'),
+                '1095' => get_string('threeyears', 'pdcertificate'),
+                '1895' => get_string('fiveyears', 'pdcertificate'),
+                '3650' => get_string('tenyears', 'pdcertificate'),
+            );
 
-        $mform->addElement('select', 'validitytime', get_string('validity', 'pdcertificate'), $validityoptions);
-        $mform->setDefault('validitytime', 0);
-        $mform->addHelpButton('validitytime', 'validitytime', 'pdcertificate');
+            $mform->addElement('select', 'validitytime', get_string('validity', 'pdcertificate'), $validityoptions);
+            $mform->setDefault('validitytime', 0);
+            $mform->addHelpButton('validitytime', 'validitytime', 'pdcertificate');
 
-        $completioninfo = new completion_info($COURSE);
-        if ($completioninfo->is_enabled(null)) {
-            $mform->addElement('advcheckbox', 'lockoncoursecompletion', get_string('lockoncoursecompletion', 'pdcertificate'));
-            $mform->setDefault('lockoncoursecompletion', 0);
-            $mform->addHelpButton('lockoncoursecompletion', 'lockoncoursecompletion', 'pdcertificate');
+            $completioninfo = new completion_info($COURSE);
+            if ($completioninfo->is_enabled(null)) {
+                $mform->addElement('advcheckbox', 'lockoncoursecompletion', get_string('lockoncoursecompletion', 'pdcertificate'));
+                $mform->setDefault('lockoncoursecompletion', 0);
+                $mform->addHelpButton('lockoncoursecompletion', 'lockoncoursecompletion', 'pdcertificate');
+            }
         }
 
 // -------------------------------------------------------------------------------.
@@ -223,21 +225,6 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
             $mform->setType('printoutcome', PARAM_INT);
         }
 
-        /**
-        $sizeoptions = array(9 => 9, 10 => 10, 11 => 11, 12 => 12, 13 => 13, 14 => 14, 15 => 15, 16 => 16,
-                             17 => 17, 18 => 18, 19 => 19, 20 => 20);
-        $mform->addElement('select', 'fontbasesize', get_string('printfontsize', 'pdcertificate'), $sizeoptions);
-        $mform->setDefault('fontbasesize', 10);
-        **/
-
-        /*
-        $pdf = new pdf();
-        $available = array_keys($pdf->get_font_families());
-        $familyoptions = array_combine($available, $available);
-        $mform->addElement('select', 'fontbasefamily', get_string('printfontfamily', 'pdcertificate'), $familyoptions);
-        $mform->setDefault('fontbasefamily', 'freesans');
-        */
-
         $attrs = array('cols' => '120', 'rows' => '4', 'wrap' => 'virtual');
         $mform->addElement('textarea', 'headertext', get_string('headertext', 'pdcertificate'), $attrs);
         $mform->setType('headertext', PARAM_RAW);
@@ -256,8 +243,8 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
         $mform->addHelpButton('footertext', 'footertext', 'pdcertificate');
         $mform->setDefault('footertext', get_string('defaultcertificatefooter_tpl', 'pdcertificate'));
 
-        $mform->addElement('checkbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
-        $mform->setDefault('printqrcode', true);
+        $mform->addElement('advcheckbox', 'printqrcode', get_string('printqrcode', 'pdcertificate'), '');
+        $mform->setDefault('printqrcode', false);
 
         // This needs groupspecifichtml block installed for providing group addressed content.
         if ($COURSE->groupmode != NOGROUPS && is_dir($CFG->dirroot.'/blocks/groupspecifichtml')) {
@@ -347,6 +334,19 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
 
         $this->add_action_buttons();
 
+    }
+
+    public function validation($data, $files) {
+
+        $errors = [];
+
+        if (!empty($data['printconfig'])) {
+            if (empty(json_decode($data['printconfig']))) {
+                $errors['printconfig'] = get_string('printconfigjsonerror', 'pdcertificate');
+            }
+        }
+
+        return $errors;
     }
 
     /**

@@ -107,7 +107,7 @@ if (!$wsquery) {
     // Trigger module viewed event.
     $eventparams = array(
         'objectid' => $pdcertificate->id,
-        'context' => $context,
+        'context' => $modulecontext,
     );
 
     $event = \mod_pdcertificate\event\course_module_verified::create($eventparams);

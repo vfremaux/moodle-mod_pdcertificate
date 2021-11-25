@@ -81,6 +81,8 @@ $strgrade = get_string('grade','pdcertificate');
 $strcode = get_string('code', 'pdcertificate');
 $strstate = get_string('state', 'pdcertificate');
 $strreport= get_string('report', 'pdcertificate');
+$strlock = get_string('issuelock', 'pdcertificate');
+$strtimeoverride = get_string('timeoverride', 'pdcertificate');
 
 if (!$download) {
     $PAGE->navbar->add($strreport);
@@ -130,6 +132,8 @@ if (!$allgroupaccess) {
     }
 }
 
+raise_memory_limit(MEMORY_EXTRA);
+
 $total = array();
 $certifiableusers = array();
 $state = pdcertificate_get_state($pdcertificate, $cm, $page, $perpage, $group, $total, $certifiableusers);
@@ -158,7 +162,7 @@ $filterfirstname = optional_param('filterfirstname', '', PARAM_TEXT);
 $filterlastname = optional_param('filterlastname', '', PARAM_TEXT);
 $filters = array($filterfirstname, $filterlastname);
 
-$certs = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
+$certusers = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
 
 if ($download == 'ods') {
     require_once($CFG->libdir.'/odslib.class.php');
@@ -184,8 +188,8 @@ if ($download == 'ods') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             $myxls->write_string($row, 0, $user->lastname);
             $myxls->write_string($row, 1, $user->firstname);
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
@@ -233,8 +237,8 @@ if ($download == 'xls') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             $myxls->write_string($row, 0, $user->lastname);
             $myxls->write_string($row, 1, $user->firstname);
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
@@ -277,8 +281,8 @@ if ($download == 'txt') {
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certs) {
-        foreach ($certs as $user) {
+    if ($certusers) {
+        foreach ($certusers as $user) {
             echo $user->lastname;
             echo "\t" . $user->firstname;
             $studentid = " ";
@@ -302,6 +306,15 @@ if ($download == 'txt') {
     exit;
 }
 
+if ($download == 'zip') {
+    $userids = optional_param_array('userids', false, PARAM_INT);
+    $zipfile = pdcertificate_make_zip_file($pdcertificate, $cm, $userids);
+    if ($zipfile) {
+        send_stored_file($zipfile, 0, 0, true);
+        exit;
+    }
+}
+
 $usercount = count(pdcertificate_get_issues($pdcertificate->id, $DB->sql_fullname(), $groupmode, $cm, 0, 0, $filters));
 
 // Create the table for the users.
@@ -312,7 +325,7 @@ $table->tablealign = 'center';
 $table->head  = array($strto, $strdate, $strgrade, $strcode);
 $table->align = array('left', 'left', 'center', 'center');
 
-foreach ($certs as $user) {
+foreach ($certusers as $user) {
     $name = $OUTPUT->user_picture($user) . fullname($user);
     $date = userdate($user->timecreated) . pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
     $code = $user->code;
@@ -337,9 +350,16 @@ $selallselnonecmd = '<a href="#" class="smalltext pdcertificate-select-all">'.ge
 $selallselnonecmd .= '<a href="#" class="smalltext pdcertificate-select-none">'.get_string('selectnone', 'pdcertificate').'</a>';
 
 $table = new html_table();
-$table->head  = array ($selallselnonecmd, $strto, $strdate, $strgrade, $strcode, $strstate);
+$head = array ($selallselnonecmd, $strto, $strdate, $strgrade, $strcode, $strstate);
+if (pdcertificate_supports_feature('issues/lockable')) {
+    $head[] = $strlock;
+}
+if (pdcertificate_supports_feature('issues/timeoverrideable')) {
+    $head[] = $strtimeoverride;
+}
+$table->head  = $head;
 $table->align = array ('CENTER', 'LEFT', 'LEFT', 'CENTER', 'CENTER', 'LEFT');
-$table->width = '95%';
+$table->width = '100%';
 
 $state->selectionrequired = 0;
 foreach ($certifiableusers as $user) {
@@ -347,21 +367,25 @@ foreach ($certifiableusers as $user) {
     if (empty($errors)) $state->selectionrequired = 1;
     $name = $OUTPUT->user_picture($user).' '.fullname($user);
 
-    if (!empty($certs) && array_key_exists($user->id, $certs)) {
+    if (!empty($certusers) && array_key_exists($user->id, $certusers)) {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
-        $cert = $certs[$user->id];
+        $cert = $certusers[$user->id];
         $date = userdate($cert->timecreated).pdcertificate_print_user_files($pdcertificate, $user->id, $context->id);
         if (has_capability('mod/pdcertificate:manage', $context) && $pdcertificate->savecert) {
             if (empty($errors)) $state->selectionrequired = 1;
             if (has_capability('mod/pdcertificate:regenerate', $context)) {
                 // TODO : Move this capability to a more local cap.
-                $redrawurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 'sesskey' => sesskey()));
+                $params = ['id' => $cm->id, 'what' => 'regenerate', 'ccode' => $cert->code, 
+                        'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
+                $redrawurl = new moodle_url('/mod/pdcertificate/report.php', $params);
                 $date .= ' <a href="'.$redrawurl.'">'.get_string('regenerate', 'pdcertificate').'</a>';
             }
 
             // Delete link.
             if (has_capability('mod/pdcertificate:deletepdcertificates', context_system::instance())) {
-                $deleteurl = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code, 'sesskey' => sesskey()));
+                $params = ['id' => $cm->id, 'what' => 'deletesingle', 'ccode' => $cert->code,
+                        'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
+                $deleteurl = new moodle_url('/mod/pdcertificate/report.php', $params);
                 $date .= ' <a href="'.$deleteurl.'" title="'.get_string('delete').'">'.$OUTPUT->pix_icon('t/delete', get_string('delete'), 'core').'</a>';
             }
         }
@@ -371,7 +395,29 @@ foreach ($certifiableusers as $user) {
             $grade = get_string('notapplicable','pdcertificate');
         }
         $code = $cert->code;
-        $certstate = '';
+        $certuserstate = '';
+        if (pdcertificate_supports_feature('issues/lockable')) {
+            if (has_capability('mod/pdcertificate:unlockissues', $context)) {
+                if ($cert->locked) {
+                    $icon = $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core');
+                    $params = ['id' => $cm->id, 'what' => 'unlock', 'ccode' => $cert->code,
+                            'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
+                    $unlockurl = new moodle_url('/mod/pdcertificate/report.php', $params);
+                    $lockstate = '<a href="'.$unlockurl.'">'.$icon.'</a>';
+                } else {
+                    $icon = $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+                    $params = ['id' => $cm->id, 'what' => 'lock', 'ccode' => $cert->code, 
+                            'sesskey' => sesskey(), 'page' => $page, 'perpage' => $perpage];
+                    $lockurl = new moodle_url('/mod/pdcertificate/report.php', $params);
+                    $lockstate = '<a href="'.$lockurl.'">'.$icon.'</a>';
+                }
+            } else {
+                $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+            }
+        }
+        if (pdcertificate_supports_feature('issues/timeoverrideable')) {
+            $timeoverride = '<input type="text" id="id-timeoverride-'.$cert->issueid.'" class="pdcertificate-time-override" data-iid="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
+        }
     } else {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
         $date = '';
@@ -379,10 +425,25 @@ foreach ($certifiableusers as $user) {
         $code = '';
         $generatelink = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id, 'what' => 'generate', 'userids[]' => $user->id));
         $certifylink = '<a href="'.$generatelink.'">'.get_string('generate', 'pdcertificate').'</a>';
-        $certstate = (empty($errors)) ? $certifylink : $errors;
+        $certuserstate = (empty($errors)) ? $certifylink : $errors;
+        if (pdcertificate_supports_feature('issues/lockable')) {
+            $lockstate = '';
+            // $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
+        }
+        if (pdcertificate_supports_feature('issues/timeoverridable')) {
+            $timeoverride = '<input type="text" class="pdcertificate-time-override" data-id="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
+        }
     }
-    $table->data[] = array ($check, $name, $date, $grade, $code, $certstate);
+    $row = array ($check, $name, $date, $grade, $code, $certuserstate);
+    if (pdcertificate_supports_feature('issues/lockable')) {
+        $row[] = $lockstate;
+    }
+    if (pdcertificate_supports_feature('issues/timeoverrideable')) {
+        $row[] = $timeoverride;
+    }
+    $table->data[] = $row;
 }
+
 $pagingurl = new moodle_url($url, array('filterfirstname' => $firstnamefilter, 'filterlastname' => $lastnamefilter));
 $pagingurl->remove_params('action');
 
@@ -394,16 +455,18 @@ if ($perpage) {
 }
 echo '<br />';
 
+echo $renderer->pagesizeswitch($id);
+
 echo $renderer->namefilter($url);
 
-echo $renderer->report_form($table, $cm, $state, $url, $perpage);
+echo $renderer->report_form($table, $cm, $pdcertificate, $state, $url, $perpage);
 
 if ($perpage){
     echo $OUTPUT->paging_bar($state->totalcount, $page, $perpage, new moodle_url($pagingurl));
 }
 
 // Create table to store buttons.
-echo $renderer->export_buttons($cm);
+echo $renderer->export_buttons($cm, $pdcertificate);
 
 echo '<br/><center>';
 echo $OUTPUT->single_button(new moodle_url("/course/view.php", array('id' => $course->id)), get_string('backtocourse', 'pdcertificate'));

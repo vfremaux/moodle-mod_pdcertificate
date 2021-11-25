@@ -24,16 +24,17 @@
  */
 
 // Capabilities.
-$string['pdcertificate:addinstance'] = 'Add a PD Certificate instance';
+$string['pdcertificate:addinstance'] = 'Can add a PD Certificate instance';
 $string['pdcertificate:apply'] = 'Can apply to certification';
 $string['pdcertificate:deletepdcertificates'] = 'Can delete generated certificates';
-$string['pdcertificate:download'] = 'Download certificate using API';
-$string['pdcertificate:getown'] = 'Retrieve my own certificate';
+$string['pdcertificate:download'] = 'Can download certificate using API';
+$string['pdcertificate:getown'] = 'Can retrieve my own certificate';
 $string['pdcertificate:isauthority'] = 'Is certification authority';
-$string['pdcertificate:manage'] = 'Manage a PD Certificate instance';
+$string['pdcertificate:manage'] = 'Can manage a PD Certificate instance';
 $string['pdcertificate:printteacher'] = 'Be listed as a teacher on the certificate if the print teacher setting is on';
 $string['pdcertificate:regenerate'] = 'Can regenerate certificates';
-$string['pdcertificate:view'] = 'View a certificate';
+$string['pdcertificate:view'] = 'Can view a certificate';
+$string['pdcertificate:unlockissues'] = 'Can manually unlock a certificate issue';
 
 $string['privacy:metadata:pdcertificate'] = 'Certificate instances';
 $string['privacy:metadata:pdcertificate:certifierid'] = 'People having their id in this field are designated authority for this certificate';
@@ -83,6 +84,7 @@ $string['customtext'] = 'Custom Text';
 $string['certdata'] = 'Certificate data and content';
 $string['date'] = 'On';
 $string['datefmt'] = 'Date Format';
+$string['htmldatefmt'] = '%Y-%m-%d';
 $string['datehelp'] = 'Date';
 $string['defaultpropagategroups'] = 'Propagate groups when chaining (default)';
 $string['defaultpropagategroups_desc'] = 'If checked, group information will be replicated in the chained course';
@@ -96,6 +98,7 @@ $string['designoptions'] = 'Design Options';
 $string['destroyselection'] = 'Destroy selection ';
 $string['disabled'] = 'Disabled';
 $string['download'] = 'Force download';
+$string['downloadzip'] = 'Download all issues in a zip';
 $string['editpdcertificatelayout'] = 'Edit Layout';
 $string['emailothers'] = 'Email Others';
 $string['emailothers_help'] = 'Enter the email addresses here, separated by a comma, of those who should be alerted with an email whenever students receive a certificate.';
@@ -111,6 +114,7 @@ $string['errornocapabilitytodelete'] = 'You have no capability to delete certifi
 $string['errorcertificatenotinstalled'] = 'The original certificate module seems not be installed on your moodle. You cannot migrate data from it if it is not installed.';
 $string['expiredon'] = 'Expired on';
 $string['extradata'] = 'Additional data';
+$string['exportselection'] = 'Export selection';
 $string['followercourse'] = 'Follower course : {$a->rolename} in {$a->coursename}. This module is prerequisite : {$a->prerequisite}';
 $string['followers'] = 'Following course(s) in learning path';
 $string['footertext'] = 'Custom Footer Text';
@@ -144,6 +148,8 @@ $string['lastviewed'] = 'You last received this certificate on:';
 $string['letter'] = 'Letter';
 $string['linkedcourse'] = 'Linked to course';
 $string['lockingoptions'] = 'Locking Options';
+$string['lockselection'] = 'Lock selection';
+$string['unlockselection'] = 'Unlock selection';
 $string['lockoncoursecompletion'] = 'Locked by course completion';
 $string['lockoncoursecompletion_help'] = 'If enabled, the certificate will NOT be retrievable if the current course has not be completed.';
 $string['managedelivery'] = 'Manage certificates delivery';
@@ -192,8 +198,10 @@ $string['pdcertificatesfor'] = 'Certificates for';
 $string['pdcertificatetype'] = 'Certificate model';
 $string['pdcertificateverification'] = 'Certificates Check';
 $string['pdcertificateverifiedstate'] = 'The certificate code you tested is recognized and matches the following information:';
+$string['printconfigjsonerror'] = 'Something may be wrong in Json syntax. You can validate you json syntax at : https://jsonlint.com/';
 $string['pluginadministration'] = 'Certificate administration';
 $string['pluginname'] = 'PD Certificate';
+$string['modname'] = 'Module name (indexed)';
 $string['portrait'] = 'Portrait';
 $string['prerequisites'] = 'Prerequisites';
 $string['previewpdcertificate'] = 'Preview the certificate';
@@ -234,6 +242,10 @@ $string['releaseselection'] = 'Release selection ';
 $string['removecert'] = 'Issued certificates removed';
 $string['removeother'] = 'Remove all other roles';
 $string['report'] = 'Report';
+$string['reportcustomuserfields'] = 'Custom user fields for report';
+$string['reportcustomuserfields_desc'] = 'A comma separated of custom user field shortnames, in order of display in report';
+$string['reportdefaultactivityname'] = 'Default activity name for activity in report';
+$string['reportdefaultactivityname_desc'] = 'Chooses the name origin for the grade column';
 $string['reportcert'] = 'Report Certificates';
 $string['requiredcoursecompletion'] = 'This certificate requires you have completed the course to be delivered.';
 $string['requiredtimenotmet'] = 'You must spend at least a minimum of {$a->requiredtime} minutes in the course before you can access this certificate';
@@ -267,6 +279,7 @@ $string['title'] = 'CERTIFICATE of ACHIEVEMENT';
 $string['to'] = 'Awarded to';
 $string['totalcount'] = 'Total concerned users';
 $string['tryothercode'] = 'Try other code';
+$string['usercredithours'] = 'User credit hours';
 $string['unsupportedfiletype'] = 'File must be a jpeg or png file';
 $string['uploadimage'] = 'Upload image';
 $string['uploadimagedesc'] = 'This button will take you to a new screen where you will be able to upload images.';
@@ -275,6 +288,10 @@ $string['userpassword'] = 'User password';
 $string['usersdelivered'] = 'Users delivered : {$a}';
 $string['usersgenerated'] = 'Users generated not yet delivered : {$a}';
 $string['userstocertify'] = 'Users yet to complete certification : {$a}';
+$string['issuelock'] = 'Issue lock';
+$string['timeoverride'] = 'Time override';
+$string['locked'] = 'This issue is NOT retrievable by the user. It has to be unlocked first.';
+$string['unlocked'] = 'This issue is retrievable by the user';
 $string['validate'] = 'Verify';
 $string['validity'] = 'Validity period';
 $string['validitytime'] = 'Validity period';
@@ -434,3 +451,6 @@ $string['defaultauthority_desc'] = 'The default authority user that will be setu
 $string['extradata_help'] = 'Additional data that can be called from the HTML template. Should be a json serialized array of variablenames
 to value mapping. F.e: a value of {\'data1\':\'value1\';\'data2\':\'value2\'} will expose two additional variables extra:data1 and extra:data2 to
 the html template';
+
+include(__DIR__.'/pro_additional_strings.php');
+

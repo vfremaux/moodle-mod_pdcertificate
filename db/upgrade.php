@@ -255,6 +255,19 @@ function xmldb_pdcertificate_upgrade($oldversion = 0) {
         upgrade_mod_savepoint(true, 2019091101, 'pdcertificate');
     }
 
+    if ($oldversion < 2021100600) {
+
+        $table = new xmldb_table('pdcertificate_issues');
+
+        $field = new xmldb_field('credithoursoverride', XMLDB_TYPE_CHAR, 255, XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'code');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Certificate savepoint reached.
+        upgrade_mod_savepoint(true, 2021100600, 'pdcertificate');
+    }
+
     return true;
 }
 

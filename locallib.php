@@ -657,8 +657,10 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
     $sql = "
         SELECT
             u.*,
+            ci.id as issueid,
             ci.code,
-            ci.timecreated
+            ci.timecreated,
+            ci.locked
         FROM
             {user} u
         INNER JOIN
@@ -1104,33 +1106,50 @@ function pdcertificate_get_issue($course, $userorid, $pdcertificate, $cm) {
  * @param int $userid
  * @return string the grade result
  */
-function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
+function pdcertificate_get_grade($pdcertificate, $course, $userid = null, $cmid = 0) {
     global $USER, $DB;
 
     if (empty($userid)) {
         $userid = $USER->id;
     }
 
-    if ($course_item = grade_item::fetch_course_item($course->id)) {
-        // String used.
-        $strcoursegrade = get_string('coursegrade', 'pdcertificate');
+    if ($cmid == 0) {
+        // Course grade.
+        if ($course_item = grade_item::fetch_course_item($course->id)) {
+            // String used.
+            $strcoursegrade = get_string('coursegrade', 'pdcertificate');
 
-        $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
-        $course_item->gradetype = GRADE_TYPE_VALUE;
-        $coursegrade = new stdClass;
-        $coursegrade->points = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-        $coursegrade->percentage = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-        $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
+            $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
+            $course_item->gradetype = GRADE_TYPE_VALUE;
+            $coursegrade = new stdClass;
+            $coursegrade->points = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
+            $coursegrade->percentage = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
+            $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
 
-        if ($pdcertificate->gradefmt == 1) {
-            $grade = $strcoursegrade.': '.$coursegrade->percentage;
-        } else if ($pdcertificate->gradefmt == 2) {
-            $grade = $strcoursegrade.': '.$coursegrade->points;
-        } else if ($pdcertificate->gradefmt == 3) {
-            $grade = $strcoursegrade.': '.$coursegrade->letter;
+            if ($pdcertificate->gradefmt == 1) {
+                $grade = $strcoursegrade.': '.$coursegrade->percentage;
+            } else if ($pdcertificate->gradefmt == 2) {
+                $grade = $strcoursegrade.': '.$coursegrade->points;
+            } else if ($pdcertificate->gradefmt == 3) {
+                $grade = $strcoursegrade.': '.$coursegrade->letter;
+            }
+
+            return $grade;
+        }
+    } else {
+        // Activity grade.
+        $cm = $DB->get_record('course_modules', ['id' => $cmid]);
+        $module = $DB->get_record('modules', ['id' => $cm->module]);
+        $gradeinfo = grade_get_grades($course->id, 'mod', $module->name, $cm->instance, $userid);
+        if (!$gradeinfo) {
+            return false;
         }
 
-        return $grade;
+        $generalinfo = $gradeinfo->items[0];
+        $usergrade = $gradeinfo->items[0]->grades[$userid];
+
+        return sprintf('%0.1f', $usergrade->grade).'/'.sprintf('%d', $generalinfo->grademax);
+
     }
 
     return '';
@@ -1601,4 +1620,64 @@ function pdcertificate_get_users_by_capability(context $context, $capability, $f
           ORDER BY $sort";
 
     return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+}
+
+/**
+ * Makes a zip file into a user's volatile draft zone.
+ * @param object $pdcertificate the certificate instance
+ * @param object $cm the course module record
+ * @param array $userids if not null, restricts to selected userids.
+ */
+function pdcertificate_make_zip_file($pdcertificate, $cm, $userids = null) {
+    global $USER, $DB;
+
+    $fs = get_file_storage();
+
+    if (empty($userids)) {
+        // Take all available certs in module.
+        $allcerts = $DB->get_records('pdcertificate_issues', ['pdcertificateid' => $pdcertificate->id]);
+    } else {
+        list($insql, $inparams) = $DB->get_in_or_equal($userids);
+        $inparams[] = $pdcertificate->id;
+        $select = "userid $insql AND pdcertificateid = ? ";
+        debug_trace($select);
+        debug_trace($inparams);
+        $allcerts = $DB->get_records_select('pdcertificate_issues', $select, $inparams);
+    }
+
+    $context = context_module::instance($cm->id);
+
+    $certfiles = [];
+    if (!empty($allcerts)) {
+        foreach ($allcerts as $cert) {
+            $component = 'mod_pdcertificate';
+            $filearea = 'issue';
+            $itemid = $cert->id;
+            $filepath = '/';
+
+            $areafiles = $fs->get_area_files($context->id, $component, $filearea, $itemid, '', false);
+            if (!empty($areafiles)) {
+                // Have i a stored pdf in the area ? It is unique in the area.
+                $storedcert = array_pop($areafiles);
+                $certfiles['certs/pdcert_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.$cert->userid.'pdf'] = $storedcert;
+            } else {
+                debug_trace("No cert file in area {$context->id}, $component, $filearea, $itemid ", TRACE_DEBUG);
+            }
+        }
+    } else {
+        debug_trace("No certs for zipping ", TRACE_DEBUG);
+    }
+
+    $zippacker = new zip_packer();
+    $context = context_user::instance($USER->id);
+    $component = 'user';
+    $filearea = 'draft';
+    $itemid = file_get_unused_draft_itemid();
+    $filepath = '/';
+    $filename = 'pdcertificates_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.date('Ymd').'.zip';
+    $storedzip = $zippacker->archive_to_storage($certfiles, $context->id, $component, $filearea, 
+            $itemid, $filepath, $filename, $USER->id, true, null);
+
+    debug_trace($storedzip, TRACE_DEBUG);
+    return $storedzip;
 }
