@@ -29,6 +29,8 @@ use \core_privacy\local\metadata\collection;
 use \core_privacy\local\metadata\provider as metadataprovider;
 use \core_privacy\local\request\approved_contextlist;
 use \core_privacy\local\request\contextlist;
+use core_privacy\local\request\userlist;
+use core_privacy\local\request\approved_userlist;
 use \core_privacy\local\request\helper;
 use \core_privacy\local\request\transform;
 use \core_privacy\local\request\writer;
@@ -44,7 +46,10 @@ require_once($CFG->dirroot . '/mod/pdcertificate/locallib.php');
  * @package   mod_pdcertificate
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-class provider implements metadataprovider, pluginprovider {
+class provider implements
+    \core_privacy\local\metadata\provider,
+    \core_privacy\local\request\core_userlist_provider,
+    \core_privacy\local\request\plugin\provider {
 
     // This trait must be included.
     use \core_privacy\local\legacy_polyfill;
@@ -55,24 +60,26 @@ class provider implements metadataprovider, pluginprovider {
      * @param collection $collection The initialised collection to add items to.
      * @return collection A listing of user data stored through this system.
      */
-    public static function _get_metadata(collection $collection) {
+    public static function get_metadata(collection $collection) : collection {
 
          // The table pdcertificate stores only the certificate properties.
          // However, some users may be certifers authority for some instances.
-        $collection->add_database_table('pdcertificate', [
+        $fields = [
             'certifierid' => 'privacy:metadata:pdcertificate:certifierid',
-        ], 'privacy:metadata:pdcertificate');
+        ];
+        $collection->add_database_table('pdcertificate', $fields, 'privacy:metadata:pdcertificate');
 
         // The table pdcertificate_issues stores certificate delivered to users.
         // Some personal information along with the resource accessed is stored.
-        $collection->add_database_table('pdcertificate_issues', [
+        $fields = [
             'userid' => 'privacy:metadata:pdcertificate_issues:userid',
             'timecreated' => 'privacy:metadata:pdcertificate_issues:timecreated',
             'code' => 'privacy:metadata:pdcertificate_issues:code',
             'locked' => 'privacy:metadata:pdcertificate_issues:locked',
             'timedelivered' => 'privacy:metadata:pdcertificate_issues:timedelivered',
             'timeexported' => 'privacy:metadata:pdcertificate_issues:timeexported',
-        ], 'privacy:metadata:pdcertificate_issues');
+        ];
+        $collection->add_database_table('pdcertificate_issues', $fields, 'privacy:metadata:pdcertificate_issues');
 
         return $collection;
     }
@@ -83,8 +90,10 @@ class provider implements metadataprovider, pluginprovider {
      * @param   int           $userid       The user to search.
      * @return  contextlist   $contextlist  The list of contexts used in this plugin.
      */
-    public static function _get_contexts_for_userid(int $userid) {
-        // Fetch all behalf certificates regarding your auhtority binding.
+    public static function get_contexts_for_userid(int $userid) : contextlist {
+        $contextlist = new contextlist;
+
+        // Fetch all behalf certificates regarding your authority binding.
         $sql = "SELECT c.id
                   FROM {context} c
             INNER JOIN {course_modules} cm
@@ -102,7 +111,7 @@ class provider implements metadataprovider, pluginprovider {
             'contextlevel' => CONTEXT_MODULE,
             'userid' => $userid,
         ];
-        $contextlist = new contextlist();
+
         $contextlist->add_from_sql($sql, $params);
 
         // Fetch all certificates user has isssues in.
@@ -125,11 +134,9 @@ class provider implements metadataprovider, pluginprovider {
             'contextlevel' => CONTEXT_MODULE,
             'userid' => $userid,
         ];
-        $contextlist = new contextlist();
         $contextlist->add_from_sql($sql, $params);
 
         return $contextlist;
-
     }
 
     /**
@@ -137,8 +144,8 @@ class provider implements metadataprovider, pluginprovider {
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
-    public static function _export_user_data(approved_contextlist $contextlist) {
-        self::_export_user_data_issues($contextlist);
+    public static function export_user_data(approved_contextlist $contextlist) {
+        self::export_user_data_issues($contextlist);
     }
 
 
@@ -152,7 +159,7 @@ class provider implements metadataprovider, pluginprovider {
      *
      * @param \context $context the context to delete in.
      */
-    public static function _delete_data_for_all_users_in_context(\context $context) {
+    public static function delete_data_for_all_users_in_context(\context $context) {
         global $DB;
 
         $config = get_config('pdcertificate');
@@ -174,7 +181,7 @@ class provider implements metadataprovider, pluginprovider {
      *
      * @param approved_contextlist $contextlist a list of contexts approved for deletion.
      */
-    public static function _delete_data_for_user(approved_contextlist $contextlist) {
+    public static function delete_data_for_user(approved_contextlist $contextlist) {
         global $DB;
 
         $count = $contextlist->count();
@@ -195,11 +202,39 @@ class provider implements metadataprovider, pluginprovider {
     }
 
     /**
+     * Delete all user data for a userlist
+     *
+     * @param approved_userlist $userlist a list of users approved for deletion.
+     */
+    public static function delete_data_for_users(approved_userlist $userlist) {
+        global $DB;
+
+        $count = $userlist->count();
+        if (empty($count)) {
+            return;
+        }
+
+        $context = $userlist->get_context();
+
+        if ($context->contextlevel != CONTEXT_MODULE) {
+            return;
+        }
+
+        $cm = $DB->get_record('course_modules', ['id' => $context->instanceid]);
+
+        foreach ($userlist->get_userids() as $uid) {
+            $DB->delete_records('pdcertificate_issues', ['pdcertificateid' => $cm->instance, 'userid' => $uid]);
+            $DB->set_field('pdcertificate', 'certifierid', 0, ['pdcertificateid' => $cm->instance, 'certifierid' => $uid]);
+            // DO NOT apply reset to authorityid in issues as this is track of the "past" and NOT data ownership at the moment of deletion.
+        }
+    }
+
+    /**
      * Export personal data for the given approved_contextlist related to pdcertificate issues.
      *
      * @param approved_contextlist $contextlist a list of contexts approved for export.
      */
-    protected static function _export_user_data_issues(approved_contextlist $contextlist) {
+    protected static function export_user_data_issues(approved_contextlist $contextlist) {
         global $DB;
 
         // Filter out any contexts that are not related to modules.
@@ -235,6 +270,7 @@ class provider implements metadataprovider, pluginprovider {
                   ];
                 return $carry;
             },
+
             function($instanceid, $data) use ($user, $instanceidstocmids) {
                 $context = \context_module::instance($instanceidstocmids[$instanceid]);
                 $contextdata = helper::get_context_data($context, $user);
@@ -296,5 +332,91 @@ class provider implements metadataprovider, pluginprovider {
         if (!empty($lastid)) {
             $export($lastid, $data);
         }
+    }
+
+    /**
+     * Get the list of users who have data within a context.
+     *
+     * @param   userlist    $userlist   The userlist containing the list of users who have data in this context/plugin combination.
+     *
+     */
+    public static function get_users_in_context(userlist $userlist) {
+        $context = $userlist->get_context();
+
+        if (!is_a($context, \context_module::class)) {
+            return;
+        }
+
+        // Find users who are certifierid.
+        $sql = "
+            SELECT
+                pdc.certifierid as userid
+            FROM
+                  {course_modules} cm,
+                  {modules} m,
+                  {pdcertificate} pdc
+            WHERE
+                cm.module = m.id AND
+                AND m.name = :modname
+                cm.instance = pdc.id AND
+                cm.id = :contextid AND
+                pdc.certifierid <> 0
+        ";
+
+        $params = [
+            'contextid'     => $context->instanceid,
+            'modname'     => 'pdcertificate'
+        ];
+
+        $userlist->add_from_sql('userid', $sql, $params);
+
+        // Find users who are authority of some issues.
+        $sql = "
+            SELECT
+                pdci.authorityid as userid
+            FROM
+                  {course_modules} cm,
+                  {modules} m,
+                  {pdcertificate} pdc,
+                  {pdcertificate_issues} pdci
+            WHERE
+                cm.module = m.id AND
+                AND m.name = :modname
+                cm.instance = pdc.id AND
+                cm.id = :contextid AND
+                pdc.id = pdci.pdcertificateid AND
+                pdci.authorityid <> 0
+        ";
+
+        $params = [
+            'contextid'     => $context->instanceid,
+            'modname'     => 'pdcertificate'
+        ];
+
+        $userlist->add_from_sql('userid', $sql, $params);
+
+        // Find users with issues.
+        $sql = "
+            SELECT
+                pdci.userid
+            FROM
+                  {course_modules} cm,
+                  {modules} m,
+                  {pdcertificate} pdc,
+                  {pdcertificate_issues} pdci
+            WHERE
+                cm.module = m.id AND
+                AND m.name = :modname
+                cm.instance = pdc.id AND
+                pdc.id = pdci.pdcertificateid AND
+                cm.id = :contextid
+        ";
+
+        $params = [
+            'contextid'     => $context->instanceid,
+            'modname'     => 'pdcertificate'
+        ];
+        $userlist->add_from_sql('userid', $sql, $params);
+
     }
 }

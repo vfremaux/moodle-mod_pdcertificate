@@ -82,7 +82,7 @@ $strcode = get_string('code', 'pdcertificate');
 $strstate = get_string('state', 'pdcertificate');
 $strreport= get_string('report', 'pdcertificate');
 $strlock = get_string('issuelock', 'pdcertificate');
-$strtimeoverride= get_string('timeoverride', 'pdcertificate');
+$strtimeoverride = get_string('timeoverride', 'pdcertificate');
 
 if (!$download) {
     $PAGE->navbar->add($strreport);

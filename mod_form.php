@@ -34,7 +34,7 @@ require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
 
 class mod_pdcertificate_mod_form extends moodleform_mod {
 
-    var $instance;
+    public $instance;
 
     public function definition() {
         global $CFG, $DB, $COURSE;
@@ -352,7 +352,7 @@ class mod_pdcertificate_mod_form extends moodleform_mod {
     /**
      *
      */
-    function set_data($defaults) {
+    public function set_data($defaults) {
 
         // Saves draft customization image files into definitive filearea.
         $instancefiles = array('printborders', 'printwmark', 'printseal', 'printsignature');
