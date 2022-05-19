@@ -163,12 +163,20 @@ if (!empty($printconfig->printqrcode)) {
     $qrcode = new StdClass;
     $qrcode->x = 250;
     $qrcode->y = 155;
+    $qrcode->w = 50;
+    $qrcode->h = 50;
 
     if (!empty($printconfig->qrcodex)) {
         $qrcode->x = $printconfig->qrcodex;
     }
     if (!empty($printconfig->qrcodey)) {
         $qrcode->y = $printconfig->qrcodey;
+    }
+    if (!empty($printconfig->qrcodew)) {
+        $qrcode->w = $printconfig->qrcodew;
+    }
+    if (!empty($printconfig->qrcodeh)) {
+        $qrcode->h = $printconfig->qrcodeh;
     }
     $pdf->addCustomObject('qrcode', $qrcode);
 }

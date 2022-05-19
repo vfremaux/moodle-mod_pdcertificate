@@ -660,7 +660,9 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
             ci.id as issueid,
             ci.code,
             ci.timecreated,
-            ci.locked
+            ci.locked,
+            ci.credithoursoverride,
+            ci.reportdays
         FROM
             {user} u
         INNER JOIN
@@ -1659,7 +1661,8 @@ function pdcertificate_make_zip_file($pdcertificate, $cm, $userids = null) {
             if (!empty($areafiles)) {
                 // Have i a stored pdf in the area ? It is unique in the area.
                 $storedcert = array_pop($areafiles);
-                $certfiles['certs/pdcert_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.$cert->userid.'pdf'] = $storedcert;
+                $user = $DB->get_record('user', ['id' => $cert->userid], 'id,firstname,lastname');
+                $certfiles['certs/pdcert_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.$cert->userid.'_'.$user->firstname.'_'.$user->lastname.'.pdf'] = $storedcert;
             } else {
                 debug_trace("No cert file in area {$context->id}, $component, $filearea, $itemid ", TRACE_DEBUG);
             }

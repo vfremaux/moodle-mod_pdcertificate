@@ -157,6 +157,9 @@ function pdcertificate_draw_frame_letter($pdf, $pdcertificate) {
     }
 }
 
+/**
+ * DEPRECATED. Use local/vflibs/tcpdflib
+ */
 function pdcertificate_print_qrcode($pdf, $code, $x, $y) {
     global $CFG;
 
@@ -261,6 +264,7 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
     }
 
     $usercredithours = ($certrecord->credithoursoverride !== '') ? $certrecord->credithoursoverride : $pdcertificate->credithours;
+    $usercreditdays = ($certrecord->creditdaysoverride !== '') ? $certrecord->creditdaysoverride : $pdcertificate->creditdays;
 
     $replacements = array(
         'info:user_fullname' => fullname($user),

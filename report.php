@@ -416,7 +416,27 @@ foreach ($certifiableusers as $user) {
             }
         }
         if (pdcertificate_supports_feature('issues/timeoverrideable')) {
-            $timeoverride = '<input type="text" id="id-timeoverride-'.$cert->issueid.'" class="pdcertificate-time-override" data-iid="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
+            $attrs = [
+                'id' => 'id-timeoverride-'.$cert->issueid,
+                'class' => 'pdcertificate-time-override',
+                'type' => 'text',
+                'data-iid' => $cert->issueid,
+                'name' => 'timeoverride-'.$cert->issueid,
+                'size' => 4,
+                'value' => $cert->credithoursoverride
+            ];
+            $timeoverride = html_writer::tag('input', '', $attrs);
+            $timeoverride .= '<br>';
+            $attrs = [
+                'id' => 'id-daysoverride-'.$cert->issueid,
+                'class' => 'pdcertificate-days-override',
+                'type' => 'text',
+                'data-iid' => $cert->issueid,
+                'name' => 'daysoverride-'.$cert->issueid,
+                'size' => 4,
+                'value' => $cert->creditdaysoverride
+            ];
+            $timeoverride .= html_writer::tag('input', '', $attrs);
         }
     } else {
         $check = (!empty($errors)) ? '' : '<input type="checkbox" class="pdcertificate-sel" name="userids[]" value="'.$user->id.'" />';
@@ -431,7 +451,27 @@ foreach ($certifiableusers as $user) {
             // $lockstate = ($cert->locked) ? $OUTPUT->pix_icon('t/locked', get_string('locked', 'pdcertificate'), 'core') : $OUTPUT->pix_icon('t/unlocked', get_string('unlocked', 'pdcertificate'), 'core');
         }
         if (pdcertificate_supports_feature('issues/timeoverridable')) {
-            $timeoverride = '<input type="text" class="pdcertificate-time-override" data-id="'.$cert->issueid.'" name="timeoverride-'.$cert->issueid.'" size="4" />';
+            $attrs = [
+                'type' => 'text',
+                'class' => 'pdcertificate-time-override',
+                'data-id' => $cert->issueid,
+                'id' => 'id-timeoverride-'.$cert->issueid,
+                'name' => 'timeoverride-'.$cert->issueid,
+                'size' => 4,
+                'value' => $cert->credithoursoverride,
+            ]
+            $timeoverride = html_writer::tag('input', $attrs);
+            $attrs = [
+                'type' => 'text',
+                'class' => 'pdcertificate-days-override',
+                'data-id' => $cert->issueid,
+                'id' => 'id-daysoverride-'.$cert->issueid,
+                'name' => 'daysoverride-'.$cert->issueid,
+                'size' => 4,
+                'value' => $cert->creditdaysoverride,
+            ]
+            $timeoverride .= '<br/>';
+            $timeoverride = html_writer::tag('input', $attrs);
         }
     }
     $row = array ($check, $name, $date, $grade, $code, $certuserstate);

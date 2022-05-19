@@ -33,10 +33,26 @@ $action = required_param('what', PARAM_TEXT);
 
 if ($action == 'overridetime') {
     require_sesskey();
-    $to = required_param('to', PARAM_NUMBER);
+    $to = required_param('to', PARAM_TEXT);
     $issueid = required_param('iid', PARAM_INT);
+    if ($to === '') {
+        $DB->set_field('pdcertificate_issues', 'credithoursoverride', null, ['id' => $issueid]);
+    } else {
+        $DB->set_field('pdcertificate_issues', 'credithoursoverride', $to, ['id' => $issueid]);
+    }
+    echo $issueid;
+    exit(0);
+}
 
-    $DB->set_field('pdcertificate_issues', 'credithoursoverride', $to, ['id' => $issueid]);
+if ($action == 'reportdays') {
+    require_sesskey();
+    $to = required_param('to', PARAM_TEXT);
+    $issueid = required_param('iid', PARAM_INT);
+    if ($to === '') {
+        $DB->set_field('pdcertificate_issues', 'reportdays', null, ['id' => $issueid]);
+    } else {
+        $DB->set_field('pdcertificate_issues', 'reportdays', $to, ['id' => $issueid]);
+    }
     echo $issueid;
     exit(0);
 }

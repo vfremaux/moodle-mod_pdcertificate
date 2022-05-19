@@ -19,3 +19,7 @@ syntax.
 2019021300 (X.X.0012) : Reintroduce credit hours as pdcertificate attribute.
 
 2019030800 (X.X.0014) : Add the refrzsh task and factorise the refreshing code.
+
+2019030800 (X.X.0021) : Add credithours override per user.
+
+2019030800 (X.X.0022) : Add creditdays injection in certificate.

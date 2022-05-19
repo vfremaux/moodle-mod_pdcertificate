@@ -57,3 +57,11 @@ Reintroduce credit hours as pdcertificate attribute.
 =============== 2019030800 (X.X.0014) :
 
 Add the refresh task and factorise the refreshing code.
+
+=============== 2021100600 (X.X.0021) :
+
+Add credithours override per user.
+
+=============== 2021102100 (X.X.0022) :
+
+Add creditdays injection in certificate.
