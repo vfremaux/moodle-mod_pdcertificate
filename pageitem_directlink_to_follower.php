@@ -31,7 +31,7 @@ require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
  * @param objectref &$block the block recevied is an instance of a page_module block. The course_module is
  * located in the 'cm' member of the block.
  */
-function pdcertificate_directlink_to_follower_set_instance(&$block) {
+function pdcertificate_directlink_to_follower_set_instance($block) {
     global $DB, $PAGE, $CFG, $COURSE, $OUTPUT, $USER;
 
     $str = '';

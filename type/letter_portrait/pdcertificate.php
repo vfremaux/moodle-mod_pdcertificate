@@ -25,7 +25,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
+$fs = get_file_storage();
+
 $pdf = new PDF('P', 'pt', 'Letter', true, 'UTF-8', false);
+
+// In pdcertificate, printconfig comes from certiticate instance.
+$printconfig = json_decode($pdcertificate->printconfig);
+if (!$printconfig && !empty($pdcertificate->printconfig)) {
+    // Maybe an old syntax.
+    $printconfig = unserialize($pdcertificate->printconfig);
+}
+$printconfig->plugin = 'pdcertificate';
+
+$pdf->init($printconfig);
 
 $pdf->SetTitle($pdcertificate->name);
 $pdf->setPrintHeader(false);
@@ -33,93 +45,161 @@ $pdf->setPrintFooter(false);
 $pdf->SetAutoPageBreak(false, 0);
 $pdf->AddPage();
 
-$printconfig = unserialize($pdcertificate->printconfig);
+$files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printborders', 0, 'filename', true);
+if ($files) {
+    $border = new StdClass;
+    $border->x = 0;
+    $border->y = 0;
+    $border->w = $pdf->getPageWidth();
+    $border->h = $pdf->getPageHeight();
+    if (!empty($printconfig->borderx)) {
+        $border->x = $printconfig->borderx;
+    }
+    if (!empty($printconfig->bordery)) {
+        $border->y = $printconfig->bordery;
+    }
 
-$x = 20;
-$y = 20;
-
-if (!empty($printconfig->margingroup['marginx'])) {
-    $x = $printconfig->margingroup['marginx'];
-}
-if (!empty($printconfig->margingroup['marginy'])) {
-    $y = $printconfig->margingroup['marginy'];
-}
-
-$sealx = 440;
-$sealy = 590;
-
-if (!empty($printconfig->sealoffsetgroup['sealoffsetx'])) {
-    $sealx = $printconfig->sealoffsetgroup['sealoffsetx'];
-}
-if (!empty($printconfig->sealoffsetgroup['sealoffsety'])) {
-    $sealy = $printconfig->sealoffsetgroup['sealoffsety'];
-}
-
-$sigx = 30;
-$sigy = 235;
-
-if (!empty($printconfig->signatureoffsetgroup['signatureoffsetx'])) {
-    $sigx = $printconfig->signatureoffsetgroup['signatureoffsetx'];
-}
-if (!empty($printconfig->signatureoffsetgroup['signatureoffsety'])) {
-    $sigy = $printconfig->signatureoffsetgroup['signatureoffsety'];
+    $file = array_pop($files);
+    $border->image = $file;
+    $pdf->addCustomObject('border', $border);
+    $printconfig->printborders = true;
+} else {
+    // Override whatever comes from user. We have NO borders file.
+    $printconfig->printborders = false;
 }
 
-$wmarkx = 78;
-$wmarky = 130;
-$wmarkw = 450;
-$wmarkh = 480;
+$files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printseal', 0, 'filename', true);
+if ($files) {
+    $seal = new Stdclass;
+    $seal->x = 440;
+    $seal->y = 590;
 
-if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsetx'])) {
-    $wmarkx = $printconfig->watermarkoffsetgroup['watermarkoffsetx'];
+    if (!empty($printconfig->sealx)) {
+        $seal->x = $printconfig->sealx;
+    }
+    if (!empty($printconfig->sealy)) {
+        $seal->y = $printconfig->sealy;
+    }
+
+    $file = array_pop($files);
+    $seal->image = $file;
+    $pdf->addCustomObject('seal', $seal);
+    $printconfig->printseal = true;
+} else {
+    // Override whatever comes from user. We have NO seal file.
+    $printconfig->printseal = false;
 }
-if (!empty($printconfig->watermarkoffsetgroup['watermarkoffsety'])) {
-    $wmarky = $printconfig->watermarkoffsetgroup['watermarkoffsety'];
+
+$files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printsignature', 0, 'filename', true);
+if ($files) {
+    $signature = new StdClass;
+    $signature->x = 30;
+    $signature->y = 235;
+
+    if (!empty($printconfig->signaturex)) {
+        $signature->x = $printconfig->signaturex;
+    }
+    if (!empty($printconfig->signaturey)) {
+        $signature->y = $printconfig->signaturey;
+    }
+
+    $file = array_pop($files);
+    $signature->image = $file;
+    $pdf->adDcustomObject('signature', $signature);
+    $printconfig->printsignature = true;
+} else {
+    // Override whatever comes from user. We have NO signature file.
+    $printconfig->printsignature = false;
 }
 
-$brdrx = 0;
-$brdry = 0;
-$brdrw = 279;
-$brdrh = 215;
+/*
+ * We need override "settings" watermark not proviced by pdcertificate with
+ * per instance watermark image.
+ */
+$files = $fs->get_area_files($context->id, 'mod_pdcertificate', 'printwmark', 0, 'filename', true);
+if ($files) {
+    $watermark = new StdClass;
+    $watermark->x = 20;
+    $watermark->y = 20;
+    $watermark->w = $pdf->getPageWidth() - 40;
+    $watermark->h = $pdf->getPageHeight() - 40;
 
-$qrcx = 149;
-$qrcy = 30;
+    if (!empty($printconfig->watermarkx)) {
+        $watermark->x = $printconfig->watermarkx;
+    }
+    if (!empty($printconfig->watermarky)) {
+        $watermark->y = $printconfig->watermarky;
+    }
 
-if (!empty($printconfig->qrcodeoffsetgroup['qrcodex'])) {
-    $qrcx = $printconfig->qrcodeoffsetgroup['qrcodex'];
+    if (!empty($printconfig->watermarkw)) {
+        $watermark->w = $printconfig->watermarkw;
+    }
+    if (!empty($printconfig->watermarkh)) {
+        $watermark->h = $printconfig->watermarkh;
+    }
+
+    $file = array_pop($files);
+    $watermark->image = $file;
+    // Replace the standard setting base definition.
+    $pdf->adDcustomObject('wmark', $watermark);
+    $printconfig->printwatermark = true;
+} else {
+    // Override whatever comes from user. We have NO signature file.
+    $printconfig->printwatermark = false;
 }
-if (!empty($printconfig->qrcodeoffsetgroup['qrcodey'])) {
-    $qrcy = $printconfig->qrcodeoffsetgroup['qrcodey'];
+
+if (!empty($printconfig->printqrcode)) {
+    $qrcode = new StdClass;
+    $qrcode->x = 150;
+    $qrcode->y = 30;
+    $qrcode->w = 50;
+    $qrcode->h = 50;
+
+    if (!empty($printconfig->qrcodex)) {
+        $qrcode->x = $printconfig->qrcodex;
+    }
+    if (!empty($printconfig->qrcodey)) {
+        $qrcode->y = $printconfig->qrcodey;
+    }
+    if (!empty($printconfig->qrcodew)) {
+        $qrcode->w = $printconfig->qrcodew;
+    }
+    if (!empty($printconfig->qrcodeh)) {
+        $qrcode->h = $printconfig->qrcodeh;
+    }
+    $pdf->addCustomObject('qrcode', $qrcode);
 }
 
 // Text boxes.
 
-$headx = $x;
-$heady = $y;
-$headw = 215 - (2 * $x);
-
-$custx = $x;
+$custx = $pdf-getBaseX();
 $custy = 440;
-$custw = 215 - (2 * $x);
-
-$footerx = $x;
-$footery = 237;
-$footerw = 215 - (2 * $x);
+$custw = 215 - (2 * $custx);
 
 if (empty($user)) {
     $user = $USER;
 }
 
 // Add images and lines.
-pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_BORDER, $brdrx, $brdry, $brdrw, $brdrh);
-pdcertificate_draw_frame_letter($pdf, $pdcertificate);
+pdcertificate_draw_frame($pdf, $pdcertificate);
+
+// Start with borders (deepest)
+if ($printconfig->printborders) {
+    $pdf->renderCustomObject('border');
+}
 
 // Set alpha to semi-transparency.
-$pdf->SetAlpha(0.1);
-pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_WATERMARK, $wmarkx, $wmarky, $wmarkw, $wmarkh);
+if ($printconfig->printwatermark) {
+    $pdf->renderWatermark();
+}
+
 $pdf->SetAlpha(1);
-pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SEAL, $sealx, $sealy, '', '');
-pdcertificate_print_image($pdf, $pdcertificate, PDCERT_IMAGE_SIGNATURE, $sigx, $sigy, '', '');
+if ($printconfig->printsignature) {
+    $pdf->renderCustomObject('signature');
+}
+if ($printconfig->printseal) {
+    $pdf->renderCustomObject('seal');
+}
 
 // Add text.
 $pdf->SetTextColor(0, 0, 0);
@@ -128,10 +208,14 @@ $headertext = pdcertificate_insert_data(format_text($pdcertificate->headertext),
 $customtext = pdcertificate_insert_data(format_text($pdcertificate->customtext), $pdcertificate, $certrecord, $course, $user);
 $footertext = pdcertificate_insert_data(format_text($pdcertificate->footertext), $pdcertificate, $certrecord, $course, $user);
 
-pdcertificate_print_textbox($pdf, $headw, $headx, $heady, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $headertext);
+$header = $pdf->getCustomObject('header');
+$footer = $pdf->getCustomObject('footer');
+
+pdcertificate_print_textbox($pdf, $header->w, $header->x, $header->y, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $headertext);
 pdcertificate_print_textbox($pdf, $custw, $custx, $custy, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $customtext);
-pdcertificate_print_textbox($pdf, $footerw, $footerx, $footery, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $footertext);
+pdcertificate_print_textbox($pdf, $footer->w, $footer->x, $footer->y, 'L', $printconfig->fontbasefamily, '', $printconfig->fontbasesize, $footertext);
 
 if (!empty($printconfig->printqrcode)) {
-    pdcertificate_print_qrcode($pdf, $certrecord->code, $qrcx, $qrcy);
+    $verifyurl = new moodle_url('/mod/pdcertificate/verify.php', array('code' => $certrecord->code));
+    $pdf->renderQRCode($verifyurl);
 }

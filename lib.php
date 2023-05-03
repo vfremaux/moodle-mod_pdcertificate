@@ -30,14 +30,16 @@ require_once($CFG->dirroot.'/grade/querylib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/printlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/locallib.php');
 
-/** The border image folder */
+/*
+** The border image folder *
 define('PDCERT_IMAGE_BORDER', 'borders');
-/** The watermark image folder */
+** The watermark image folder *
 define('PDCERT_IMAGE_WATERMARK', 'watermarks');
-/** The signature image folder */
+** The signature image folder *
 define('PDCERT_IMAGE_SIGNATURE', 'signatures');
-/** The seal image folder */
+** The seal image folder *
 define('PDCERT_IMAGE_SEAL', 'seals');
+*/
 
 define('PDCERT_PER_PAGE', 30);
 define('PDCERT_MAX_PER_PAGE', 200);
@@ -46,8 +48,58 @@ define('PDCERT_MAX_PER_PAGE', 200);
  * This function is not implemented in this plugin, but is needed to mark
  * the vf documentation custom volume availability.
  */
-function mod_pdcertificate_supports_feature() {
-    assert(1);
+function pdcertificate_supports_feature($feature = null, $getsupported = null) {
+    global $CFG;
+    static $supports;
+
+    if (!during_initial_install()) {
+        $config = get_config('pdcertificate');
+    }
+
+    if (!isset($supports)) {
+        $supports = array(
+            'pro' => array(
+                'issues' => array('lockable', 'timeoverrideable', 'exportable')
+            ),
+            'community' => array(
+            ),
+        );
+    }
+
+    if (!empty($getsupported)) {
+        return $supports;
+    }
+
+    // Check existance of the 'pro' dir in plugin.
+    if (is_dir(__DIR__.'/pro')) {
+        if ($feature == 'emulate/community') {
+            return 'pro';
+        }
+        if (empty($config->emulatecommunity)) {
+            $versionkey = 'pro';
+        } else {
+            $versionkey = 'community';
+        }
+    } else {
+        $versionkey = 'community';
+    }
+
+    if (empty($feature)) {
+        // Just return version.
+        return $versionkey;
+    }
+
+    list($feat, $subfeat) = explode('/', $feature);
+
+    if (!array_key_exists($feat, $supports[$versionkey])) {
+        return false;
+    }
+
+    if (!in_array($subfeat, $supports[$versionkey][$feat])) {
+        return false;
+    }
+
+    return $versionkey;
 }
 
 /**
@@ -100,7 +152,18 @@ function pdcertificate_add_instance($pdcertificate) {
         $pdcertificate->lockoncoursecompletion = 0;
     }
 
-    pdcertificate_compact($pdcertificate);
+    pdcertificate_compact($pdcertificate); // Compact protections.
+
+    if (empty($pdcertificate->printconfig)) {
+        $pdcertificate->printconfig = '{"fontbasefamily":"FreeSans","fontbasesize":"10"}';
+    }
+
+    // special processing.
+    if (!empty($pdcertificate->printqrcode)) {
+        $printconfig = json_decode($pdcertificate->printconfig);
+        $printconfig->printqrcode = $pdcertificate->printqrcode;
+        $pdcertificate->printconfig = json_encode($printconfig);
+    }
 
     $pdcertificate->id = $DB->insert_record('pdcertificate', $pdcertificate);
 
@@ -140,7 +203,6 @@ function pdcertificate_add_instance($pdcertificate) {
  */
 function pdcertificate_update_instance($pdcertificate) {
     global $DB;
-
 
     $pdcertificate->courselinkentry = @$_REQUEST['courselinkentry'];
 
@@ -189,7 +251,13 @@ function pdcertificate_update_instance($pdcertificate) {
         }
     }
 
-    pdcertificate_compact($pdcertificate);
+    pdcertificate_compact($pdcertificate); // compact protections.
+
+    if (!empty($pdcertificate->printqrcode)) {
+        $printconfig = json_decode($pdcertificate->printconfig);
+        $printconfig->printqrcode = $pdcertificate->printqrcode;
+        $pdcertificate->printconfig = json_encode($printconfig);
+    }
 
     // Saves pdcertificate images.
     $context = context_module::instance($pdcertificate->coursemodule);
@@ -214,7 +282,12 @@ function pdcertificate_update_instance($pdcertificate) {
 }
 
 function pdcertificate_compact(&$pdcertificate) {
+
     // Compact print options.
+    /**
+     * Obsolete. Printconfig comes directly from form now.
+     */
+    /*
     $printconfig = new StdClass;
     $printconfig->printhours = $pdcertificate->printhours;
     $printconfig->printoutcome = $pdcertificate->printoutcome;
@@ -227,7 +300,8 @@ function pdcertificate_compact(&$pdcertificate) {
     $printconfig->qrcodeoffsetgroup = $pdcertificate->qrcodeoffsetgroup;
     $printconfig->margingroup = $pdcertificate->margingroup;
 
-    $pdcertificate->printconfig = serialize($printconfig);
+    $pdcertificate->printconfig = json_encode($printconfig);
+    */
 
     // Compact protection.
     $protections = pdcertificate_protections();
@@ -236,7 +310,7 @@ function pdcertificate_compact(&$pdcertificate) {
         $key = 'protection'.$pk;
         $protection[$pk] = @$pdcertificate->$key;
     }
-    $pdcertificate->protection = serialize($protection);
+    $pdcertificate->protection = json_encode($protection);
 }
 
 /**

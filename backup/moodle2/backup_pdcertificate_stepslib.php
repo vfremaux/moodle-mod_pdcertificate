@@ -41,18 +41,20 @@ class backup_pdcertificate_activity_structure_step extends backup_activity_struc
             'name', 'intro', 'introformat', 'emailteachers', 'emailothers',
             'savecert', 'reportcert', 'delivery', 'pdcertificatetype', 'requiredtime',
             'orientation', 'printconfig', 'datefmt', 'gradefmt', 'statement', 
-            'customtext','timecreated', 'timemodified', 'caption', 'certifierid', 'validitytime', 'layout', 'propagategroups'));
+            'customtext','timecreated', 'timemodified', 'caption', 'certifierid', 'credithours', 'validitytime',
+            'layout', 'propagategroups', 'locked', 'lockoncoursecompletion', 'completiondelivered', 'croned',
+            'protection', 'userpass', 'fullpass', 'pubkey', 'extradata'));
 
         $issues = new backup_nested_element('issues');
 
         $issue = new backup_nested_element('issue', array('id'), array(
             'pdcertificateid', 'userid', 'timecreated', 'code'));
 
-        // Build the tree
+        // Build the tree.
         $pdcertificate->add_child($issues);
         $issues->add_child($issue);
 
-        // Define sources
+        // Define sources.
         $pdcertificate->set_source_table('pdcertificate', array('id' => backup::VAR_ACTIVITYID));
 
         // All the rest of elements only happen if we are including user info
@@ -66,9 +68,10 @@ class backup_pdcertificate_activity_structure_step extends backup_activity_struc
         // Define file annotations
         $pdcertificate->annotate_files('mod_pdcertificate', 'intro', null); // This file area hasn't itemid
         $issue->annotate_files('mod_pdcertificate', 'issue', 'id');
-        $issue->annotate_files('mod_pdcertificate', 'printwmark', 'id');
-        $issue->annotate_files('mod_pdcertificate', 'printseal', 'id');
-        $issue->annotate_files('mod_pdcertificate', 'printsignature', 'id');
+        $pdcertificate->annotate_files('mod_pdcertificate', 'printborders', null);
+        $pdcertificate->annotate_files('mod_pdcertificate', 'printwmark', null);
+        $pdcertificate->annotate_files('mod_pdcertificate', 'printseal', null);
+        $pdcertificate->annotate_files('mod_pdcertificate', 'printsignature', null);
 
         // Return the root element (pdcertificate), wrapped into standard activity structure
         return $this->prepare_activity_structure($pdcertificate);

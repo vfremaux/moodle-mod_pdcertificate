@@ -246,11 +246,11 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $deliveredids = array_keys($delivered);
 
     // This may be costfull when a big bunch of users arrive to certification state.
-    if ($state->totalcount > 100) {
+    if ($state->totalcount > 300) {
         // Reduce the state to the current page.
         $checkables = $certifiableusers;
         $state->range = 'page';
-        $state->totalcount = count($certifiableusers);
+        $state->totalcount = min($pagesize, count($total));
     } else {
         $checkables = $total;
         $state->range = 'all';
@@ -385,11 +385,24 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
 
     $file_contents = $pdf->Output('', 'S');
     if ($pdcertificate->savecert == 1) {
-        pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
+        $fileinfo = pdcertificate_save_pdf($file_contents, $certrecord->id, $filesafe, $context->id);
         if ($pdcertificate->delivery == 2 && (($iscron && !empty($config->cronsendsbymail)) || !$iscron)) {
             pdcertificate_email_student($user, $course, $pdcertificate, $certrecord, $context);
         }
+
+        // TODO : throw event so other plugins (auth_netypareo) can catch.
+        $eventparams = array(
+            'objectid' => $pdcertificate->id,
+            'context' => $context,
+            'userid' => $userid,
+            'other' => $fileinfo
+        );
+        $event = mod_pdcertificate\event\document_generated::create($eventparams);
+        $event->trigger();
     }
+
+    // Update timemodified.
+    $DB->set_field('pdcertificate_issues', 'timemodified', time(), array('id' => $certrecord->id));
 
     return $user;
 }
@@ -644,8 +657,12 @@ function pdcertificate_get_issues($pdcertificateid, $sort = "ci.timecreated ASC"
     $sql = "
         SELECT
             u.*,
+            ci.id as issueid,
             ci.code,
-            ci.timecreated
+            ci.timecreated,
+            ci.locked,
+            ci.credithoursoverride,
+            ci.reportdays
         FROM
             {user} u
         INNER JOIN
@@ -779,6 +796,7 @@ function pdcertificate_email_teachers($course, $pdcertificate, $certrecord, $cm)
             $info->course = format_string($course->fullname,true);
             $info->pdcertificate = format_string($pdcertificate->name,true);
             $info->url = $CFG->wwwroot.'/mod/pdcertificate/report.php?id='.$cm->id;
+            $info->email = $USER->email;
             $from = $USER;
             $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $pdcertificate->name;
             $posttext = pdcertificate_email_teachers_text($info);
@@ -824,6 +842,7 @@ function pdcertificate_email_others($course, $pdcertificate, $certrecord, $cm) {
                     $info->course = format_string($course->fullname, true);
                     $info->pdcertificate = format_string($pdcertificate->name, true);
                     $info->url = $CFG->wwwroot.'/mod/pdcertificate/report.php?id='.$cm->id;
+                    $info->email = $USER->email;
                     $from = $USER;
                     $postsubject = $strawarded . ': ' . $info->student . ' -> ' . $pdcertificate->name;
                     $posttext = pdcertificate_email_teachers_text($info);
@@ -954,7 +973,7 @@ function pdcertificate_path_from_hash($contenthash) {
  * @param int $contextid context id
  * @return bool return true if successful, false otherwise
  */
-function pdcertificate_save_pdf($pdf, $certrecordid, $filename, $contextid) {
+function pdcertificate_save_pdf(&$pdf, $certrecordid, $filename, $contextid) {
     global $DB, $USER;
 
     if (empty($certrecordid)) {
@@ -998,7 +1017,7 @@ function pdcertificate_save_pdf($pdf, $certrecordid, $filename, $contextid) {
 
     $fs->create_file_from_string($fileinfo, $pdf);
 
-    return true;
+    return $fileinfo;
 }
 
 /**
@@ -1089,33 +1108,50 @@ function pdcertificate_get_issue($course, $userorid, $pdcertificate, $cm) {
  * @param int $userid
  * @return string the grade result
  */
-function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
+function pdcertificate_get_grade($pdcertificate, $course, $userid = null, $cmid = 0) {
     global $USER, $DB;
 
     if (empty($userid)) {
         $userid = $USER->id;
     }
 
-    if ($course_item = grade_item::fetch_course_item($course->id)) {
-        // String used.
-        $strcoursegrade = get_string('coursegrade', 'pdcertificate');
+    if ($cmid == 0) {
+        // Course grade.
+        if ($course_item = grade_item::fetch_course_item($course->id)) {
+            // String used.
+            $strcoursegrade = get_string('coursegrade', 'pdcertificate');
 
-        $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
-        $course_item->gradetype = GRADE_TYPE_VALUE;
-        $coursegrade = new stdClass;
-        $coursegrade->points = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
-        $coursegrade->percentage = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
-        $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
+            $grade = new grade_grade(array('itemid' => $course_item->id, 'userid' => $userid));
+            $course_item->gradetype = GRADE_TYPE_VALUE;
+            $coursegrade = new stdClass;
+            $coursegrade->points = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_REAL, $decimals = 2);
+            $coursegrade->percentage = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_PERCENTAGE, $decimals = 2);
+            $coursegrade->letter = grade_format_gradevalue($grade->finalgrade, $course_item, true, GRADE_DISPLAY_TYPE_LETTER, $decimals = 0);
 
-        if ($pdcertificate->gradefmt == 1) {
-            $grade = $strcoursegrade.': '.$coursegrade->percentage;
-        } else if ($pdcertificate->gradefmt == 2) {
-            $grade = $strcoursegrade.': '.$coursegrade->points;
-        } else if ($pdcertificate->gradefmt == 3) {
-            $grade = $strcoursegrade.': '.$coursegrade->letter;
+            if ($pdcertificate->gradefmt == 1) {
+                $grade = $strcoursegrade.': '.$coursegrade->percentage;
+            } else if ($pdcertificate->gradefmt == 2) {
+                $grade = $strcoursegrade.': '.$coursegrade->points;
+            } else if ($pdcertificate->gradefmt == 3) {
+                $grade = $strcoursegrade.': '.$coursegrade->letter;
+            }
+
+            return $grade;
+        }
+    } else {
+        // Activity grade.
+        $cm = $DB->get_record('course_modules', ['id' => $cmid]);
+        $module = $DB->get_record('modules', ['id' => $cm->module]);
+        $gradeinfo = grade_get_grades($course->id, 'mod', $module->name, $cm->instance, $userid);
+        if (!$gradeinfo) {
+            return false;
         }
 
-        return $grade;
+        $generalinfo = $gradeinfo->items[0];
+        $usergrade = $gradeinfo->items[0]->grades[$userid];
+
+        return sprintf('%0.1f', $usergrade->grade).'/'.sprintf('%d', $generalinfo->grademax);
+
     }
 
     return '';
@@ -1131,15 +1167,17 @@ function pdcertificate_get_grade($pdcertificate, $course, $userid = null) {
 function pdcertificate_get_outcome($pdcertificate, $course) {
     global $USER, $DB;
 
-    $printconfig = unserialize($pdcertificate->printconfig);
+    $printconfig = json_decode($pdcertificate->printconfig);
 
-    if ($grade_item = new grade_item(array('id' => $printconfig->printoutcome))) {
-        $outcomeinfo = new stdClass;
-        $outcomeinfo->name = $grade_item->get_name();
-        $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $USER->id));
-        $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
+    if (!empty($printconfig->printoutcome)) {
+        if ($grade_item = new grade_item(array('id' => $printconfig->printoutcome))) {
+            $outcomeinfo = new stdClass;
+            $outcomeinfo->name = $grade_item->get_name();
+            $outcome = new grade_grade(array('itemid' => $grade_item->id, 'userid' => $USER->id));
+            $outcomeinfo->grade = grade_format_gradevalue($outcome->finalgrade, $grade_item, true, GRADE_DISPLAY_TYPE_REAL);
 
-        return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
+            return $outcomeinfo->name . ': ' . $outcomeinfo->grade;
+        }
     }
 
     return '';
@@ -1257,7 +1295,7 @@ function pdcertificate_set_protection(&$pdcertificate, &$pdf) {
 
     $config = get_config('pdcertificate');
 
-    $protections = unserialize($pdcertificate->protection);
+    $protections = json_decode($pdcertificate->protection);
 
     if (empty($protections)) {
         return;
@@ -1584,4 +1622,239 @@ function pdcertificate_get_users_by_capability(context $context, $capability, $f
           ORDER BY $sort";
 
     return $DB->get_records_sql($sql, $params, $limitfrom, $limitnum);
+}
+
+/**
+ * Makes a zip file into a user's volatile draft zone.
+ * @param object $pdcertificate the certificate instance
+ * @param object $cm the course module record
+ * @param array $userids if not null, restricts to selected userids.
+ */
+function pdcertificate_make_zip_file($pdcertificate, $cm, $userids = null) {
+    global $USER, $DB;
+
+    $fs = get_file_storage();
+
+    if (empty($userids)) {
+        // Take all available certs in module.
+        $allcerts = $DB->get_records('pdcertificate_issues', ['pdcertificateid' => $pdcertificate->id]);
+    } else {
+        list($insql, $inparams) = $DB->get_in_or_equal($userids);
+        $inparams[] = $pdcertificate->id;
+        $select = "userid $insql AND pdcertificateid = ? ";
+        debug_trace($select);
+        debug_trace($inparams);
+        $allcerts = $DB->get_records_select('pdcertificate_issues', $select, $inparams);
+    }
+
+    $context = context_module::instance($cm->id);
+
+    $certfiles = [];
+    if (!empty($allcerts)) {
+        foreach ($allcerts as $cert) {
+            $component = 'mod_pdcertificate';
+            $filearea = 'issue';
+            $itemid = $cert->id;
+            $filepath = '/';
+
+            $areafiles = $fs->get_area_files($context->id, $component, $filearea, $itemid, '', false);
+            if (!empty($areafiles)) {
+                // Have i a stored pdf in the area ? It is unique in the area.
+                $storedcert = array_pop($areafiles);
+                $user = $DB->get_record('user', ['id' => $cert->userid], 'id,firstname,lastname');
+                $certfiles['certs/pdcert_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.$cert->userid.'_'.$user->firstname.'_'.$user->lastname.'.pdf'] = $storedcert;
+            } else {
+                debug_trace("No cert file in area {$context->id}, $component, $filearea, $itemid ", TRACE_DEBUG);
+            }
+        }
+    } else {
+        debug_trace("No certs for zipping ", TRACE_DEBUG);
+    }
+
+    $zippacker = new zip_packer();
+    $context = context_user::instance($USER->id);
+    $component = 'user';
+    $filearea = 'draft';
+    $itemid = file_get_unused_draft_itemid();
+    $filepath = '/';
+    $filename = 'pdcertificates_'.$pdcertificate->course.'_'.$pdcertificate->id.'_'.date('Ymd').'.zip';
+    $storedzip = $zippacker->archive_to_storage($certfiles, $context->id, $component, $filearea, 
+            $itemid, $filepath, $filename, $USER->id, true, null);
+
+    debug_trace($storedzip, TRACE_DEBUG);
+    return $storedzip;
+}
+
+/**
+ * Get and adds to a column namelist the pointed customfields from customized user profile.
+ */
+function mod_pdcertificate_add_customfields_names(&$cols) {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+
+    debug_trace($fieldnames);
+
+    if (empty($fieldnames)) {
+        debug_trace("No fields");
+        return;
+    }
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            $cols[] = format_string($fields[$fn]->name);
+        }
+    }
+}
+
+/**
+ * Get formats thjat are added.
+ */
+function mod_pdcertificate_add_customfields_formats(&$formats) {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+
+    if (empty($fieldnames)) {
+        return;
+    }
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name, datatype');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            switch ($fields[$fn]->datatype) {
+                case 'datetime' : {
+                    $formats[] = 'd';
+                    break;
+                }
+                default: {
+                    $formats[] = 't';
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_add_customfields_values(&$values, $userid, $format = 'html') {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+    if (empty($fieldnames)) {
+        return;
+    }
+    // Get by shortnames
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name, id');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            $params = ['userid' => $userid, 'fieldid' => $fields[$fn]->id];
+            $data = $DB->get_record('user_info_data', $params);
+            if ($field->datatype == 'datetime') {
+                if ($format == 'html') {
+                    $values[] = userdate($data->data, get_string('htmldatefmt', 'pdcertificate'));
+                }
+            } else {
+                $values[] = $data->data;
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_cols_from_extradata($pdcertificate, &$cols) {
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    debug_trace("Extras : ");
+    debug_trace($extra);
+
+    if (!empty($extra)) {
+
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+        $config = get_config('pdcertificate');
+
+        foreach ($extra as $key => $value) {
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                if (!empty($cm)) {
+                    $namefield = $config->reportdefaultactivityname;
+                    $name = $cm->$namefield;
+                    if ($namefield == 'modname') {
+                        $name .= ' '.$cm->id;
+                    }
+                    $cols[] = $name;
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_formats_from_extradata($pdcertificate, &$formats) {
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    if (!empty($extra)) {
+
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+
+        foreach ($extra as $key => $value) {
+            debug_trace("check format for $key => $value ");
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                debug_trace("Adding format for $value : ");
+                if (!empty($cm)) {
+                    debug_trace("Adding");
+                    $formats[] = 'n';
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_values_from_extradata($pdcertificate, &$values, $userid) {
+    global $COURSE;
+
+    $course = $COURSE;
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    if (!empty($extra)) {
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+
+        foreach ($extra as $key => $value) {
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                if (!empty($cm)) {
+                    $values[] = pdcertificate_get_grade($pdcertificate, $course, $userid, $cm->id);
+                }
+            }
+        }
+    }
 }

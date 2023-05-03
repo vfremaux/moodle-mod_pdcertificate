@@ -74,3 +74,18 @@
     display: inline-block;
     border-radius:3px;
 }
+
+#pdcertificate-teacher-view {
+    margin-top: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+#pdcertificate-teacher-view .row {
+    padding: 10px;
+}
+
+.pdcertificate-course-button {
+    margin-top: 10px;
+}

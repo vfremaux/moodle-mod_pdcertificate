@@ -15,7 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * This page lists all the instances of pdcertificate in a particular course
+ * This page is the report controller for list actions.
+ * TODO : rebuild the controller in OO design.
  *
  * @package    mod
  * @subpackage pdcertificate
@@ -54,6 +55,39 @@ if ($action == 'generateall') {
     if (!empty($userids)){
         $action = 'generate';
     }
+}
+
+if ($action == 'lock') {
+    require_sesskey();
+    $DB->set_field('pdcertificate_issues', 'locked', true, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
+}
+
+if ($action == 'unlockselection' || $action == 'lockselection') {
+
+    $lockstate = ($action == 'unlockselection') ? 'false' : 'true';
+
+    require_sesskey();
+    $userids = required_param_array('userids', PARAM_INT); // Gets an array of user ids to generate.
+    $params = [$pdcertificate->id];
+    list($insql, $inparams) = $DB->get_in_or_equal($userids);
+    foreach ($inparams as $inp) {
+        $params[] = $inp;
+    }
+    $sql = "
+        UPDATE
+            {pdcertificate_issues}
+        SET
+           locked = $lockstate
+        WHERE
+            pdcertificateid = ? AND
+            userid $insql
+    ";
+    $DB->execute($sql, $params);
+}
+
+if ($action == 'unlock') {
+    require_sesskey();
+    $DB->set_field('pdcertificate_issues', 'locked', false, ['pdcertificateid' => $pdcertificate->id, 'code' => $ccode]);
 }
 
 if ($action == 'generate') {
@@ -112,10 +146,10 @@ if ($action == 'delete') {
     }
     $userids = required_param_array('userids', PARAM_INT); // gets an array of user ids to generate.
     if (!empty($userids)) {
-        $userlist = implode(",", $userids);
+        $userlist = implode("','", $userids);
 
         // Retrieve all rec ids.
-        if ($recstodelete = $DB->get_records('pdcertificate_issues', " userid IN ('$userlist') AND pdcertificateid = ? ", array($pdcertificate->id))) {
+        if ($recstodelete = $DB->get_records_select('pdcertificate_issues', " userid IN ('$userlist') AND pdcertificateid = ? ", array($pdcertificate->id))) {
             foreach ($recstodelete as $rec) {
                 $deleted[] = $rec->id;
             }
@@ -137,4 +171,10 @@ if ($action == 'delete') {
             }
         }
     }
+}
+
+if ($action == 'export') {
+    // pass hand to download use case.
+    // download use case will retreive its userlist.
+    $download = 'zip';
 }

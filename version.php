@@ -25,11 +25,13 @@
  */
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2018061300; // The current module version (Date: YYYYMMDDXX).
-$plugin->requires  = 2018112800; // Requires this Moodle version.
+$plugin->version   = 2022062700; // The current module version (Date: YYYYMMDDXX).
+$plugin->requires  = 2019051100; // Requires this Moodle version.
 $plugin->component = 'mod_pdcertificate';
 $plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = '3.6.0 (Build 2018061300)'; // User-friendly version number.
+$plugin->supported = [39, 311];
+$plugin->release   = '3.9.0 (Build 2022062700)'; // User-friendly version number.
 
 // Non Moodle attributes.
-$plugin->codeincrement = '3.6.0009';
+$plugin->codeincrement = '3.9.0022';
+$plugin->privacy = 'dualrelease';

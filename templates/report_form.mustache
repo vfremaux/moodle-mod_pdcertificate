@@ -1,10 +1,11 @@
 
 
 
-<!-- report_form -->
+<!-- mod_pdcertificate/report_form -->
 <br />
-<form name="controller" method="GET" action="{{{baseurl}}}">
+<form name="controller" method="GET" action="{{{baseurl}}}" method="POST">
     <input type="hidden" name="id" value="{{cmid}}" />
+    <input type="hidden" name="sesskey" value="{{sesskey}}" />
 
     {{{table}}}
 
@@ -15,10 +16,10 @@
                 {{#canmakeall}}
                 <a href="{{{makeallurl}}}" >{{generateallstr}}</a>
                 {{/canmakeall}}
-                <a href="{{{viewallurl}}}" title="{{{viewalladvicestr}}}" >{{viewallstr}}</a>
+                <!-- a href="{{{viewallurl}}}" title="{{{viewalladvicestr}}}" >{{viewallstr}}</a -->
             </td>
         </tr>
     </table>
 
 </form>
-<!-- /report_form -->
+<!-- /mod_pdcertificate/report_form -->

@@ -104,13 +104,10 @@ if (!$wsquery) {
     $pdcertificatefilestr = get_string('pdcertificatefile', 'pdcertificate');
     $pdcertificatefilenoaccessstr = get_string('pdcertificatefilenoaccess', 'pdcertificate');
 
-    // Add to log.
-    // add_to_log($context->instanceid, 'pdcertificate', 'verify', "verify.php?code=$code", '$issuedcert->id');
-
     // Trigger module viewed event.
     $eventparams = array(
         'objectid' => $pdcertificate->id,
-        'context' => $context,
+        'context' => $modulecontext,
     );
 
     $event = \mod_pdcertificate\event\course_module_verified::create($eventparams);

@@ -52,3 +52,34 @@ function pdcertificate_get_user_pdcertificates($course, $userid) {
     return array();
 
 }
+
+/**
+ *
+ */
+function pdcertificate_get_my_pdcertificates() {
+    global $USER, $DB;
+
+    $sql = "
+        SELECT
+            pdci.*,
+            pdc.id as modid,
+            pdc.name as modname,
+            cm.id as cmid
+        FROM
+            {course_modules} cm,
+            {modules} m,
+            {pdcertificate} pdc,
+            {pdcertificate_issues} pdci
+        WHERE
+            cm.instance = pdc.id AND
+            cm.deletioninprogress != 1 AND
+            m.id = cm.module AND
+            m.name = 'pdcertificate' AND
+            pdc.id = pdci.pdcertificateid AND
+            pdci.userid = ?
+    ";
+
+    $issues = $DB->get_records_sql($sql, [$USER->id]);
+
+    return $issues;
+}

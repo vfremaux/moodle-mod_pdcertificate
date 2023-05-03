@@ -24,7 +24,6 @@
  */
 
 require('../../config.php');
-require_once($CFG->dirroot.'/mod/pdcertificate/deprecatedlib.php');
 require_once($CFG->dirroot.'/mod/pdcertificate/lib.php');
 require_once($CFG->dirroot.'/local/vflibs/tcpdflib.php');
 
@@ -165,7 +164,8 @@ if (empty($action)) {
         echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center'));
         $confirm = true;
     }
-    if (has_capability('mod/pdcertificate:addinstance', $coursecontext)) {
+    $template = new StdClass;
+    if (has_capability('mod/pdcertificate:manage', $coursecontext)) {
 
         echo $OUTPUT->heading(get_string('teacherview', 'pdcertificate'));
 
@@ -173,16 +173,21 @@ if (empty($action)) {
         $link = new moodle_url('/mod/pdcertificate/view.php', array('id' => $cm->id, 'what' => 'get'));
         $button = new single_button($link, $linkname);
         $button->add_action(new popup_action('click', $link, 'view'.$cm->id, array('height' => 600, 'width' => 800)));
-        echo html_writer::tag('div', $OUTPUT->render($button), array('style' => 'text-align:center', 'class' => 'inline-button'));
+        $template->testbutton = $OUTPUT->render($button);
 
-        if (has_capability('mod/pdcertificate:manage', $context)) {
-            $numusers = count(get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id', '', '', '', $currentgroup, '', true));
-            $linkname = get_string('managedelivery', 'pdcertificate', $numusers);
-            $link = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
-            echo '<center>';
-            echo $OUTPUT->single_button($link, $linkname);
-            echo '</center>';
-        }
+        $template->numusers = count(get_users_by_capability($context, 'mod/pdcertificate:apply', 'u.id', '', '', '', $currentgroup, '', true));
+        $linkname = get_string('managedelivery', 'pdcertificate');
+        $link = new moodle_url('/mod/pdcertificate/report.php', array('id' => $cm->id));
+        $template->managebutton = $OUTPUT->single_button($link, $linkname);
+        $linkname = get_string('backtocourse', 'pdcertificate');
+        $link = new moodle_url('/course/view.php', array('id' => $course->id));
+        $template->backtocoursebutton = $OUTPUT->single_button($link, $linkname);
+
+        echo $OUTPUT->render_from_template('mod_pdcertificate/teacherview', $template);
+    } else {
+        $linkname = get_string('backtocourse', 'pdcertificate');
+        $link = new moodle_url('/course/view.php', array('id' => $course->id));
+        echo "<center>".$OUTPUT->single_button($link, $linkname)."</center>";
     }
 
     echo $OUTPUT->footer();
