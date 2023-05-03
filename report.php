@@ -164,6 +164,42 @@ $filters = array($filterfirstname, $filterlastname);
 
 $certusers = pdcertificate_get_issues($pdcertificate->id, 'lastname, firstname', $groupmode, $cm, 0, 0, $filters);
 
+if (!empty($download)) {
+    // Prepare downloadable cols and data.
+    $cols = [
+        get_string("lastname"),
+        get_string("firstname"),
+        get_string("idnumber")
+    ];
+
+    mod_pdcertificate_add_customfields_names($cols);
+
+    $cols[] = get_string("group");
+    $cols[] = $strdate;
+    $cols[] = $strgrade;
+    $cols[] = $strcode;
+
+    mod_pdcertificate_extract_report_cols_from_extradata($pdcertificate, $cols);
+
+    // Get formats to help formating data.
+    $formats = [
+        't',
+        't',
+        't'
+    ];
+
+    mod_pdcertificate_add_customfields_formats($formats);
+
+    $formats[] = 't';
+    $formats[] = 'd';
+    $formats[] = 'n';
+    $formats[] = 't';
+
+    mod_pdcertificate_extract_report_formats_from_extradata($pdcertificate, $formats);
+
+    debug_trace($formats);
+}
+
 if ($download == 'ods') {
     require_once($CFG->libdir.'/odslib.class.php');
 
@@ -176,34 +212,56 @@ if ($download == 'ods') {
     // Creating the first worksheet.
     $myxls = $workbook->add_worksheet($strreport);
 
-    // Print names of all the fields.
-    $myxls->write_string(0, 0, get_string("lastname"));
-    $myxls->write_string(0, 1, get_string("firstname"));
-    $myxls->write_string(0, 2, get_string("idnumber"));
-    $myxls->write_string(0, 3, get_string("group"));
-    $myxls->write_string(0, 4, $strdate);
-    $myxls->write_string(0, 5, $strgrade);
-    $myxls->write_string(0, 6, $strcode);
+    $j = 0;
+    foreach ($cols as $c) {
+        $myxls->write_string(0, $j, $c);
+
+        if ($formats[$j] == 'd') {
+            $props = ['num_format' => 'yyyy-mm-dd'];
+            $myxls->set_column($j, $j, 12, $props);
+        } else {
+            $myxls->set_column($j, $j, 12);
+        }
+        $j++;
+    }
 
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($certusers) {
         foreach ($certusers as $user) {
-            $myxls->write_string($row, 0, $user->lastname);
-            $myxls->write_string($row, 1, $user->firstname);
+            $values = [];
+            $values[] = $user->lastname;
+            $values[] = $user->firstname;
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
-            $myxls->write_string($row, 2, $studentid);
+            $values[] = $studentid;
+
+            mod_pdcertificate_add_customfields_values($values, $user->id, $formats);
+
             $ug2 = '';
             if ($usergrps = groups_get_all_groups($course->id, $user->id)) {
                 foreach ($usergrps as $ug) {
                     $ug2 = $ug2. $ug->name;
                 }
             }
-            $myxls->write_string($row, 3, $ug2);
-            $myxls->write_string($row, 4, userdate($user->timecreated));
-            $myxls->write_string($row, 5, pdcertificate_get_grade($pdcertificate, $course, $user->id));
-            $myxls->write_string($row, 6, $user->code);
+            $values[] = $ug2;
+            $values[] = $user->timecreated;
+            $values[] = pdcertificate_get_grade($pdcertificate, $course, $user->id);
+            $values[] = $user->code;
+
+            mod_pdcertificate_extract_report_values_from_extradata($pdcertificate, $values, $user->id);
+
+            $j = 0;
+            foreach ($values as $v) {
+                if ($formats[$j] == 'd') {
+                    if (!empty($v)) {
+                        $myxls->write_date($row, $j, $v);
+                    }
+                } else {
+                    $myxls->write_string($row, $j, $v);
+                }
+                $j++;
+            }
             $row++;
         }
         $pos = 6;
@@ -225,34 +283,56 @@ if ($download == 'xls') {
     // Creating the first worksheet.
     $myxls = $workbook->add_worksheet($strreport);
 
-    // Print names of all the fields.
-    $myxls->write_string(0, 0, get_string('lastname'));
-    $myxls->write_string(0, 1, get_string('firstname'));
-    $myxls->write_string(0, 2, get_string('idnumber'));
-    $myxls->write_string(0, 3, get_string('group'));
-    $myxls->write_string(0, 4, $strdate);
-    $myxls->write_string(0, 5, $strgrade);
-    $myxls->write_string(0, 6, $strcode);
+    $j = 0;
+    foreach ($cols as $c) {
+        $myxls->write_string(0, $j, $c);
+        if ($formats[$j] == 'd') {
+            $props = ['num_format' => 'yyyy-mm-dd'];
+            $myxls->set_column($j, $j, 12, $props);
+        } else {
+            $myxls->set_column($j, $j, 12);
+        }
+
+        $j++;
+    }
 
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
-    if ($certusers) {
-        foreach ($certusers as $user) {
-            $myxls->write_string($row, 0, $user->lastname);
-            $myxls->write_string($row, 1, $user->firstname);
+    if ($certs) {
+        foreach ($certs as $user) {
+            $values = [];
+            $values[] = $user->lastname;
+            $values[] = $user->firstname;
             $studentid = (!empty($user->idnumber)) ? $user->idnumber : " ";
-            $myxls->write_string($row,2,$studentid);
+            $values[] = $studentid;
+
+            mod_pdcertificate_add_customfields_values($values, $user->id);
+
             $ug2 = '';
             if ($usergrps = groups_get_all_groups($course->id, $user->id)) {
                 foreach ($usergrps as $ug) {
-                    $ug2 = $ug2 . $ug->name;
+                    $ug2 = $ug2. $ug->name;
                 }
             }
-            $myxls->write_string($row, 3, $ug2);
-            $myxls->write_string($row, 4, userdate($user->timecreated));
-            $myxls->write_string($row, 5, pdcertificate_get_grade($pdcertificate, $course, $user->id));
-            $myxls->write_string($row, 6, $user->code);
+            $values[] = $ug2;
+            $values[] = $user->timecreated;
+            $values[] = pdcertificate_get_grade($pdcertificate, $course, $user->id);
+            $values[] = $user->code;
+
+            mod_pdcertificate_extract_report_values_from_extradata($pdcertificate, $values, $user->id);
+
+            $j = 0;
+            foreach ($values as $v) {
+                if ($formats[$j] == 'd') {
+                    if (!empty($v)) {
+                        $myxls->write_date($row, $j, $v);
+                    }
+                } else {
+                    $myxls->write_string($row, $j, $v);
+                }
+                $j++;
+            }
             $row++;
         }
         $pos = 6;
@@ -271,36 +351,42 @@ if ($download == 'txt') {
     header("Cache-Control: must-revalidate,post-check=0,pre-check=0");
     header("Pragma: public");
 
-    // Print names of all the fields.
-    echo get_string("firstname"). "\t" .get_string("lastname") . "\t". get_string("idnumber") . "\t";
-    echo get_string("group"). "\t";
-    echo $strdate. "\t";
-    echo $strgrade. "\t";
-    echo $strcode. "\n";
+    $j = 0;
+    $allcols = implode("\t", $cols);
+    echo $allcols."\n";
 
     // Generate the data for the body of the spreadsheet.
     $i = 0;
     $row = 1;
     if ($certusers) {
         foreach ($certusers as $user) {
-            echo $user->lastname;
-            echo "\t" . $user->firstname;
+            $values = [];
+            $values[] = $user->lastname;
+            $values[] = $user->firstname;
             $studentid = " ";
             if (!empty($user->idnumber)) {
                 $studentid = $user->idnumber;
             }
-            echo "\t" . $studentid . "\t";
+            $values[] = $studentid;
+
+            mod_pdcertificate_add_customfields_values($values, $user->id);
+
             $ug2 = '';
             if ($usergrps = groups_get_all_groups($course->id, $user->id)) {
                 foreach ($usergrps as $ug) {
                     $ug2 = $ug2. $ug->name;
                 }
             }
-            echo $ug2 . "\t";
-            echo userdate($user->timecreated) . "\t";
-            echo pdcertificate_get_grade($pdcertificate, $course, $user->id) . "\t";
-            echo $user->code . "\n";
-            $row++;
+            $values[] = $ug2;
+            $values[] = userdate($user->timecreated);
+            $values[] = pdcertificate_get_grade($pdcertificate, $course, $user->id);
+            $values[] = $user->code;
+
+            mod_pdcertificate_extract_report_values_from_extradata($pdcertificate, $values, $user->id);
+
+            $j = 0;
+            $allvalues = implode("\t", $values);
+            echo $allvalues."\n";
         }
     }
     exit;
@@ -459,7 +545,7 @@ foreach ($certifiableusers as $user) {
                 'name' => 'timeoverride-'.$cert->issueid,
                 'size' => 4,
                 'value' => $cert->credithoursoverride,
-            ]
+            ];
             $timeoverride = html_writer::tag('input', $attrs);
             $attrs = [
                 'type' => 'text',
@@ -469,7 +555,7 @@ foreach ($certifiableusers as $user) {
                 'name' => 'daysoverride-'.$cert->issueid,
                 'size' => 4,
                 'value' => $cert->creditdaysoverride,
-            ]
+            ];
             $timeoverride .= '<br/>';
             $timeoverride = html_writer::tag('input', $attrs);
         }

@@ -79,7 +79,7 @@ if ($files) {
 
     $file = array_pop($files);
     if ($CFG->debug == DEBUG_DEVELOPER) {
-        debug_trace($border);
+        debug_trace($border, TRACE_FINE_DEBUG);
     }
     $border->image = $file;
     $pdf->addCustomObject('border', $border);

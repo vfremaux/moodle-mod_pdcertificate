@@ -246,7 +246,7 @@ function pdcertificate_get_state($pdcertificate, $cm, $page, $pagesize, $group, 
     $deliveredids = array_keys($delivered);
 
     // This may be costfull when a big bunch of users arrive to certification state.
-    if ($state->totalcount > 100) {
+    if ($state->totalcount > 300) {
         // Reduce the state to the current page.
         $checkables = $certifiableusers;
         $state->range = 'page';
@@ -1683,4 +1683,178 @@ function pdcertificate_make_zip_file($pdcertificate, $cm, $userids = null) {
 
     debug_trace($storedzip, TRACE_DEBUG);
     return $storedzip;
+}
+
+/**
+ * Get and adds to a column namelist the pointed customfields from customized user profile.
+ */
+function mod_pdcertificate_add_customfields_names(&$cols) {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+
+    debug_trace($fieldnames);
+
+    if (empty($fieldnames)) {
+        debug_trace("No fields");
+        return;
+    }
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            $cols[] = format_string($fields[$fn]->name);
+        }
+    }
+}
+
+/**
+ * Get formats thjat are added.
+ */
+function mod_pdcertificate_add_customfields_formats(&$formats) {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+
+    if (empty($fieldnames)) {
+        return;
+    }
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name, datatype');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            switch ($fields[$fn]->datatype) {
+                case 'datetime' : {
+                    $formats[] = 'd';
+                    break;
+                }
+                default: {
+                    $formats[] = 't';
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_add_customfields_values(&$values, $userid, $format = 'html') {
+    global $DB;
+
+    $config = get_config('pdcertificate');
+
+    $fieldnames = preg_split('/[,\\s]+/', $config->reportcustomuserfields);
+    if (empty($fieldnames)) {
+        return;
+    }
+    // Get by shortnames
+    $fields = $DB->get_records_list('user_info_field', 'shortname', $fieldnames, '', 'shortname, name, id');
+
+    // Scan data keeping config order.
+    if (!empty($fields)) {
+        foreach ($fieldnames as $fn) {
+            $params = ['userid' => $userid, 'fieldid' => $fields[$fn]->id];
+            $data = $DB->get_record('user_info_data', $params);
+            if ($field->datatype == 'datetime') {
+                if ($format == 'html') {
+                    $values[] = userdate($data->data, get_string('htmldatefmt', 'pdcertificate'));
+                }
+            } else {
+                $values[] = $data->data;
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_cols_from_extradata($pdcertificate, &$cols) {
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    debug_trace("Extras : ");
+    debug_trace($extra);
+
+    if (!empty($extra)) {
+
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+        $config = get_config('pdcertificate');
+
+        foreach ($extra as $key => $value) {
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                if (!empty($cm)) {
+                    $namefield = $config->reportdefaultactivityname;
+                    $name = $cm->$namefield;
+                    if ($namefield == 'modname') {
+                        $name .= ' '.$cm->id;
+                    }
+                    $cols[] = $name;
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_formats_from_extradata($pdcertificate, &$formats) {
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    if (!empty($extra)) {
+
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+
+        foreach ($extra as $key => $value) {
+            debug_trace("check format for $key => $value ");
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                debug_trace("Adding format for $value : ");
+                if (!empty($cm)) {
+                    debug_trace("Adding");
+                    $formats[] = 'n';
+                }
+            }
+        }
+    }
+}
+
+function mod_pdcertificate_extract_report_values_from_extradata($pdcertificate, &$values, $userid) {
+    global $COURSE;
+
+    $course = $COURSE;
+
+    $extra = (array) json_decode($pdcertificate->extradata);
+
+    if (!empty($extra)) {
+        $modinfo = get_fast_modinfo($pdcertificate->course);
+
+        foreach ($extra as $key => $value) {
+            // Value should hold cmid.
+            if (!is_numeric($value)) {
+                continue;
+            }
+
+            if (preg_match('/report_export_cmid([\\d]+)/', $key, $matches)) {
+                // We are a report grade export request.
+                $cm = $modinfo->get_cm($value);
+                if (!empty($cm)) {
+                    $values[] = pdcertificate_get_grade($pdcertificate, $course, $userid, $cm->id);
+                }
+            }
+        }
+    }
 }
