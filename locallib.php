@@ -341,10 +341,11 @@ function pdcertificate_check_conditions($pdcertificate, $cm, $userid) {
  * @param object $context the course module context object.
  * @param string $ccode the certificate code
  * @param string $userid either, the userid being certified
+ * @param string $moredata, some extra data as associative array that can adress template placeholders dynamically
  * @return the user record the certificate is belonging to.
  */
-function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0, $iscron = false) {
-    global $CFG, $DB;
+function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', $userid = 0, $iscron = false, $moredata = []) {
+    global $CFG, $DB, $USER;
 
     $config = get_config('pdcertificate');
 
@@ -394,7 +395,8 @@ function pdcertificate_make_certificate(&$pdcertificate, $context, $ccode = '', 
         $eventparams = array(
             'objectid' => $pdcertificate->id,
             'context' => $context,
-            'userid' => $userid,
+            'userid' => $USER->id,
+            'relateduserid' => $userid,
             'other' => $fileinfo
         );
         $event = mod_pdcertificate\event\document_generated::create($eventparams);

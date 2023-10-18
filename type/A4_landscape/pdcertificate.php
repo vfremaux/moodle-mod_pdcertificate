@@ -48,6 +48,11 @@ if (empty($printconfig->fontbasesize)) {
     $printconfig->fontbasesize = 9;
 }
 
+// $moredata should be provided at least as empty array. If not ensure it exists
+if (!isset($moredata)) {
+    $moredata = [];
+}
+
 $pdf->init($printconfig);
 
 $pdf->SetTitle($pdcertificate->name);
@@ -222,9 +227,9 @@ if ($printconfig->printseal) {
 // Add text.
 $pdf->SetTextColor(0, 0, 0);
 
-$headertext = pdcertificate_insert_data(format_text($pdcertificate->headertext), $pdcertificate, $certrecord, $course, $user);
-$customtext = pdcertificate_insert_data(format_text($pdcertificate->customtext), $pdcertificate, $certrecord, $course, $user);
-$footertext = pdcertificate_insert_data(format_text($pdcertificate->footertext), $pdcertificate, $certrecord, $course, $user);
+$headertext = pdcertificate_insert_data(format_text($pdcertificate->headertext), $pdcertificate, $certrecord, $course, $user, $moredata);
+$customtext = pdcertificate_insert_data(format_text($pdcertificate->customtext), $pdcertificate, $certrecord, $course, $user, $moredata);
+$footertext = pdcertificate_insert_data(format_text($pdcertificate->footertext), $pdcertificate, $certrecord, $course, $user, $moredata);
 
 $header = $pdf->getCustomObject('header');
 $footer = $pdf->getCustomObject('footer');

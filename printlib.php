@@ -177,7 +177,16 @@ function pdcertificate_print_qrcode($pdf, $code, $x, $y) {
     $pdf->write2DBarcode(''.$codeurl, 'QRCODE,H', $x, $y, 35, 35, $style, 'N');
 }
 
-function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord, $course, $user) {
+/**
+ * Get all insertable data in a certificate rendering, and subtitute it in template.
+ * @param string $templatestring certificate glue template
+ * @param object $pdcertificate certificate instance
+ * @param object $certrecord issue record
+ * @param object $course the current course
+ * @param object $user the certified user
+ * @param object $moredata an extra data comming from runtime invocation
+ */
+function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord, $course, $user, $moredata) {
     global $SITE, $DB, $CFG, $COURSE, $PAGE;
 
     $printconfig = json_decode($pdcertificate->printconfig);
@@ -327,6 +336,14 @@ function pdcertificate_insert_data($templatestring, $pdcertificate, $certrecord,
             if ($CFG->debug == DEBUG_DEVELOPER) {
                 debug_trace("Bad JSON format in extradata in ".$pdcertificate->id);
             }
+        }
+    }
+
+    // Even more data comming from runtime call
+    // f.e. when another plugin requires for generating the document.
+    if (!empty($moredata)) {
+        foreach ($moredata as $key => $datum) {
+            $replacements['extra:'.$key] = $datum;
         }
     }
 
